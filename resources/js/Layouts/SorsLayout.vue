@@ -35,6 +35,12 @@ const closeTransaction = () => {
     isTransactionOpen.value = false;
 };
 
+const goBack = () => {
+    if (typeof window === 'undefined') return;
+    if (window.history.length > 1) window.history.back();
+    else window.location.href = route('dashboard');
+};
+
 const navItems = computed(() => [
     {
         label: 'Início',
@@ -45,7 +51,7 @@ const navItems = computed(() => [
     {
         label: 'Análise',
         href: route('analysis'),
-        active: route().current('analysis'),
+        active: route().current('analysis*'),
         icon: 'chart' as const,
     },
     {
@@ -165,7 +171,7 @@ const navItems = computed(() => [
                             </span>
                             Perfil
                         </Link>
-                        <a class="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-600 hover:bg-slate-100" href="#">
+                        <Link class="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-600 hover:bg-slate-100" :href="route('settings')">
                             <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path
@@ -175,8 +181,13 @@ const navItems = computed(() => [
                                 </svg>
                             </span>
                             Configurações
-                        </a>
-                        <button class="mt-8 flex w-full items-center justify-center rounded-2xl border border-slate-200 py-3 text-slate-400" type="button">
+                        </Link>
+                        <button
+                            class="mt-8 flex w-full items-center justify-center rounded-2xl border border-slate-200 py-3 text-slate-400"
+                            type="button"
+                            @click="goBack"
+                            aria-label="Voltar"
+                        >
                             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M15 18l-6-6 6-6" />
                             </svg>

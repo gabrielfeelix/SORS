@@ -2,8 +2,8 @@
 import { ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import SorsLayout from '@/Layouts/SorsLayout.vue';
 import ToggleSwitch from '@/Components/ToggleSwitch.vue';
+import DesktopSettingsShell from '@/Layouts/DesktopSettingsShell.vue';
 import { useMediaQuery } from '@/composables/useMediaQuery';
 
 const isMobile = useMediaQuery('(max-width: 767px)');
@@ -100,11 +100,73 @@ const goalProgress = ref(false);
         </div>
     </MobileShell>
 
-    <SorsLayout v-else title="Notificações" subtitle="Mobile-first por enquanto.">
-        <div class="rounded-[28px] border border-white/70 bg-white p-8 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.4)]">
-            <div class="text-sm font-semibold text-slate-900">Notificações (desktop/tablet)</div>
-            <div class="mt-2 text-sm text-slate-500">Vamos adaptar essa tela depois da versão mobile.</div>
-        </div>
-    </SorsLayout>
-</template>
+    <DesktopSettingsShell v-else>
+        <div class="space-y-8 pb-10">
+            <div class="rounded-3xl bg-white px-10 py-9 shadow-sm ring-1 ring-slate-200/60">
+                <div class="space-y-10">
+                    <div>
+                        <div class="text-[11px] font-bold uppercase tracking-wide text-slate-300">Contas e pagamentos</div>
+                        <div class="mt-5 space-y-4">
+                            <div class="flex items-center justify-between gap-6 rounded-2xl bg-slate-50 px-6 py-5 ring-1 ring-slate-200/60">
+                                <div>
+                                    <div class="text-sm font-semibold text-slate-900">Lembrar contas a vencer</div>
+                                    <div class="mt-1 text-xs font-semibold text-slate-400">3 dias antes do vencimento</div>
+                                </div>
+                                <ToggleSwitch v-model="remindDue" />
+                            </div>
+                            <div class="flex items-center justify-between gap-6 rounded-2xl bg-slate-50 px-6 py-5 ring-1 ring-slate-200/60">
+                                <div>
+                                    <div class="text-sm font-semibold text-slate-900">Avisar quando saldo ficar negativo</div>
+                                </div>
+                                <ToggleSwitch v-model="warnNegative" />
+                            </div>
+                            <div class="flex items-center justify-between gap-6 rounded-2xl bg-slate-50 px-6 py-5 ring-1 ring-slate-200/60">
+                                <div>
+                                    <div class="text-sm font-semibold text-slate-900">Confirmar quando marcar como pago</div>
+                                </div>
+                                <ToggleSwitch v-model="confirmPaid" />
+                            </div>
+                        </div>
+                    </div>
 
+                    <div>
+                        <div class="text-[11px] font-bold uppercase tracking-wide text-slate-300">Relatórios</div>
+                        <div class="mt-5 space-y-4">
+                            <div class="flex items-center justify-between gap-6 rounded-2xl bg-slate-50 px-6 py-5 ring-1 ring-slate-200/60">
+                                <div>
+                                    <div class="text-sm font-semibold text-slate-900">Resumo semanal das finanças</div>
+                                    <div class="mt-1 text-xs font-semibold text-slate-400">Toda segunda-feira às 9h</div>
+                                </div>
+                                <ToggleSwitch v-model="weeklySummary" />
+                            </div>
+                            <div class="flex items-center justify-between gap-6 rounded-2xl bg-slate-50 px-6 py-5 ring-1 ring-slate-200/60">
+                                <div>
+                                    <div class="text-sm font-semibold text-slate-900">Avisar sobre gastos fora do padrão</div>
+                                </div>
+                                <ToggleSwitch v-model="warnOutlier" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-[11px] font-bold uppercase tracking-wide text-slate-300">Metas</div>
+                        <div class="mt-5 space-y-4">
+                            <div class="flex items-center justify-between gap-6 rounded-2xl bg-slate-50 px-6 py-5 ring-1 ring-slate-200/60">
+                                <div>
+                                    <div class="text-sm font-semibold text-slate-900">Progresso das metas de economia</div>
+                                </div>
+                                <ToggleSwitch v-model="goalProgress" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="button" class="inline-flex h-12 items-center justify-center rounded-2xl bg-[#14B8A6] px-8 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20">
+                    Guardar Alterações
+                </button>
+            </div>
+        </div>
+    </DesktopSettingsShell>
+</template>

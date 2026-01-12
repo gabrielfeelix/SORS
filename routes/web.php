@@ -62,6 +62,14 @@ Route::get('/settings/notifications', function () {
     return Inertia::render('Settings/Notifications');
 })->middleware(['auth', 'verified'])->name('settings.notifications');
 
+Route::get('/settings/categories', function () {
+    return Inertia::render('Settings/Categories');
+})->middleware(['auth', 'verified'])->name('settings.categories');
+
+Route::get('/settings/appearance', function () {
+    return Inertia::render('Settings/Appearance');
+})->middleware(['auth', 'verified'])->name('settings.appearance');
+
 Route::get('/settings/security', function () {
     return Inertia::render('Settings/SecurityPrivacy');
 })->middleware(['auth', 'verified'])->name('settings.security');

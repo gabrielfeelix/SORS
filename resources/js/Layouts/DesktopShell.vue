@@ -4,13 +4,20 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import { getEntries, setEntries } from '@/stores/localStore';
 import DesktopTransactionDrawer from '@/Components/DesktopTransactionDrawer.vue';
 
-const props = defineProps<{
+const props = withDefaults(
+    defineProps<{
     title: string;
     subtitle?: string;
     searchPlaceholder?: string;
     newActionLabel?: string;
     showSearch?: boolean;
-}>();
+    showNewAction?: boolean;
+}>(),
+    {
+        showSearch: true,
+        showNewAction: true,
+    },
+);
 
 const emit = defineEmits<{
     (event: 'new-transaction'): void;
@@ -136,6 +143,7 @@ const navItems = computed<NavItem[]>(() => [
 
 const showSearch = computed(() => props.showSearch ?? true);
 const newActionLabel = computed(() => props.newActionLabel ?? 'Nova Transação');
+const showNewAction = computed(() => props.showNewAction ?? true);
 </script>
 
 <template>
@@ -149,14 +157,14 @@ const newActionLabel = computed(() => props.newActionLabel ?? 'Nova Transação'
         ></button>
         <div class="flex min-h-screen">
             <aside class="flex w-[260px] flex-col border-r border-slate-100 bg-white">
-                <div class="flex items-center gap-3 px-6 py-6">
+                <Link :href="route('dashboard')" class="flex items-center gap-3 px-6 py-6" aria-label="Ir para início">
                     <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#14B8A6] text-lg font-bold text-white">
                         F
                     </div>
                     <div class="text-lg font-semibold tracking-tight text-slate-900">
                         Finance<span class="text-[#14B8A6]">Pro</span>
                     </div>
-                </div>
+                </Link>
 
                 <nav class="mt-2 space-y-1 px-4">
                     <Link
@@ -288,6 +296,8 @@ const newActionLabel = computed(() => props.newActionLabel ?? 'Nova Transação'
                             </div>
                         </div>
 
+                        <slot name="actions" />
+
                         <div class="relative">
                             <button
                                 type="button"
@@ -320,6 +330,7 @@ const newActionLabel = computed(() => props.newActionLabel ?? 'Nova Transação'
                         </div>
 
                         <button
+                            v-if="showNewAction && newActionLabel"
                             type="button"
                             class="inline-flex h-11 items-center gap-2 rounded-xl bg-[#14B8A6] px-4 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20"
                             @click="emit('new-transaction')"

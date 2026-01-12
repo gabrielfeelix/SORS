@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import SorsLayout from '@/Layouts/SorsLayout.vue';
+import DesktopSettingsShell from '@/Layouts/DesktopSettingsShell.vue';
 import ToggleSwitch from '@/Components/ToggleSwitch.vue';
 import ChangePasswordModal from '@/Components/ChangePasswordModal.vue';
 import { useMediaQuery } from '@/composables/useMediaQuery';
@@ -187,10 +187,83 @@ const passwordOpen = ref(false);
         <ChangePasswordModal :open="passwordOpen" @close="passwordOpen = false" />
     </MobileShell>
 
-    <SorsLayout v-else title="Segurança e Privacidade" subtitle="Mobile-first por enquanto.">
-        <div class="rounded-[28px] border border-white/70 bg-white p-8 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.4)]">
-            <div class="text-sm font-semibold text-slate-900">Segurança e Privacidade (desktop/tablet)</div>
-            <div class="mt-2 text-sm text-slate-500">Vamos adaptar essa tela depois da versão mobile.</div>
+    <DesktopSettingsShell v-else>
+        <div class="space-y-8 pb-10">
+            <div class="rounded-3xl bg-white px-10 py-9 shadow-sm ring-1 ring-slate-200/60">
+                <div class="space-y-10">
+                    <div>
+                        <div class="text-[11px] font-bold uppercase tracking-wide text-slate-300">Acesso</div>
+                        <div class="mt-5 overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-slate-200/60">
+                            <button type="button" class="flex w-full items-center justify-between gap-6 px-6 py-5 text-left" @click="passwordOpen = true">
+                                <div class="flex items-center gap-4">
+                                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200/60">
+                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M8 11V9a4 4 0 1 1 8 0v2" />
+                                            <rect x="6" y="11" width="12" height="10" rx="2" />
+                                        </svg>
+                                    </span>
+                                    <div class="text-sm font-semibold text-slate-900">Trocar senha</div>
+                                </div>
+                                <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 18l6-6-6-6" />
+                                </svg>
+                            </button>
+                            <div class="border-t border-slate-200/70 px-6 py-5">
+                                <div class="flex items-center justify-between gap-6">
+                                    <div class="flex items-center gap-4">
+                                        <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200/60">
+                                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M12 11a3 3 0 1 0-3-3" />
+                                                <path d="M12 14v7" />
+                                                <path d="M5 12c0-4 3-7 7-7s7 3 7 7" />
+                                            </svg>
+                                        </span>
+                                        <div>
+                                            <div class="text-sm font-semibold text-slate-900">Usar biometria</div>
+                                            <div class="mt-1 text-xs font-semibold text-slate-400">Impressão digital ou Face ID</div>
+                                        </div>
+                                    </div>
+                                    <ToggleSwitch v-model="biometric" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-[11px] font-bold uppercase tracking-wide text-slate-300">Seus dados</div>
+                        <div class="mt-5 overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-slate-200/60">
+                            <Link :href="route('settings.backup')" class="flex w-full items-center justify-between gap-6 px-6 py-5 text-left">
+                                <div class="flex items-center gap-4">
+                                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200/60">
+                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M20 17.5A4.5 4.5 0 0 0 18 9h-1.3A7 7 0 0 0 3 11.5" />
+                                            <path d="M12 12v7" />
+                                            <path d="M8 15l4-3 4 3" />
+                                        </svg>
+                                    </span>
+                                    <div>
+                                        <div class="text-sm font-semibold text-slate-900">Backup de dados</div>
+                                        <div class="mt-1 text-xs font-semibold text-slate-400">Status: Sincronizado</div>
+                                    </div>
+                                </div>
+                                <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 18l6-6-6-6" />
+                                </svg>
+                            </Link>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-[11px] font-bold uppercase tracking-wide text-red-400">Zona de perigo</div>
+                        <div class="mt-5 rounded-2xl bg-slate-50 px-6 py-6 ring-1 ring-slate-200/60">
+                            <button type="button" class="h-12 w-full rounded-2xl border border-red-200 bg-white text-sm font-semibold text-red-500">Excluir minha conta</button>
+                            <div class="mt-3 text-center text-xs font-semibold text-slate-400">Esta ação não pode ser desfeita</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </SorsLayout>
+
+        <ChangePasswordModal :open="passwordOpen" @close="passwordOpen = false" />
+    </DesktopSettingsShell>
 </template>

@@ -35,13 +35,13 @@ const navItems = computed(() => [
     {
         label: 'Análise',
         href: route('analysis'),
-        active: route().current('analysis'),
+        active: route().current('analysis*'),
         icon: 'pie' as const,
     },
     {
         label: 'Config',
         href: route('settings'),
-        active: route().current('settings'),
+        active: route().current('settings*') || route().current('profile.*'),
         icon: 'gear' as const,
     },
 ]);
