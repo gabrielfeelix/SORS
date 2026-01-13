@@ -86,6 +86,11 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
+# Executar script de pós-deploy (adapta estrutura para Hostinger)
+if [ -f scripts/hostinger-post-deploy.sh ]; then
+  bash scripts/hostinger-post-deploy.sh
+fi
+
 echo \"OK: deploy finalizado\"
 '"
 else
@@ -134,6 +139,11 @@ php artisan optimize:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
+
+# Executar script de pós-deploy (adapta estrutura para Hostinger)
+if [ -f scripts/hostinger-post-deploy.sh ]; then
+  bash scripts/hostinger-post-deploy.sh
+fi
 
 echo \"OK: deploy finalizado\"
 '"

@@ -19,7 +19,7 @@ const close = () => emit('close');
 const name = ref('');
 const icon = ref<IconKey>('home');
 const target = ref('0,00');
-const due = ref('Dez 2026');
+const due = ref('2026-12'); // Formato YYYY-MM para input type="month"
 
 const normalizeMoneyInput = (raw: string) => {
     const digits = raw.replace(/[^\d]/g, '');
@@ -42,29 +42,10 @@ const mapIcon = (key: IconKey) => {
     return 'home';
 };
 
-const parseDueDate = (label: string) => {
-    const value = label.trim().toLowerCase();
-    if (!value) return null;
-    const monthMap: Record<string, number> = {
-        jan: 1, janeiro: 1,
-        fev: 2, fevereiro: 2,
-        mar: 3, março: 3, marco: 3,
-        abr: 4, abril: 4,
-        mai: 5, maio: 5,
-        jun: 6, junho: 6,
-        jul: 7, julho: 7,
-        ago: 8, agosto: 8,
-        set: 9, setembro: 9,
-        out: 10, outubro: 10,
-        nov: 11, novembro: 11,
-        dez: 12, dezembro: 12,
-    };
-    const parts = value.split(/\s+/);
-    const year = parts.find((part) => part.match(/^\d{4}$/));
-    const monthKey = parts.find((part) => monthMap[part]);
-    if (!year || !monthKey) return null;
-    const month = monthMap[monthKey];
-    return `${year}-${String(month).padStart(2, '0')}-01`;
+const parseDueDate = (monthInput: string) => {
+    // Formato esperado: YYYY-MM (do input type="month")
+    if (!monthInput || !monthInput.match(/^\d{4}-\d{2}$/)) return null;
+    return `${monthInput}-01`; // Adiciona dia 01 para completar a data
 };
 
 const submit = async () => {
@@ -95,7 +76,9 @@ watch(
         name.value = '';
         icon.value = 'home';
         target.value = '0,00';
-        due.value = 'Dez 2026';
+        // Define prazo padrão como dezembro do próximo ano
+        const nextYear = new Date().getFullYear() + 1;
+        due.value = `${nextYear}-12`;
     },
 );
 </script>
@@ -159,7 +142,7 @@ watch(
                 <div class="grid grid-cols-2 gap-5">
                     <div>
                         <div class="text-xs font-bold uppercase tracking-wide text-slate-400">Valor objetivo</div>
-                        <div class="mt-3 flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200/60">
+                        <div class="mt-3 flex h-12 items-center gap-3 rounded-xl bg-slate-50 px-4 ring-1 ring-slate-200/60 focus-within:ring-2 focus-within:ring-[#14B8A6]">
                             <div class="text-sm font-semibold text-slate-400">R$</div>
                             <input
                                 class="w-full bg-transparent text-lg font-bold tracking-tight text-slate-900 focus:outline-none"
@@ -174,9 +157,9 @@ watch(
                         <div class="text-xs font-bold uppercase tracking-wide text-slate-400">Prazo</div>
                         <input
                             v-model="due"
-                            type="text"
+                            type="month"
                             class="mt-3 h-12 w-full rounded-xl bg-slate-50 px-4 text-sm font-semibold text-slate-700 ring-1 ring-slate-200/60 focus:outline-none focus:ring-2 focus:ring-[#14B8A6]"
-                            placeholder="Ex: Dez 2026"
+                            :min="new Date().toISOString().slice(0, 7)"
                         />
                     </div>
                 </div>
