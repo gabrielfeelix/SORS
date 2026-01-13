@@ -35,11 +35,13 @@ const pct = (goal: Goal) => {
     return Math.min(100, Math.round((goal.current / goal.target) * 100));
 };
 
-const statusPill = computed(() => ({
+const statusPill = {
     on_track: { label: 'No ritmo', cls: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-500' },
     ahead: { label: 'Adiantado', cls: 'bg-blue-50 text-blue-600', dot: 'bg-blue-500' },
     late: { label: 'Atrasado', cls: 'bg-red-50 text-red-500', dot: 'bg-red-500' },
-}));
+} as const;
+
+const statusFor = (status: string) => statusPill[status as keyof typeof statusPill] ?? statusPill.on_track;
 
 type GoalFilter = 'all' | 'short' | 'long';
 const goalFilter = ref<GoalFilter>('all');
@@ -109,8 +111,6 @@ const toastMessage = ref('');
 const showToast = (message: string) => {
     toastMessage.value = message;
     toastOpen.value = true;
-};
-
 };
 
 const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
@@ -195,9 +195,9 @@ const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
                                 <div class="mt-1 text-xs font-semibold text-slate-400">Prazo: {{ goal.due }}</div>
                             </div>
 
-                            <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold" :class="statusPill[goal.status].cls">
-                                <span class="h-2 w-2 rounded-full" :class="statusPill[goal.status].dot"></span>
-                                {{ statusPill[goal.status].label }}
+                            <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold" :class="statusFor(goal.status).cls">
+                                <span class="h-2 w-2 rounded-full" :class="statusFor(goal.status).dot"></span>
+                                {{ statusFor(goal.status).label }}
                             </span>
                         </div>
 
@@ -309,8 +309,8 @@ const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
                         </div>
 
                         <div class="text-right">
-                            <span class="inline-flex rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide" :class="statusPill[goal.status].cls">
-                                {{ statusPill[goal.status].label }}
+                            <span class="inline-flex rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide" :class="statusFor(goal.status).cls">
+                                {{ statusFor(goal.status).label }}
                             </span>
                             <div class="mt-2 text-[10px] font-bold uppercase tracking-wide text-slate-300">Prazo: {{ goal.due }}</div>
                         </div>

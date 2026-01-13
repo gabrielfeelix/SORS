@@ -175,7 +175,7 @@ const formatDateLabels = (date: Date) => {
     return { dayLabel, dateLabel: `DIA ${dayLabel} ${month}` };
 };
 
-const parseInstallmentCount = (installment?: string) => {
+const parseInstallmentCount = (installment?: string | null) => {
     if (!installment) return 3;
     const match = installment.match(/\/\s*(\d+)/);
     if (!match) return 3;

@@ -224,7 +224,7 @@ const openDesktopTransaction = () => {
     openTransaction('expense');
 };
 
-const parseInstallmentCount = (installment?: string) => {
+const parseInstallmentCount = (installment?: string | null) => {
     if (!installment) return 3;
     const match = installment.match(/\/\s*(\d+)/);
     if (!match) return 3;
@@ -295,8 +295,6 @@ const handleDetailMarkPaid = async () => {
     showToast(nextStatus === 'paid' ? 'Conta marcada como paga' : 'Conta marcada como pendente');
 };
 
-};
-
 const onTransactionSave = async (payload: TransactionModalPayload) => {
     if (payload.kind === 'transfer') {
         showToast('Transferência realizada');
@@ -354,17 +352,6 @@ const toggleBillPaid = async (id: string) => {
             <div class="mt-2 flex items-center justify-center gap-2 text-xs font-semibold text-slate-400">
                 <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
                 Atualizado agora
-            </div>
-            <div v-else class="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center">
-                <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-400">
-                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="4" y="5" width="16" height="16" rx="3" />
-                        <path d="M8 3v4" />
-                        <path d="M16 3v4" />
-                    </svg>
-                </div>
-                <div class="mt-3 text-sm font-semibold text-slate-900">Sem contas programadas</div>
-                <div class="mt-1 text-xs text-slate-500">Cadastre seus compromissos e acompanhe aqui.</div>
             </div>
         </section>
 
@@ -750,17 +737,6 @@ Ver lançamentos
                             <div class="text-sm font-semibold text-slate-900">-150.00</div>
                         </div>
                     </div>
-                    <div v-else class="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-6 py-8 text-center">
-                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-400">
-                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="4" width="18" height="16" rx="3" />
-                                <path d="M7 8h10" />
-                                <path d="M7 12h7" />
-                            </svg>
-                        </div>
-                        <div class="mt-3 text-sm font-semibold text-slate-900">Sem transações recentes</div>
-                        <div class="mt-1 text-xs text-slate-500">Crie seu primeiro lançamento para aparecer aqui.</div>
-                    </div>
                 </div>
             </div>
 
@@ -1072,16 +1048,6 @@ Ver lançamentos
                             </div>
                             <div class="text-sm font-semibold text-slate-900">R$ {{ card.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
                         </Link>
-                    </div>
-                    <div v-else class="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-6 py-8 text-center">
-                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-400">
-                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 5v14" />
-                                <path d="M5 12h14" />
-                            </svg>
-                        </div>
-                        <div class="mt-3 text-sm font-semibold text-slate-900">Crie sua primeira meta</div>
-                        <div class="mt-1 text-xs text-slate-500">Comece definindo um objetivo financeiro.</div>
                     </div>
                 </div>
 
