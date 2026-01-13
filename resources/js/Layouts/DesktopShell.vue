@@ -160,7 +160,7 @@ const showNewAction = computed(() => props.showNewAction ?? true);
         <button
             v-if="notificationsOpen || suggestionsOpen || profileOpen"
             type="button"
-            class="fixed inset-0 z-[80] cursor-default bg-transparent"
+            class="fixed inset-0 z-[70] cursor-default bg-transparent"
             @click="closePopovers"
             aria-label="Fechar"
         ></button>
@@ -248,7 +248,7 @@ const showNewAction = computed(() => props.showNewAction ?? true);
 
                         <div
                             v-if="profileOpen"
-                            class="absolute bottom-14 left-0 z-40 w-full overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-[0_20px_40px_-30px_rgba(15,23,42,0.5)]"
+                            class="absolute bottom-14 left-0 z-[90] w-full overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-[0_20px_40px_-30px_rgba(15,23,42,0.5)]"
                         >
                             <Link
                                 :href="route('settings')"
