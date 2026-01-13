@@ -73,6 +73,8 @@ fi
 mkdir -p storage bootstrap/cache
 chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 
+rm -f public/hot || true
+
 php artisan optimize:clear
 php artisan config:cache
 php artisan route:cache

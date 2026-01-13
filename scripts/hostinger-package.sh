@@ -39,6 +39,8 @@ rsync -a --delete \
   --exclude ".git/" \
   --exclude "node_modules/" \
   --exclude "tests/" \
+  --exclude "public/hot" \
+  --exclude "public_html/" \
   --exclude ".env" \
   --exclude ".env.*" \
   --exclude "storage/logs/" \

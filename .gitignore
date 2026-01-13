@@ -26,3 +26,4 @@ sors-hostinger-backup-*.zip
 Homestead.json
 Homestead.yaml
 Thumbs.db
+/public_html/
