@@ -48,9 +48,9 @@ echo \"PWD: \$(pwd)\"
 test -f artisan || { echo \"ERRO: artisan não encontrado em ${PROJECT_DIR}\"; exit 10; }
 test -d public || { echo \"ERRO: pasta public não encontrada em ${PROJECT_DIR}\"; exit 10; }
 
-tmp=\"__deploy_tmp\"
-rm -rf \"\$tmp\"
-mkdir -p \"\$tmp\"
+tmp=\"\$(mktemp -d /tmp/kitamo_deploy.XXXXXX)\"
+cleanup() { rm -rf \"\$tmp\" \"__deploy.zip\"; }
+trap cleanup EXIT
 
 if command -v unzip >/dev/null 2>&1; then
   unzip -q \"__deploy.zip\" -d \"\$tmp\"
@@ -62,7 +62,7 @@ else
 fi
 
 if command -v rsync >/dev/null 2>&1; then
-  rsync -a --delete \\
+  rsync -a --delete-after --delay-updates \\
     --exclude \".env\" \\
     --exclude \"storage/\" \\
     \"\$tmp/\" \"./\"
@@ -86,7 +86,6 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-rm -rf \"\$tmp\" \"__deploy.zip\"
 echo \"OK: deploy finalizado\"
 '"
 else
@@ -98,9 +97,9 @@ echo \"PWD: \$(pwd)\"
 test -f artisan || { echo \"ERRO: artisan não encontrado em ${PROJECT_DIR}\"; exit 10; }
 test -d public || { echo \"ERRO: pasta public não encontrada em ${PROJECT_DIR}\"; exit 10; }
 
-tmp=\"__deploy_tmp\"
-rm -rf \"\$tmp\"
-mkdir -p \"\$tmp\"
+tmp=\"\$(mktemp -d /tmp/kitamo_deploy.XXXXXX)\"
+cleanup() { rm -rf \"\$tmp\" \"__deploy.zip\"; }
+trap cleanup EXIT
 
 if command -v unzip >/dev/null 2>&1; then
   unzip -q \"__deploy.zip\" -d \"\$tmp\"
@@ -112,7 +111,7 @@ else
 fi
 
 if command -v rsync >/dev/null 2>&1; then
-  rsync -a --delete \
+  rsync -a --delete-after --delay-updates \
     --exclude \".env\" \
     --exclude \"storage/\" \
     \"\$tmp/\" \"./\"
@@ -136,7 +135,6 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-rm -rf \"\$tmp\" \"__deploy.zip\"
 echo \"OK: deploy finalizado\"
 '"
 fi
