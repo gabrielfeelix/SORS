@@ -90,7 +90,7 @@ const submit = () => {
 
                 <div class="mt-8">
                     <a
-                        :href="route('auth.google')"
+                        href="/auth/google"
                         class="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
                     >
                         <span class="flex items-center gap-3">
