@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -107,6 +108,11 @@ Route::get('/accounts/nubank', function () {
 Route::get('/accounts/nubank-card', function () {
     return Inertia::render('Accounts/CreditCard');
 })->middleware(['auth', 'verified'])->name('accounts.card');
+
+Route::middleware(['auth', 'verified', 'admin'])->group(function () {
+    Route::get('/admin', [UserController::class, 'index'])->name('admin.users.index');
+    Route::patch('/admin/users/{user}/password', [UserController::class, 'updatePassword'])->name('admin.users.password');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

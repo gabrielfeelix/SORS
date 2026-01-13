@@ -10,6 +10,7 @@ const props = defineProps<{
 
 const page = usePage();
 const userName = computed(() => page.props.auth?.user?.name ?? 'Gabriel');
+const isAdmin = computed(() => Boolean(page.props.auth?.user?.is_admin));
 
 const initials = computed(() => {
     const parts = String(userName.value).trim().split(/\s+/).filter(Boolean);
@@ -227,6 +228,17 @@ const navItems = computed(() => [
                                     Nova Entrada
                                 </button>
                                 <div class="mx-2 hidden h-10 w-px bg-slate-200 sm:block"></div>
+                                <Link
+                                    v-if="isAdmin"
+                                    :href="route('admin.users.index')"
+                                    class="inline-flex items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700"
+                                >
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+                                        <path d="M9 12l2 2 4-4" />
+                                    </svg>
+                                    Admin
+                                </Link>
                                 <div class="flex items-center gap-2">
                                     <button
                                         class="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50"

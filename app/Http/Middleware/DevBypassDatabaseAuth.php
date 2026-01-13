@@ -24,6 +24,7 @@ class DevBypassDatabaseAuth
             $user->forceFill([
                 'name' => 'Gabriel',
                 'email' => 'dev@example.com',
+                'is_admin' => true,
             ]);
             $user->setAttribute('id', 1);
             $user->setAttribute('email_verified_at', now());
