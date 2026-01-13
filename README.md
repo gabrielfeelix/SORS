@@ -133,10 +133,30 @@ sail artisan db:seed          # Rodar seeders
 sail logs multi-tenant.sistema --tail=50
 ```
 
+### Deploy para Produção (Hostinger)
+
+Para fazer deploy para o servidor de produção:
+
+```bash
+SSH_HOST=147.79.84.203 SSH_USER=u626119115 SSH_PORT=65002 \
+  PROJECT_DIR=~/domains/kitamo.com.br/public_html \
+  scripts/hostinger-deploy-ssh.sh
+```
+
+📖 **Documentação completa:** Ver [DEPLOY_HOSTINGER.md](DEPLOY_HOSTINGER.md)
+
+O script automatizado:
+- ✅ Faz build do frontend localmente
+- ✅ Instala dependências PHP em modo produção
+- ✅ Envia pacote via SSH
+- ✅ Preserva `.env` e `storage/` no servidor
+- ✅ Executa otimizações do Laravel (cache, config, routes, views)
+
 ### Acesso
 
 - **Laravel:** http://localhost:8000
 - **Vite HMR:** http://localhost:5174
+- **Produção:** https://kitamo.com.br
 
 > Se você estiver no WSL e abrindo no Chrome do Windows, o servidor do Laravel precisa estar em `0.0.0.0`.
 > Use `composer dev` (já configurado) e acesse `http://localhost:8000`.
