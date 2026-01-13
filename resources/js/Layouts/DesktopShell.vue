@@ -156,7 +156,7 @@ const showNewAction = computed(() => props.showNewAction ?? true);
 </script>
 
 <template>
-    <div class="min-h-screen bg-[#F6F8FB]">
+    <div class="h-screen bg-[#F6F8FB]">
         <button
             v-if="notificationsOpen || suggestionsOpen || profileOpen"
             type="button"
@@ -164,8 +164,8 @@ const showNewAction = computed(() => props.showNewAction ?? true);
             @click="closePopovers"
             aria-label="Fechar"
         ></button>
-        <div class="flex min-h-screen">
-            <aside class="flex w-[260px] flex-col border-r border-slate-100 bg-white">
+        <div class="flex h-screen overflow-hidden">
+            <aside class="flex h-screen w-[260px] flex-col border-r border-slate-100 bg-white">
                 <Link :href="route('dashboard')" class="flex items-center gap-3 px-6 py-6" aria-label="Ir para início">
                     <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#14B8A6] text-lg font-bold text-white">
                         K
@@ -280,7 +280,7 @@ const showNewAction = computed(() => props.showNewAction ?? true);
                 </div>
             </aside>
 
-            <div class="flex min-w-0 flex-1 flex-col">
+            <div class="flex h-full min-w-0 flex-1 flex-col">
                 <header class="relative flex items-center justify-between gap-6 border-b border-slate-100 bg-white px-10 py-6">
                     <div class="min-w-0">
                         <div class="text-2xl font-semibold tracking-tight text-slate-900">{{ title }}</div>
@@ -400,7 +400,7 @@ const showNewAction = computed(() => props.showNewAction ?? true);
                     </div>
                 </header>
 
-                <main class="min-w-0 flex-1 px-10 py-8">
+                <main class="min-w-0 flex-1 overflow-y-auto px-10 py-8">
                     <slot />
                 </main>
             </div>
