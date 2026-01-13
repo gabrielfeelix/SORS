@@ -64,7 +64,7 @@ const submit = () => {
 
 const resendCode = () => {
     if (resendActive.value) {
-        showToast('Calma!', `Espera mais ${resendCountdown.value} segundos pra pedir outro.`, 'info');
+        showToast('Calma, respira!', `Espera mais ${resendCountdown.value} segundos pra pedir outro.`, 'info');
         return;
     }
 
@@ -123,6 +123,10 @@ const onCodePaste = (event: ClipboardEvent) => {
     }
 };
 
+const iconTone = computed(() =>
+    step.value === 'code' ? 'bg-amber-50 text-amber-500' : 'bg-emerald-50 text-emerald-500',
+);
+
 watch(
     () => props.status,
     (value) => {
@@ -161,41 +165,38 @@ onBeforeUnmount(() => {
                         <div class="text-lg font-semibold tracking-wide">Kitamo</div>
                     </div>
 
-                    <div class="space-y-5">
-                        <h2 class="text-4xl font-semibold leading-tight">Vai dar ate o fim do mes?</h2>
-                        <p class="max-w-sm text-sm text-white/80">
-                            A gente te mostra. Sem misterio, sem susto no saldo. E so lancar seus gastos e ver se o dinheiro aguenta ate o proximo salario.
+                    <div class="space-y-4">
+                        <h2 class="text-4xl font-semibold leading-tight">Deu branco? Acontece.</h2>
+                        <p class="max-w-sm text-sm text-white/85">
+                            Relaxa, a gente recupera isso num instante. Seus dados continuam blindados e seguros com a gente.
                         </p>
                     </div>
                 </div>
 
                 <div class="relative z-10 mt-10 max-w-md rounded-3xl border border-white/15 bg-white/10 p-6 backdrop-blur">
-                    <div class="flex items-center gap-1 text-amber-300">
-                        <svg v-for="star in 5" :key="star" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.8 6.1 20.5l1.2-6.5-4.8-4.6 6.6-.9L12 2.5Z" />
-                        </svg>
+                    <div class="flex items-center gap-3 text-white">
+                        <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/15">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+                                <path d="M9 12l2 2 4-4" />
+                            </svg>
+                        </span>
+                        <div class="text-sm font-semibold">Dica de Mestre</div>
                     </div>
-                    <p class="mt-4 text-sm italic text-white/90">
-                        "Antes eu ficava na agonia de nao saber se ia sobrar grana. Agora eu sei exatamente quando posso gastar e quando preciso segurar."
+                    <p class="mt-3 text-sm text-white/80">
+                        Evite usar a mesma senha em varios sites. O Kitamo recomenda senhas unicas para proteger seu patrimonio.
                     </p>
-                    <div class="mt-6 flex items-center gap-3">
-                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-sm font-semibold text-white">LM</div>
-                        <div>
-                            <div class="text-xs font-semibold uppercase tracking-wide text-white">Lucas Mendes</div>
-                            <div class="text-[10px] text-white/70">28 anos</div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </template>
 
         <Head title="Esqueceu a senha" />
 
-        <div class="flex flex-1 flex-col justify-center">
-            <div class="relative mx-auto w-full max-w-md">
+        <div class="flex flex-1 flex-col justify-center lg:justify-start lg:pt-8">
+            <div class="relative mx-auto w-full max-w-md lg:mx-0">
                 <div
                     v-if="toast"
-                    class="absolute left-1/2 top-0 z-20 w-[92%] -translate-x-1/2 rounded-2xl bg-slate-900 px-4 py-3 text-white shadow-[0_18px_35px_-25px_rgba(15,23,42,0.9)]"
+                    class="absolute left-1/2 top-0 z-20 w-[92%] -translate-x-1/2 rounded-2xl bg-slate-900 px-4 py-3 text-white shadow-[0_18px_35px_-25px_rgba(15,23,42,0.9)] lg:left-0 lg:translate-x-0"
                 >
                     <div class="flex items-start gap-3">
                         <span
@@ -217,7 +218,16 @@ onBeforeUnmount(() => {
 
                 <Link
                     :href="route('login')"
-                    class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm"
+                    class="hidden items-center gap-2 text-sm font-semibold text-slate-500 lg:inline-flex"
+                >
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                    Voltar pro Login
+                </Link>
+                <Link
+                    :href="route('login')"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm lg:hidden"
                     aria-label="Voltar"
                 >
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -225,15 +235,15 @@ onBeforeUnmount(() => {
                     </svg>
                 </Link>
 
-                <div class="mt-6 text-center">
-                    <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
-                        <svg v-if="step === 'email'" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="mt-6 text-center lg:text-left">
+                    <div class="flex h-14 w-14 items-center justify-center rounded-2xl" :class="iconTone">
+                        <svg v-if="step === 'email'" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="10" cy="14" r="6" />
                             <path d="M14.5 9.5L18 6" />
                             <path d="M18 6h-4" />
                             <path d="M18 6v4" />
                         </svg>
-                        <svg v-else class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg v-else class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M4 6h16v12H4z" />
                             <path d="m22 6-10 7L2 6" />
                         </svg>
@@ -244,17 +254,22 @@ onBeforeUnmount(() => {
                     </h1>
                     <p class="mt-2 text-sm text-slate-500">
                         <span v-if="step === 'email'">
-                            Relaxa, acontece nas melhores familias. Manda teu e-mail ai que a gente resolve.
+                            <span class="lg:hidden">Relaxa, acontece nas melhores familias. Manda teu e-mail ai que a gente resolve.</span>
+                            <span class="hidden lg:inline">Sem stress. Manda teu e-mail cadastrado ai.</span>
                         </span>
                         <span v-else>
-                            Mandamos um codigo de 4 digitos. Digita ele aqui pra gente saber que e voce mesmo.
+                            <span class="lg:hidden">Mandamos um codigo de 4 digitos. Digita ele aqui pra gente saber que e voce mesmo.</span>
+                            <span class="hidden lg:inline">Mandamos um codigo de 4 digitos pra la.</span>
                         </span>
                     </p>
                 </div>
 
                 <form v-if="step === 'email'" class="mt-8 space-y-5" @submit.prevent="submit">
                     <div>
-                        <label for="email" class="text-xs font-semibold text-slate-500">E-mail cadastrado</label>
+                        <label for="email" class="text-xs font-semibold text-slate-500">
+                            <span class="lg:hidden">E-mail cadastrado</span>
+                            <span class="hidden lg:inline">E-mail de acesso</span>
+                        </label>
                         <input
                             id="email"
                             v-model="form.email"
@@ -285,7 +300,7 @@ onBeforeUnmount(() => {
                 </form>
 
                 <div v-else class="mt-8 space-y-6">
-                    <div class="flex items-center justify-center gap-3">
+                    <div class="flex items-center justify-center gap-3 lg:justify-start">
                         <input
                             v-for="(digit, idx) in codeDigits"
                             :key="idx"
@@ -303,17 +318,17 @@ onBeforeUnmount(() => {
                         />
                     </div>
 
-                    <div class="text-center text-sm text-slate-400">
-                        Nao recebeu?
+                    <div class="text-center text-sm text-slate-400 lg:text-left">
+                        Nao chegou?
                         <button
                             type="button"
-                            class="mt-2 block w-full text-sm font-semibold"
+                            class="ml-1 font-semibold"
                             :class="resendActive ? 'text-slate-400' : 'text-emerald-600'"
                             @click="resendCode"
                         >
                             <span v-if="resending">Enviando...</span>
                             <span v-else>
-                                Reenviar codigo<span v-if="resendActive"> ({{ resendCountdown }}s)</span>
+                                Reenviar<span v-if="resendActive"> ({{ resendCountdown }}s)</span>
                             </span>
                         </button>
                     </div>

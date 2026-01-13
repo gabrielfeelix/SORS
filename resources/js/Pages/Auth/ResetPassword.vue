@@ -44,41 +44,47 @@ const submit = () => {
                         <div class="text-lg font-semibold tracking-wide">Kitamo</div>
                     </div>
 
-                    <div class="space-y-5">
-                        <h2 class="text-4xl font-semibold leading-tight">Vai dar ate o fim do mes?</h2>
-                        <p class="max-w-sm text-sm text-white/80">
-                            A gente te mostra. Sem misterio, sem susto no saldo. E so lancar seus gastos e ver se o dinheiro aguenta ate o proximo salario.
+                    <div class="space-y-4">
+                        <h2 class="text-4xl font-semibold leading-tight">Deu branco? Acontece.</h2>
+                        <p class="max-w-sm text-sm text-white/85">
+                            Relaxa, a gente recupera isso num instante. Seus dados continuam blindados e seguros com a gente.
                         </p>
                     </div>
                 </div>
 
                 <div class="relative z-10 mt-10 max-w-md rounded-3xl border border-white/15 bg-white/10 p-6 backdrop-blur">
-                    <div class="flex items-center gap-1 text-amber-300">
-                        <svg v-for="star in 5" :key="star" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.8 6.1 20.5l1.2-6.5-4.8-4.6 6.6-.9L12 2.5Z" />
-                        </svg>
+                    <div class="flex items-center gap-3 text-white">
+                        <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/15">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+                                <path d="M9 12l2 2 4-4" />
+                            </svg>
+                        </span>
+                        <div class="text-sm font-semibold">Dica de Mestre</div>
                     </div>
-                    <p class="mt-4 text-sm italic text-white/90">
-                        "Antes eu ficava na agonia de nao saber se ia sobrar grana. Agora eu sei exatamente quando posso gastar e quando preciso segurar."
+                    <p class="mt-3 text-sm text-white/80">
+                        Evite usar a mesma senha em varios sites. O Kitamo recomenda senhas unicas para proteger seu patrimonio.
                     </p>
-                    <div class="mt-6 flex items-center gap-3">
-                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-sm font-semibold text-white">LM</div>
-                        <div>
-                            <div class="text-xs font-semibold uppercase tracking-wide text-white">Lucas Mendes</div>
-                            <div class="text-[10px] text-white/70">28 anos</div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </template>
 
         <Head title="Nova senha" />
 
-        <div class="flex flex-1 flex-col justify-center">
-            <div class="mx-auto w-full max-w-md">
+        <div class="flex flex-1 flex-col justify-center lg:justify-start lg:pt-8">
+            <div class="mx-auto w-full max-w-md lg:mx-0">
                 <Link
                     :href="route('login')"
-                    class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm"
+                    class="hidden items-center gap-2 text-sm font-semibold text-slate-500 lg:inline-flex"
+                >
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                    Voltar pro Login
+                </Link>
+                <Link
+                    :href="route('login')"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm lg:hidden"
                     aria-label="Voltar"
                 >
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -86,9 +92,9 @@ const submit = () => {
                     </svg>
                 </Link>
 
-                <div class="mt-6 text-center">
-                    <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-purple-50 text-purple-500">
-                        <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="mt-6 text-center lg:text-left">
+                    <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-50 text-purple-500">
+                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="5" y="11" width="14" height="9" rx="2" />
                             <path d="M8 11V7a4 4 0 0 1 8 0v4" />
                         </svg>
@@ -96,7 +102,8 @@ const submit = () => {
 
                     <h1 class="mt-4 text-2xl font-semibold text-slate-900">Agora capricha.</h1>
                     <p class="mt-2 text-sm text-slate-500">
-                        Cria uma senha nova (e segura) pra gente esquecer aquela velha.
+                        <span class="lg:hidden">Cria uma senha nova (e segura) pra gente esquecer aquela velha.</span>
+                        <span class="hidden lg:inline">Cria uma senha nova (e forte) pra gente esquecer a velha.</span>
                     </p>
                 </div>
 
