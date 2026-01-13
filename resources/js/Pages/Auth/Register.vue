@@ -81,10 +81,10 @@ const submit = () => {
                     <p class="mt-2 text-sm text-slate-500">Vem pra familia Kitamo e esquece o sufoco.</p>
                 </div>
 
-                <form class="mt-8 space-y-5" @submit.prevent="submit">
-                    <Link
+                <div class="mt-8">
+                    <a
                         :href="route('auth.google')"
-                        class="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm"
+                        class="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
                     >
                         <span class="flex items-center gap-3">
                             <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50">
@@ -97,13 +97,16 @@ const submit = () => {
                             </span>
                             <span>Cadastrar com Google <span class="text-slate-400">(mais rapido)</span></span>
                         </span>
-                    </Link>
+                    </a>
+                </div>
 
-                    <div class="flex items-center gap-3">
-                        <span class="h-px flex-1 bg-slate-200"></span>
-                        <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">ou usa seu e-mail</span>
-                        <span class="h-px flex-1 bg-slate-200"></span>
-                    </div>
+                <div class="mt-5 flex items-center gap-3">
+                    <span class="h-px flex-1 bg-slate-200"></span>
+                    <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">ou usa seu e-mail</span>
+                    <span class="h-px flex-1 bg-slate-200"></span>
+                </div>
+
+                <form class="mt-5 space-y-5" @submit.prevent="submit">
 
                     <div>
                         <label for="name" class="text-xs font-semibold text-slate-500">Como te chamamos?</label>
