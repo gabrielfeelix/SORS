@@ -59,15 +59,15 @@ const emit = defineEmits<{
                         </svg>
                     </div>
                     <div class="mt-5 text-sm font-semibold text-slate-900">Ler Fatura</div>
-                    <div class="mt-2 text-xs font-semibold text-slate-400">PDF ou foto de fatura de<br />cartão</div>
+                    <div class="mt-2 text-xs font-semibold text-slate-400">PDF (foto em breve) de<br />fatura do cartão</div>
                 </button>
 
                 <button
                     type="button"
-                    class="group rounded-2xl border border-slate-200 bg-white px-6 py-8 text-center hover:border-emerald-200 hover:bg-emerald-50/40"
-                    @click="emit('choose', 'open_finance')"
+                    class="group cursor-not-allowed rounded-2xl border border-slate-200 bg-white px-6 py-8 text-center opacity-50"
+                    disabled
                 >
-                    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-300 group-hover:bg-white">
+                    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M3 10h18" />
                             <path d="M5 10V8l7-5 7 5v2" />
@@ -77,6 +77,7 @@ const emit = defineEmits<{
                     </div>
                     <div class="mt-5 text-sm font-semibold text-slate-900">Open Finance</div>
                     <div class="mt-2 text-xs font-semibold text-slate-400">Conectar conta bancária<br />automaticamente</div>
+                    <div class="mt-4 inline-flex rounded-full bg-slate-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Em breve</div>
                 </button>
             </div>
         </div>

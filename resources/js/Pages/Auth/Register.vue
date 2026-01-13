@@ -77,7 +77,7 @@ const submit = () => {
                     >
                         K
                     </div>
-                    <h1 class="mt-5 text-2xl font-semibold text-[var(--kitamo-ink)] lg:text-3xl">Cria tua conta gratis</h1>
+                    <h1 class="mt-5 text-2xl font-semibold text-[var(--kitamo-ink)] lg:text-3xl">Cria sua conta grátis</h1>
                     <p class="mt-2 text-sm text-slate-500">Vem pra familia Kitamo e esquece o sufoco.</p>
                 </div>
 
@@ -105,7 +105,7 @@ const submit = () => {
 
                     <div class="flex items-center gap-3">
                         <span class="h-px flex-1 bg-slate-200"></span>
-                        <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">ou usa teu e-mail</span>
+                        <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">ou usa seu e-mail</span>
                         <span class="h-px flex-1 bg-slate-200"></span>
                     </div>
 
@@ -125,7 +125,7 @@ const submit = () => {
                     </div>
 
                     <div>
-                        <label for="email" class="text-xs font-semibold text-slate-500">Teu e-mail</label>
+                        <label for="email" class="text-xs font-semibold text-slate-500">Seu e-mail</label>
                         <input
                             id="email"
                             v-model="form.email"
@@ -139,7 +139,7 @@ const submit = () => {
                     </div>
 
                     <div>
-                        <label for="password" class="text-xs font-semibold text-slate-500">Tua senha</label>
+                        <label for="password" class="text-xs font-semibold text-slate-500">Sua senha</label>
                         <div class="relative mt-2">
                             <input
                                 id="password"

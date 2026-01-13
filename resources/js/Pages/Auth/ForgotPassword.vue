@@ -69,7 +69,7 @@ const resendCode = () => {
     }
 
     if (!form.email) {
-        showToast('Ops!', 'Preenche teu e-mail pra reenviar.', 'info');
+        showToast('Ops!', 'Preenche seu e-mail pra reenviar.', 'info');
         return;
     }
 
@@ -78,7 +78,7 @@ const resendCode = () => {
         preserveScroll: true,
         onSuccess: () => {
             step.value = 'code';
-            showToast('Enviado!', 'Codigo novo chegou no teu e-mail.', 'success');
+            showToast('Enviado!', 'Codigo novo chegou no seu e-mail.', 'success');
             startCountdown();
         },
         onFinish: () => {
@@ -250,12 +250,12 @@ onBeforeUnmount(() => {
                     </div>
 
                     <h1 class="mt-4 text-2xl font-semibold text-slate-900">
-                        {{ step === 'email' ? 'Esqueceu a senha?' : 'Checa teu e-mail!' }}
+                        {{ step === 'email' ? 'Esqueceu a senha?' : 'Checa seu e-mail!' }}
                     </h1>
                     <p class="mt-2 text-sm text-slate-500">
                         <span v-if="step === 'email'">
-                            <span class="lg:hidden">Relaxa, acontece nas melhores familias. Manda teu e-mail ai que a gente resolve.</span>
-                            <span class="hidden lg:inline">Sem stress. Manda teu e-mail cadastrado ai.</span>
+                            <span class="lg:hidden">Relaxa, acontece nas melhores familias. Manda seu e-mail ai que a gente resolve.</span>
+                            <span class="hidden lg:inline">Sem stress. Manda seu e-mail cadastrado ai.</span>
                         </span>
                         <span v-else>
                             <span class="lg:hidden">Mandamos um codigo de 4 digitos. Digita ele aqui pra gente saber que e voce mesmo.</span>

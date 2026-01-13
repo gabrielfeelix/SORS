@@ -5,9 +5,10 @@ import MobileShell from '@/Layouts/MobileShell.vue';
 import DesktopShell from '@/Layouts/DesktopShell.vue';
 import TransactionModal, { type TransactionModalPayload } from '@/Components/TransactionModal.vue';
 import DesktopTransactionModal from '@/Components/DesktopTransactionModal.vue';
+import DesktopTransactionDrawer from '@/Components/DesktopTransactionDrawer.vue';
 import MobileToast from '@/Components/MobileToast.vue';
 import { useMediaQuery } from '@/composables/useMediaQuery';
-import { getEntries, getGoals, upsertEntry, type Entry } from '@/stores/localStore';
+import { deleteEntry, getEntries, getGoals, upsertEntry, type Entry } from '@/stores/localStore';
 
 const page = usePage();
 const userName = computed(() => page.props.auth?.user?.name ?? 'Gabriel');
@@ -39,6 +40,16 @@ const saldoAtual = ref(1450);
 const receitas = ref(2500);
 const despesas = ref(1350);
 
+
+const cashflowSeries = [
+    { label: 'Ago', height: 70, amount: 1200, tone: 'bg-[#A7F3D0]', highlight: false },
+    { label: 'Set', height: 110, amount: 1850, tone: 'bg-[#A7F3D0]', highlight: false },
+    { label: 'Out', height: 90, amount: 1500, tone: 'bg-[#A7F3D0]', highlight: false },
+    { label: 'Nov', height: 140, amount: 2300, tone: 'bg-[#34D399]', highlight: false },
+    { label: 'Dez', height: 160, amount: 2600, tone: 'bg-[#14B8A6]', highlight: false },
+    { label: 'Jan', height: 120, amount: 2100, tone: 'bg-[#10B981]', highlight: true },
+];
+
 type UpcomingBill = {
     id: string;
     month: string;
@@ -66,6 +77,9 @@ const refreshDesktopEntries = () => {
     desktopEntries.value = getEntries();
 };
 const desktopGoals = ref(getGoals());
+
+const desktopDrawerOpen = ref(false);
+const desktopSelectedEntry = ref<Entry | null>(null);
 
 const transactionOpen = ref(false);
 const transactionKind = ref<'expense' | 'income' | 'transfer'>('expense');
@@ -119,6 +133,36 @@ const openEntryEdit = (entry: Entry) => {
 
     desktopTransactionInitial.value = initial;
     desktopTransactionOpen.value = true;
+};
+
+const openEntryDetail = (entry: Entry) => {
+    desktopSelectedEntry.value = entry;
+    desktopDrawerOpen.value = true;
+};
+
+const handleDetailEdit = () => {
+    if (!desktopSelectedEntry.value) return;
+    desktopDrawerOpen.value = false;
+    openEntryEdit(desktopSelectedEntry.value);
+};
+
+const handleDetailDelete = () => {
+    if (!desktopSelectedEntry.value) return;
+    deleteEntry(desktopSelectedEntry.value.id);
+    refreshDesktopEntries();
+    desktopDrawerOpen.value = false;
+    showToast('Lançamento excluído');
+};
+
+const handleDetailMarkPaid = () => {
+    if (!desktopSelectedEntry.value) return;
+    if (desktopSelectedEntry.value.kind !== 'expense') return;
+    const nextStatus = desktopSelectedEntry.value.status === 'paid' ? 'pending' : 'paid';
+    const updated = { ...desktopSelectedEntry.value, status: nextStatus };
+    upsertEntry(updated);
+    refreshDesktopEntries();
+    desktopSelectedEntry.value = updated;
+    showToast(nextStatus === 'paid' ? 'Conta marcada como paga' : 'Conta marcada como pendente');
 };
 
 const formatDateLabels = (date: Date) => {
@@ -678,13 +722,14 @@ const toggleBillPaid = (id: string) => {
                     </div>
 
                     <div class="mt-8 flex items-end justify-between gap-4">
-                        <div v-for="(m, idx) in ['Ago', 'Set', 'Out', 'Nov', 'Dez', 'Jan']" :key="m" class="flex-1">
-                            <div
-                                class="mx-auto w-full rounded-t-2xl"
-                                :class="idx < 3 ? 'bg-[#A7F3D0]' : idx === 3 ? 'bg-[#34D399]' : idx === 4 ? 'bg-[#14B8A6]' : 'bg-[#10B981]'"
-                                :style="{ height: `${[70, 110, 90, 140, 160, 120][idx]}px` }"
-                            ></div>
-                            <div class="mt-3 text-center text-xs font-semibold" :class="idx === 5 ? 'text-[#14B8A6]' : 'text-slate-400'">{{ m }}</div>
+                        <div v-for="item in cashflowSeries" :key="item.label" class="group flex-1">
+                            <div class="relative mx-auto w-full">
+                                <div class="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold text-white opacity-0 transition group-hover:opacity-100">
+                                    {{ formatBRL(item.amount) }}
+                                </div>
+                                <div class="mx-auto w-full rounded-t-2xl" :class="item.tone" :style="{ height: `${item.height}px` }"></div>
+                            </div>
+                            <div class="mt-3 text-center text-xs font-semibold" :class="item.highlight ? 'text-[#14B8A6]' : 'text-slate-400'">{{ item.label }}</div>
                         </div>
                     </div>
                 </div>
@@ -709,8 +754,8 @@ const toggleBillPaid = (id: string) => {
                             class="grid cursor-pointer grid-cols-[2fr_1fr_1fr_1fr] gap-4 border-t border-slate-100 px-6 py-5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                             role="button"
                             tabindex="0"
-                            @click="openEntryEdit(row)"
-                            @keydown.enter="openEntryEdit(row)"
+                            @click="openEntryDetail(row)"
+                            @keydown.enter="openEntryDetail(row)"
                         >
                             <div class="flex items-center gap-4">
                                 <span
@@ -817,6 +862,15 @@ const toggleBillPaid = (id: string) => {
         </div>
 
         <DesktopTransactionModal :open="desktopTransactionOpen" :kind="transactionKind" :initial="desktopTransactionInitial" @close="desktopTransactionOpen = false" @save="onTransactionSave" />
+
+        <DesktopTransactionDrawer
+            :open="desktopDrawerOpen"
+            :entry="desktopSelectedEntry"
+            @close="desktopDrawerOpen = false"
+            @edit="handleDetailEdit"
+            @delete="handleDetailDelete"
+            @mark-paid="handleDetailMarkPaid"
+        />
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
     </DesktopShell>
 </template>

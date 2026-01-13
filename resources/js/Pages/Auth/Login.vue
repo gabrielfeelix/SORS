@@ -112,12 +112,12 @@ const submit = () => {
 
                     <div class="flex items-center gap-3">
                         <span class="h-px flex-1 bg-slate-200"></span>
-                        <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">ou usa teu e-mail</span>
+                        <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">ou usa seu e-mail</span>
                         <span class="h-px flex-1 bg-slate-200"></span>
                     </div>
 
                     <div>
-                        <label for="email" class="text-xs font-semibold text-slate-500">Teu e-mail</label>
+                        <label for="email" class="text-xs font-semibold text-slate-500">Seu e-mail</label>
                         <input
                             id="email"
                             v-model="form.email"
@@ -133,7 +133,7 @@ const submit = () => {
 
                     <div>
                         <div class="flex items-center justify-between">
-                            <label for="password" class="text-xs font-semibold text-slate-500">Tua senha</label>
+                            <label for="password" class="text-xs font-semibold text-slate-500">Sua senha</label>
                             <Link
                                 v-if="canResetPassword"
                                 :href="route('password.request')"
@@ -180,11 +180,7 @@ const submit = () => {
                         :disabled="form.processing"
                     >
                         Bora entrar!
-                        <span class="flex items-center gap-2 text-white">
-                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M7 14c3 0 4-2 5-5 1 4 3 6 7 6" />
-                                <path d="M12 9V5" />
-                            </svg>
+                        <span class="flex items-center text-white">
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M5 12h14" />
                                 <path d="M13 5l6 7-6 7" />
@@ -194,7 +190,7 @@ const submit = () => {
                 </form>
 
                 <div class="mt-8 text-center text-sm text-slate-500">
-                    Primeira vez aqui? <Link :href="route('register')" class="font-semibold text-[var(--kitamo-accent)]">Cria tua conta gratis</Link>
+                    Primeira vez aqui? <Link :href="route('register')" class="font-semibold text-[var(--kitamo-accent)]">Cria sua conta grátis</Link>
                 </div>
 
                 <div class="mt-6 flex items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-300">
