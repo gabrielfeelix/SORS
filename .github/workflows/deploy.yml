@@ -11,7 +11,7 @@ jobs:
         with:
           node-version: 20.19.6
       - run: npm ci --legacy-peer-deps
-      - run: npx vite build
+      - run: NODE_OPTIONS=--max-old-space-size=4096 npx vite build
       - name: Deploy
         run: |
           mkdir -p ~/.ssh
