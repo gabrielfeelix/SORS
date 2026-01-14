@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Transaction extends Model
 {
@@ -25,9 +26,15 @@ class Transaction extends Model
         'installment_index',
         'installment_total',
         'is_recurring',
+        'is_parcelado',
+        'parcela_atual',
+        'parcela_total',
         'recurrence_interval',
         'next_run_at',
         'recurrence_end_at',
+        'recorrencia_grupo_id',
+        'parcelamento_grupo_id',
+        'data_pagamento',
         'tags',
     ];
 
@@ -38,10 +45,29 @@ class Transaction extends Model
             'transaction_date' => 'date',
             'priority' => 'boolean',
             'is_recurring' => 'boolean',
+            'is_parcelado' => 'boolean',
+            'parcela_atual' => 'integer',
+            'parcela_total' => 'integer',
             'next_run_at' => 'date',
             'recurrence_end_at' => 'date',
+            'data_pagamento' => 'datetime',
             'tags' => 'array',
         ];
+    }
+
+    public function recorrenciaGrupo(): BelongsTo
+    {
+        return $this->belongsTo(RecorrenciaGrupo::class, 'recorrencia_grupo_id');
+    }
+
+    public function parcelamentoGrupo(): BelongsTo
+    {
+        return $this->belongsTo(ParcelamentoGrupo::class, 'parcelamento_grupo_id');
+    }
+
+    public function tagsRelation(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class, 'transaction_tags', 'transaction_id', 'tag_id');
     }
 
     public function user(): BelongsTo

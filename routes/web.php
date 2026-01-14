@@ -8,6 +8,11 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\GoalController;
 use App\Http\Controllers\GoalDepositController;
+use App\Http\Controllers\DashboardApiController;
+use App\Http\Controllers\TransferenciaController;
+use App\Http\Controllers\TagController;
+use App\Http\Controllers\TransactionTagsController;
+use App\Http\Controllers\TransactionsApiController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -125,6 +130,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
     Route::patch('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
     Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
+    Route::patch('/api/transactions/{transaction}/toggle-pago', [TransactionController::class, 'togglePago'])->name('api.transactions.toggle-pago');
+    Route::get('/api/dashboard/projecao', [DashboardApiController::class, 'projecao'])->name('api.dashboard.projecao');
+    Route::get('/api/dashboard/insights', [DashboardApiController::class, 'insights'])->name('api.dashboard.insights');
+    Route::post('/api/transferencias/preview', [TransferenciaController::class, 'preview'])->name('api.transferencias.preview');
+    Route::post('/api/transferencias', [TransferenciaController::class, 'executar'])->name('api.transferencias.executar');
+    Route::get('/api/transactions', [TransactionsApiController::class, 'index'])->name('api.transactions.index');
+    Route::post('/api/tags', [TagController::class, 'store'])->name('api.tags.store');
+    Route::post('/api/transactions/{transaction}/tags', [TransactionTagsController::class, 'sync'])->name('api.transactions.tags.sync');
 
     Route::post('/goals', [GoalController::class, 'store'])->name('goals.store');
     Route::patch('/goals/{goal}', [GoalController::class, 'update'])->name('goals.update');
