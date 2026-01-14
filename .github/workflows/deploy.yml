@@ -6,10 +6,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 20.19.6
       - run: npm ci --legacy-peer-deps
       - run: npm run build
       - name: Deploy
@@ -20,4 +20,3 @@ jobs:
           rsync -avz -e "ssh -i ~/.ssh/key -p 65002 -o StrictHostKeyChecking=no" \
             --exclude='.git' --exclude='node_modules' \
             ./ u626119115@147.79.84.20
-
