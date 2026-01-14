@@ -93,8 +93,14 @@ function formatBRL(value: number) {
                             <Link
                                 v-if="canRegister"
                                 href="/login"
-                                class="btn-primary px-5 py-2.5 text-sm"
+                                class="btn-primary px-5 py-2.5 text-sm sm:hidden"
                                 >Entrar</Link
+                            >
+                            <Link
+                                v-if="canRegister"
+                                href="/register"
+                                class="btn-primary hidden sm:inline-flex"
+                                >Criar conta grátis</Link
                             >
                         </div>
                     </div>
