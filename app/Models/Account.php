@@ -15,6 +15,7 @@ class Account extends Model
         'user_id',
         'name',
         'type',
+        'moeda',
         'icon',
         'initial_balance',
         'current_balance',

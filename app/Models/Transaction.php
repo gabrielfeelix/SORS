@@ -18,6 +18,7 @@ class Transaction extends Model
         'kind',
         'status',
         'amount',
+        'moeda',
         'description',
         'notes',
         'transaction_date',

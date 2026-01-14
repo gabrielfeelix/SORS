@@ -15,6 +15,11 @@ use App\Http\Controllers\TransactionTagsController;
 use App\Http\Controllers\TransactionsApiController;
 use App\Http\Controllers\UserApiController;
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\NotificationsController;
+use App\Http\Controllers\NotificationPreferencesController;
+use App\Http\Controllers\WidgetController;
+use App\Http\Controllers\MoedasController;
+use App\Http\Controllers\RelatoriosController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -147,6 +152,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/api/backup/list', [BackupController::class, 'list'])->name('api.backup.list');
     Route::post('/api/backup/restore', [BackupController::class, 'restore'])->name('api.backup.restore');
     Route::get('/api/backup/status', [BackupController::class, 'status'])->name('api.backup.status');
+
+    Route::get('/api/notifications', [NotificationsController::class, 'index'])->name('api.notifications.index');
+    Route::patch('/api/notifications/{notification}/marcar-lida', [NotificationsController::class, 'marcarLida'])->name('api.notifications.read');
+    Route::post('/api/notifications/marcar-todas-lidas', [NotificationsController::class, 'marcarTodasLidas'])->name('api.notifications.read-all');
+    Route::delete('/api/notifications/{notification}', [NotificationsController::class, 'destroy'])->name('api.notifications.delete');
+    Route::delete('/api/notifications/limpar-lidas', [NotificationsController::class, 'limparLidas'])->name('api.notifications.clear-read');
+    Route::get('/api/notifications/count-unread', [NotificationsController::class, 'countUnread'])->name('api.notifications.count-unread');
+
+    Route::patch('/api/user/notification-preferences', [NotificationPreferencesController::class, 'update'])->name('api.user.notification-preferences');
+    Route::get('/api/widget/data', [WidgetController::class, 'data'])->name('api.widget.data');
+    Route::get('/api/moedas', [MoedasController::class, 'index'])->name('api.moedas.index');
+    Route::post('/api/moedas/converter', [MoedasController::class, 'converter'])->name('api.moedas.converter');
+    Route::post('/api/relatorios/exportar', [RelatoriosController::class, 'exportar'])->name('api.relatorios.exportar');
 
     Route::post('/goals', [GoalController::class, 'store'])->name('goals.store');
     Route::patch('/goals/{goal}', [GoalController::class, 'update'])->name('goals.update');
