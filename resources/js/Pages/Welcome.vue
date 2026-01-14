@@ -357,19 +357,112 @@ function formatBRL(value: number) {
                         A escolha de quem quer paz financeira
                     </p>
                     <div
-                        class="mt-6 flex flex-wrap items-center justify-center gap-x-12 gap-y-3 text-sm font-extrabold text-slate-300"
+                        class="mx-auto mt-6 grid max-w-sm grid-cols-2 gap-x-10 gap-y-4 text-sm font-extrabold text-slate-300 sm:max-w-none sm:grid-cols-4 sm:justify-items-center"
                     >
                         <span class="inline-flex items-center gap-2">
-                            <span class="text-slate-300">🚀</span> StartupOne
+                            <svg
+                                aria-hidden="true"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="text-slate-300"
+                            >
+                                <path
+                                    d="M4 14c5-1 8-4 9-9 3 3 4 7 3 11l-1 3-3-1c-4-1-7-4-8-8Z"
+                                    fill="currentColor"
+                                    opacity="0.9"
+                                />
+                                <path
+                                    d="M13 5c3 0 6 3 6 6"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+                            StartupOne
                         </span>
                         <span class="inline-flex items-center gap-2">
-                            <span class="text-slate-300">⚡</span> FastMoney
+                            <svg
+                                aria-hidden="true"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="text-slate-300"
+                            >
+                                <path
+                                    d="M13 2 3 14h7l-1 8 12-14h-7l-1-6Z"
+                                    fill="currentColor"
+                                    opacity="0.9"
+                                />
+                            </svg>
+                            FastMoney
                         </span>
                         <span class="inline-flex items-center gap-2">
-                            <span class="text-slate-300">🧱</span> StackFin
+                            <svg
+                                aria-hidden="true"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="text-slate-300"
+                            >
+                                <path
+                                    d="M12 3 2 8l10 5 10-5-10-5Z"
+                                    fill="currentColor"
+                                    opacity="0.9"
+                                />
+                                <path
+                                    d="M2 12l10 5 10-5"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    opacity="0.9"
+                                />
+                                <path
+                                    d="M2 16l10 5 10-5"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    opacity="0.6"
+                                />
+                            </svg>
+                            StackFin
                         </span>
                         <span class="inline-flex items-center gap-2">
-                            <span class="text-slate-300">🌍</span> GlobalBank
+                            <svg
+                                aria-hidden="true"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="text-slate-300"
+                            >
+                                <path
+                                    d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    opacity="0.9"
+                                />
+                                <path
+                                    d="M2 12h20"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    opacity="0.6"
+                                />
+                                <path
+                                    d="M12 2c3 3 4.5 7 4.5 10S15 19 12 22c-3-3-4.5-7-4.5-10S9 5 12 2Z"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    opacity="0.6"
+                                />
+                            </svg>
+                            GlobalBank
                         </span>
                     </div>
                 </div>
@@ -492,15 +585,15 @@ function formatBRL(value: number) {
             </section>
 
             <section class="mx-auto max-w-7xl px-6 pb-24">
-                <div class="text-center">
+                <div class="text-left">
                     <h2
-                        class="text-4xl font-extrabold tracking-tight text-slate-900"
+                        class="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl"
                     >
                         Tudo o que você precisa.<br />
                         <span class="text-teal-500">E um pouco mais.</span>
                     </h2>
                     <p
-                        class="mx-auto mt-4 max-w-2xl text-base font-medium leading-relaxed text-slate-600"
+                        class="mt-4 max-w-2xl text-base font-medium leading-relaxed text-slate-600"
                     >
                         Centralize sua vida financeira e planeje o futuro sem
                         dor de cabeça.
@@ -509,8 +602,44 @@ function formatBRL(value: number) {
 
                 <div class="mt-14 grid gap-6 lg:grid-cols-3">
                     <div
-                        class="card-kitamo overflow-hidden bg-gradient-to-br from-slate-950 to-slate-900 p-10 text-white lg:col-span-1 lg:row-span-2"
+                        class="card-kitamo relative overflow-hidden bg-gradient-to-br from-slate-950 to-slate-900 p-10 text-white lg:col-span-1 lg:row-span-2"
                     >
+                        <div
+                            aria-hidden="true"
+                            class="pointer-events-none absolute -right-10 top-10 hidden h-44 w-44 rounded-full bg-white/10 blur-2xl sm:block"
+                        />
+                        <div
+                            aria-hidden="true"
+                            class="pointer-events-none absolute -right-6 top-8 hidden opacity-60 sm:block"
+                        >
+                            <svg
+                                width="160"
+                                height="160"
+                                viewBox="0 0 160 160"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M64 30c-14 0-26 12-26 26 0 7 3 13 8 18-4 3-7 9-7 15 0 8 4 15 10 19-2 3-3 6-3 10 0 10 8 18 18 18h36c15 0 26-11 26-26 0-10-6-19-14-23 2-3 3-6 3-10 0-10-8-18-18-18h-1c-3-14-16-24-32-24Z"
+                                    fill="white"
+                                    opacity="0.12"
+                                />
+                                <path
+                                    d="M54 66c4-6 13-10 22-10"
+                                    stroke="white"
+                                    stroke-width="6"
+                                    stroke-linecap="round"
+                                    opacity="0.12"
+                                />
+                                <path
+                                    d="M52 96c6-6 16-10 28-10"
+                                    stroke="white"
+                                    stroke-width="6"
+                                    stroke-linecap="round"
+                                    opacity="0.10"
+                                />
+                            </svg>
+                        </div>
                         <div
                             class="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-500/20 text-teal-200"
                         >
@@ -674,7 +803,7 @@ function formatBRL(value: number) {
             </section>
 
             <section id="quem-usa" class="mx-auto max-w-7xl px-6 py-24">
-                <div class="flex items-end justify-between gap-6">
+                <div class="flex items-start justify-between gap-6 sm:items-center">
                     <div>
                         <h2
                             class="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl"
@@ -689,7 +818,7 @@ function formatBRL(value: number) {
                         </p>
                     </div>
 
-                    <div class="hidden items-center gap-3 sm:flex">
+                    <div class="flex items-center gap-3">
                         <button
                             type="button"
                             class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm"
