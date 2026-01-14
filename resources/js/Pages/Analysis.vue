@@ -183,6 +183,12 @@ const showToast = (message: string) => {
     toastOpen.value = true;
 };
 
+const exportTransactions = (format: 'pdf' | 'excel' | 'csv') => {
+    const targetFormat = format === 'excel' ? 'excel' : 'csv';
+    const url = route('exports.transactions', { format: targetFormat });
+    window.location.href = url;
+};
+
 const onTransactionSave = async (payload: TransactionModalPayload) => {
     if (payload.kind === 'transfer') {
         showToast('Transferência realizada');
@@ -430,7 +436,7 @@ const onTransactionSave = async (payload: TransactionModalPayload) => {
         <ExportReportModal
             :open="exportOpen"
             @close="exportOpen = false"
-            @exported="({ channel }) => showToast(channel === 'download' ? 'Relatório baixado' : 'Relatório enviado por email')"
+            @exported="({ channel, format }) => { if (channel === 'download') exportTransactions(format); showToast(channel === 'download' ? 'Relatório baixado' : 'Relatório enviado por email'); }"
         />
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
     </MobileShell>
@@ -860,7 +866,7 @@ const onTransactionSave = async (payload: TransactionModalPayload) => {
         <DesktopExportReportModal
             :open="desktopExportOpen"
             @close="desktopExportOpen = false"
-            @exported="({ channel }) => { desktopExportOpen = false; showToast(channel === 'download' ? 'Relatório baixado' : 'Relatório enviado por email'); }"
+            @exported="({ channel, format }) => { desktopExportOpen = false; if (channel === 'download') exportTransactions(format); showToast(channel === 'download' ? 'Relatório baixado' : 'Relatório enviado por email'); }"
         />
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
     </DesktopShell>

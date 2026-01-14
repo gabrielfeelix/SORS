@@ -5,6 +5,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\GoalController;
 use App\Http\Controllers\GoalDepositController;
 use Illuminate\Foundation\Application;
@@ -117,6 +118,7 @@ Route::get('/accounts/nubank-card', function () {
 })->middleware(['auth', 'verified'])->name('accounts.card');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/exports/transactions', [ExportController::class, 'transactions'])->name('exports.transactions');
     Route::post('/accounts', [AccountController::class, 'store'])->name('accounts.store');
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
 
