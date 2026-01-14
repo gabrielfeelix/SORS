@@ -429,7 +429,7 @@ const openBillDetails = (id: string) => {
             <div class="flex items-center gap-2">
                 <Link
                     :href="route('settings.notifications')"
-                    class="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50"
+                    class="flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-600 shadow-sm ring-1 ring-slate-200/60 hover:bg-slate-50"
                     aria-label="Notificações"
                 >
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
