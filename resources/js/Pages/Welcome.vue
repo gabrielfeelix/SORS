@@ -21,6 +21,65 @@ const prices = computed(() => {
     };
 });
 
+type Testimonial = {
+    quote: string;
+    name: string;
+    role: string;
+    initials: string;
+    avatarClass: string;
+};
+
+const testimonials: Testimonial[] = [
+    {
+        quote: '“Cara, eu sempre terminava o mês no vermelho. Com o Kitamo eu vi que gastava R$ 400 só em café e Uber. Ajustei isso e sobrou pra investir.”',
+        name: 'LUCAS MENDES',
+        role: 'Designer',
+        initials: 'LM',
+        avatarClass: 'bg-slate-200 text-slate-700',
+    },
+    {
+        quote: '“Interface limpa, direto ao ponto. O modo escuro é lindo e a função de recuperação de senha foi a mais rápida que já vi. Recomendo!”',
+        name: 'SARAH F.',
+        role: 'Dev Front-end',
+        initials: 'SF',
+        avatarClass: 'bg-rose-200 text-rose-900',
+    },
+    {
+        quote: '“Eu achava que tava tudo sob controle… até ver o gráfico. Em 10 minutos eu já tinha cortado três gastos invisíveis.”',
+        name: 'MATEUS R.',
+        role: 'Analista',
+        initials: 'MR',
+        avatarClass: 'bg-indigo-200 text-indigo-900',
+    },
+    {
+        quote: '“As metas são viciantes. Ver a barra enchendo dá vontade de guardar mais. Parece bobo, mas funciona.”',
+        name: 'ANA P.',
+        role: 'Autônoma',
+        initials: 'AP',
+        avatarClass: 'bg-emerald-200 text-emerald-900',
+    },
+];
+
+const testimonialIndex = ref(0);
+const visibleTestimonials = computed(() => {
+    const count = Math.min(2, testimonials.length);
+    return Array.from({ length: count }, (_, i) => {
+        const index = (testimonialIndex.value + i) % testimonials.length;
+        return testimonials[index];
+    });
+});
+
+function nextTestimonials() {
+    if (testimonials.length <= 2) return;
+    testimonialIndex.value = (testimonialIndex.value + 2) % testimonials.length;
+}
+
+function prevTestimonials() {
+    if (testimonials.length <= 2) return;
+    testimonialIndex.value =
+        (testimonialIndex.value - 2 + testimonials.length) % testimonials.length;
+}
+
 function formatBRL(value: number) {
     if (value === 0) return 'R$ 0';
     return new Intl.NumberFormat('pt-BR', {
@@ -929,6 +988,8 @@ function formatBRL(value: number) {
                         <button
                             type="button"
                             class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm"
+                            :disabled="testimonials.length <= 2"
+                            @click="prevTestimonials"
                         >
                             <span class="sr-only">Anterior</span>
                             <svg
@@ -950,6 +1011,8 @@ function formatBRL(value: number) {
                         <button
                             type="button"
                             class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white shadow-sm"
+                            :disabled="testimonials.length <= 2"
+                            @click="nextTestimonials"
                         >
                             <span class="sr-only">Próximo</span>
                             <svg
@@ -972,7 +1035,11 @@ function formatBRL(value: number) {
                 </div>
 
                 <div class="mt-12 grid gap-6 lg:grid-cols-2">
-                    <div class="card-kitamo p-10">
+                    <div
+                        v-for="testimonial in visibleTestimonials"
+                        :key="testimonial.name"
+                        class="card-kitamo p-10"
+                    >
                         <div class="flex items-center gap-1 text-amber-400">
                             <span>★</span><span>★</span><span>★</span
                             ><span>★</span><span>★</span>
@@ -980,55 +1047,21 @@ function formatBRL(value: number) {
                         <p
                             class="mt-6 text-lg font-medium italic leading-relaxed text-slate-900"
                         >
-                            “Cara, eu sempre terminava o mês no vermelho. Com o
-                            Kitamo eu vi que gastava R$ 400 só em café e Uber.
-                            Ajustei isso e sobrou pra investir.”
+                            {{ testimonial.quote }}
                         </p>
                         <div class="mt-8 flex items-center gap-4">
                             <div
-                                class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-200 text-sm font-extrabold text-slate-700"
+                                class="flex h-12 w-12 items-center justify-center rounded-full text-sm font-extrabold"
+                                :class="testimonial.avatarClass"
                             >
-                                LM
+                                {{ testimonial.initials }}
                             </div>
                             <div>
-                                <div
-                                    class="text-sm font-extrabold text-slate-900"
-                                >
-                                    LUCAS MENDES
+                                <div class="text-sm font-extrabold text-slate-900">
+                                    {{ testimonial.name }}
                                 </div>
                                 <div class="text-sm font-medium text-slate-500">
-                                    Designer
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-kitamo p-10">
-                        <div class="flex items-center gap-1 text-amber-400">
-                            <span>★</span><span>★</span><span>★</span
-                            ><span>★</span><span>★</span>
-                        </div>
-                        <p
-                            class="mt-6 text-lg font-medium italic leading-relaxed text-slate-900"
-                        >
-                            “Interface limpa, direto ao ponto. O modo escuro é
-                            lindo e a função de recuperação de senha foi a mais
-                            rápida que já vi. Recomendo!”
-                        </p>
-                        <div class="mt-8 flex items-center gap-4">
-                            <div
-                                class="flex h-12 w-12 items-center justify-center rounded-full bg-rose-200 text-sm font-extrabold text-rose-900"
-                            >
-                                SF
-                            </div>
-                            <div>
-                                <div
-                                    class="text-sm font-extrabold text-slate-900"
-                                >
-                                    SARAH F.
-                                </div>
-                                <div class="text-sm font-medium text-slate-500">
-                                    Dev Front-end
+                                    {{ testimonial.role }}
                                 </div>
                             </div>
                         </div>
