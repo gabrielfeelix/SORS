@@ -356,114 +356,236 @@ function formatBRL(value: number) {
                     >
                         A escolha de quem quer paz financeira
                     </p>
-                    <div
-                        class="mx-auto mt-6 grid max-w-sm grid-cols-2 gap-x-10 gap-y-4 text-sm font-extrabold text-slate-300 sm:max-w-none sm:grid-cols-4 sm:justify-items-center"
-                    >
-                        <span class="inline-flex items-center gap-2">
-                            <svg
-                                aria-hidden="true"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="text-slate-300"
-                            >
-                                <path
-                                    d="M4 14c5-1 8-4 9-9 3 3 4 7 3 11l-1 3-3-1c-4-1-7-4-8-8Z"
-                                    fill="currentColor"
-                                    opacity="0.9"
-                                />
-                                <path
-                                    d="M13 5c3 0 6 3 6 6"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                />
-                            </svg>
-                            StartupOne
-                        </span>
-                        <span class="inline-flex items-center gap-2">
-                            <svg
-                                aria-hidden="true"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="text-slate-300"
-                            >
-                                <path
-                                    d="M13 2 3 14h7l-1 8 12-14h-7l-1-6Z"
-                                    fill="currentColor"
-                                    opacity="0.9"
-                                />
-                            </svg>
-                            FastMoney
-                        </span>
-                        <span class="inline-flex items-center gap-2">
-                            <svg
-                                aria-hidden="true"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="text-slate-300"
-                            >
-                                <path
-                                    d="M12 3 2 8l10 5 10-5-10-5Z"
-                                    fill="currentColor"
-                                    opacity="0.9"
-                                />
-                                <path
-                                    d="M2 12l10 5 10-5"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    opacity="0.9"
-                                />
-                                <path
-                                    d="M2 16l10 5 10-5"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    opacity="0.6"
-                                />
-                            </svg>
-                            StackFin
-                        </span>
-                        <span class="inline-flex items-center gap-2">
-                            <svg
-                                aria-hidden="true"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="text-slate-300"
-                            >
-                                <path
-                                    d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    opacity="0.9"
-                                />
-                                <path
-                                    d="M2 12h20"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    opacity="0.6"
-                                />
-                                <path
-                                    d="M12 2c3 3 4.5 7 4.5 10S15 19 12 22c-3-3-4.5-7-4.5-10S9 5 12 2Z"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    opacity="0.6"
-                                />
-                            </svg>
-                            GlobalBank
-                        </span>
+                    <div class="logo-marquee mt-6">
+                        <div class="logo-track">
+                            <div class="logo-item">
+                                <span class="inline-flex items-center gap-2">
+                                    <svg
+                                        aria-hidden="true"
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="text-slate-400"
+                                    >
+                                        <path
+                                            d="M4 14c5-1 8-4 9-9 3 3 4 7 3 11l-1 3-3-1c-4-1-7-4-8-8Z"
+                                            fill="currentColor"
+                                            opacity="0.9"
+                                        />
+                                        <path
+                                            d="M13 5c3 0 6 3 6 6"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                        />
+                                    </svg>
+                                    StartupOne
+                                </span>
+                            </div>
+                            <div class="logo-item">
+                                <span class="inline-flex items-center gap-2">
+                                    <svg
+                                        aria-hidden="true"
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="text-slate-400"
+                                    >
+                                        <path
+                                            d="M13 2 3 14h7l-1 8 12-14h-7l-1-6Z"
+                                            fill="currentColor"
+                                            opacity="0.9"
+                                        />
+                                    </svg>
+                                    FastMoney
+                                </span>
+                            </div>
+                            <div class="logo-item">
+                                <span class="inline-flex items-center gap-2">
+                                    <svg
+                                        aria-hidden="true"
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="text-slate-400"
+                                    >
+                                        <path
+                                            d="M12 3 2 8l10 5 10-5-10-5Z"
+                                            fill="currentColor"
+                                            opacity="0.9"
+                                        />
+                                        <path
+                                            d="M2 12l10 5 10-5"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            opacity="0.9"
+                                        />
+                                        <path
+                                            d="M2 16l10 5 10-5"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            opacity="0.6"
+                                        />
+                                    </svg>
+                                    StackFin
+                                </span>
+                            </div>
+                            <div class="logo-item">
+                                <span class="inline-flex items-center gap-2">
+                                    <svg
+                                        aria-hidden="true"
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="text-slate-400"
+                                    >
+                                        <path
+                                            d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            opacity="0.9"
+                                        />
+                                        <path
+                                            d="M2 12h20"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            opacity="0.6"
+                                        />
+                                        <path
+                                            d="M12 2c3 3 4.5 7 4.5 10S15 19 12 22c-3-3-4.5-7-4.5-10S9 5 12 2Z"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            opacity="0.6"
+                                        />
+                                    </svg>
+                                    GlobalBank
+                                </span>
+                            </div>
+
+                            <div class="logo-item" aria-hidden="true">
+                                <span class="inline-flex items-center gap-2">
+                                    <svg
+                                        aria-hidden="true"
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="text-slate-400"
+                                    >
+                                        <path
+                                            d="M4 14c5-1 8-4 9-9 3 3 4 7 3 11l-1 3-3-1c-4-1-7-4-8-8Z"
+                                            fill="currentColor"
+                                            opacity="0.9"
+                                        />
+                                        <path
+                                            d="M13 5c3 0 6 3 6 6"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                        />
+                                    </svg>
+                                    StartupOne
+                                </span>
+                            </div>
+                            <div class="logo-item" aria-hidden="true">
+                                <span class="inline-flex items-center gap-2">
+                                    <svg
+                                        aria-hidden="true"
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="text-slate-400"
+                                    >
+                                        <path
+                                            d="M13 2 3 14h7l-1 8 12-14h-7l-1-6Z"
+                                            fill="currentColor"
+                                            opacity="0.9"
+                                        />
+                                    </svg>
+                                    FastMoney
+                                </span>
+                            </div>
+                            <div class="logo-item" aria-hidden="true">
+                                <span class="inline-flex items-center gap-2">
+                                    <svg
+                                        aria-hidden="true"
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="text-slate-400"
+                                    >
+                                        <path
+                                            d="M12 3 2 8l10 5 10-5-10-5Z"
+                                            fill="currentColor"
+                                            opacity="0.9"
+                                        />
+                                        <path
+                                            d="M2 12l10 5 10-5"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            opacity="0.9"
+                                        />
+                                        <path
+                                            d="M2 16l10 5 10-5"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            opacity="0.6"
+                                        />
+                                    </svg>
+                                    StackFin
+                                </span>
+                            </div>
+                            <div class="logo-item" aria-hidden="true">
+                                <span class="inline-flex items-center gap-2">
+                                    <svg
+                                        aria-hidden="true"
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="text-slate-400"
+                                    >
+                                        <path
+                                            d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            opacity="0.9"
+                                        />
+                                        <path
+                                            d="M2 12h20"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            opacity="0.6"
+                                        />
+                                        <path
+                                            d="M12 2c3 3 4.5 7 4.5 10S15 19 12 22c-3-3-4.5-7-4.5-10S9 5 12 2Z"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            opacity="0.6"
+                                        />
+                                    </svg>
+                                    GlobalBank
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
