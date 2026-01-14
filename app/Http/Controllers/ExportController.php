@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExportController extends Controller
 {
-    public function transactions(Request $request): Response
+    public function transactions(Request $request): Response|StreamedResponse
     {
         $user = $request->user();
 
@@ -86,4 +87,3 @@ class ExportController extends Controller
         ]);
     }
 }
-
