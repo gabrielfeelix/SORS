@@ -14,6 +14,28 @@ const bootstrap = computed(
 );
 const entries = computed(() => bootstrap.value.entries ?? []);
 
+const normalizedQuery = computed(() => query.value.trim().toLowerCase());
+const results = computed(() => {
+    const term = normalizedQuery.value;
+    if (!term) return [];
+    return entries.value
+        .filter((entry) => {
+            const haystack = [
+                entry.title,
+                entry.subtitle,
+                entry.categoryLabel,
+                entry.accountLabel,
+                entry.dateLabel,
+                entry.dayLabel,
+            ]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+            return haystack.includes(term);
+        })
+        .slice(0, 30);
+});
+
 const recent = computed(() => {
     const seen = new Set();
     const result = [];
@@ -78,6 +100,49 @@ const recent = computed(() => {
             <div v-else class="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center">
                 <div class="text-sm font-semibold text-slate-900">Sem buscas recentes</div>
                 <div class="mt-1 text-xs text-slate-500">Suas buscas vão aparecer aqui.</div>
+            </div>
+        </div>
+
+        <div class="mt-8">
+            <div class="flex items-center justify-between">
+                <div class="text-sm font-bold text-slate-900">Resultados</div>
+                <div class="text-xs font-semibold text-slate-400">{{ results.length }}</div>
+            </div>
+
+            <div v-if="!normalizedQuery" class="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center">
+                <div class="text-sm font-semibold text-slate-900">Digite para buscar</div>
+                <div class="mt-1 text-xs text-slate-500">Nome, categoria, conta ou data.</div>
+            </div>
+
+            <div v-else-if="results.length === 0" class="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center">
+                <div class="text-sm font-semibold text-slate-900">Nada encontrado</div>
+                <div class="mt-1 text-xs text-slate-500">Tente outro termo.</div>
+            </div>
+
+            <div v-else class="mt-4 space-y-3">
+                <Link
+                    v-for="entry in results"
+                    :key="entry.id"
+                    :href="`${route('accounts.index')}?open=${encodeURIComponent(entry.id)}`"
+                    class="flex items-center justify-between gap-4 rounded-2xl bg-white px-4 py-4 shadow-sm ring-1 ring-slate-200/60"
+                >
+                    <div class="min-w-0 flex-1">
+                        <div class="truncate text-sm font-semibold text-slate-900">{{ entry.title }}</div>
+                        <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-slate-400">
+                            <span>{{ entry.categoryLabel }}</span>
+                            <span class="text-slate-200">•</span>
+                            <span>{{ entry.accountLabel }}</span>
+                            <span class="text-slate-200">•</span>
+                            <span>{{ entry.dayLabel }}</span>
+                        </div>
+                    </div>
+                    <div class="shrink-0 text-right">
+                        <div class="text-sm font-semibold" :class="entry.kind === 'income' ? 'text-emerald-600' : 'text-red-500'">
+                            {{ entry.kind === 'income' ? '+' : '-' }} R$ {{ entry.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                        </div>
+                        <div class="mt-1 text-[10px] font-semibold uppercase tracking-wide text-slate-300">Detalhes</div>
+                    </div>
+                </Link>
             </div>
         </div>
     </MobileShell>

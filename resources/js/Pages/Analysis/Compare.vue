@@ -90,6 +90,27 @@ const categories = computed(() => {
 
 const maxCategory = computed(() => Math.max(...categories.value.flatMap((c) => [c.a, c.b]), 1));
 
+type Insight = {
+    key: string;
+    label: string;
+    kind: 'up' | 'down' | 'flat';
+    pct: number;
+    abs: number;
+};
+
+const insights = computed<Insight[]>(() => {
+    const items = categories.value
+        .map((c) => {
+            const abs = c.a - c.b;
+            const pct = c.b > 0 ? Math.round((abs / c.b) * 1000) / 10 : c.a > 0 ? 100 : 0;
+            const kind: Insight['kind'] = abs > 0 ? 'up' : abs < 0 ? 'down' : 'flat';
+            return { key: c.key, label: c.label, kind, pct, abs };
+        })
+        .filter((i) => Math.abs(i.abs) > 0.01 || i.pct !== 0);
+
+    return items.sort((a, b) => Math.abs(b.abs) - Math.abs(a.abs)).slice(0, 3);
+});
+
 const formatMoney = (value: number) =>
     new Intl.NumberFormat('pt-BR', {
         style: 'currency',
@@ -213,7 +234,7 @@ const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <div class="text-sm font-semibold text-slate-900">Você gastou {{ diffPct }}% a mais em Janeiro</div>
+                    <div class="text-sm font-semibold text-slate-900">Você gastou {{ diffPct }}% a mais em {{ left.month }}</div>
                     <div class="mt-1 text-sm font-semibold text-amber-700">
                         {{ diffAbs >= 0 ? '+' : '-' }}{{ formatMoney(Math.abs(diffAbs)).replace('R$', 'R$') }} de aumento
                     </div>
@@ -252,34 +273,67 @@ const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
         <div class="mt-7 pb-6">
             <div class="text-base font-semibold text-slate-900">Insights</div>
             <div class="mt-3 space-y-3">
-                <div class="flex items-center justify-between rounded-2xl bg-red-50 px-4 py-4 text-sm font-semibold text-red-500 ring-1 ring-red-100">
+                <div
+                    v-for="insight in insights"
+                    :key="insight.key"
+                    class="flex items-center justify-between rounded-2xl px-4 py-4 text-sm font-semibold ring-1"
+                    :class="
+                        insight.kind === 'up'
+                            ? 'bg-red-50 text-red-500 ring-red-100'
+                            : insight.kind === 'down'
+                              ? 'bg-emerald-50 text-emerald-600 ring-emerald-100'
+                              : 'bg-slate-50 text-slate-600 ring-slate-100'
+                    "
+                >
                     <div class="flex items-center gap-2">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg
+                            v-if="insight.kind === 'up'"
+                            class="h-5 w-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
                             <path d="M12 19V5" />
                             <path d="M5 12l7-7 7 7" />
                         </svg>
-                        Alimentação: +11%
-                    </div>
-                    <div>R$ 50 a mais</div>
-                </div>
-                <div class="flex items-center justify-between rounded-2xl bg-red-50 px-4 py-4 text-sm font-semibold text-red-500 ring-1 ring-red-100">
-                    <div class="flex items-center gap-2">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 19V5" />
-                            <path d="M5 12l7-7 7 7" />
+                        <svg
+                            v-else-if="insight.kind === 'down'"
+                            class="h-5 w-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path d="M12 5v14" />
+                            <path d="M19 12l-7 7-7-7" />
                         </svg>
-                        Transporte: +15%
-                    </div>
-                    <div>R$ 20 a mais</div>
-                </div>
-                <div class="flex items-center justify-between rounded-2xl bg-emerald-50 px-4 py-4 text-sm font-semibold text-emerald-600 ring-1 ring-emerald-100">
-                    <div class="flex items-center gap-2">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 6 9 17l-5-5" />
+                        <svg
+                            v-else
+                            class="h-5 w-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path d="M5 12h14" />
                         </svg>
-                        Moradia: Sem variação
+                        <span>
+                            {{ insight.label }}:
+                            {{
+                                insight.kind === 'flat'
+                                    ? 'Sem variação'
+                                    : `${insight.abs > 0 ? '+' : '-'}${Math.abs(insight.pct)}%`
+                            }}
+                        </span>
                     </div>
-                    <div></div>
+                    <div v-if="insight.kind !== 'flat'">
+                        {{ insight.abs > 0 ? '+' : '-' }}{{ formatMoney(Math.abs(insight.abs)).replace('R$', 'R$') }}
+                    </div>
+                </div>
+
+                <div v-if="insights.length === 0" class="rounded-2xl bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-500 ring-1 ring-slate-100">
+                    Sem insights suficientes para este período.
                 </div>
             </div>
         </div>
