@@ -4,16 +4,77 @@
 
 @layer base {
     :root {
-        --kitamo-primary: 52 152 219;
-        --kitamo-success: 39 174 96;
-        --kitamo-danger: 231 76 60;
-        --kitamo-neutral: 149 165 166;
-        --kitamo-ink: 17 24 39;
-        --kitamo-surface: 245 247 251;
+        --kitamo-brand: 20 184 166; /* #14B8A6 */
+        --kitamo-brand-dark: 15 118 110; /* #0F766E */
+        --kitamo-brand-light: 153 246 228; /* #99F6E4 */
+
+        --kitamo-success: 16 185 129; /* #10B981 */
+        --kitamo-warning: 245 158 11; /* #F59E0B */
+        --kitamo-danger: 239 68 68; /* #EF4444 */
+
+        --kitamo-ink: 15 23 42; /* #0F172A */
+        --kitamo-body: 71 85 105; /* #475569 */
+        --kitamo-surface: 255 255 255; /* #FFFFFF */
+        --kitamo-bg: 248 250 252; /* #F8FAFC */
     }
 
     body {
-        background-color: rgb(var(--kitamo-surface));
+        background-color: rgb(var(--kitamo-bg));
         color: rgb(var(--kitamo-ink));
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+@layer components {
+    .glass-nav {
+        @apply bg-white/90 backdrop-blur border-b border-black/5;
+    }
+
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-teal-500 px-6 py-3 font-bold text-white shadow-[0_10px_15px_-3px_rgba(20,184,166,0.30)] transition active:scale-95 hover:bg-teal-700;
+    }
+
+    .btn-outline {
+        @apply inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-white/70 px-6 py-3 font-bold text-slate-700 transition active:scale-95 hover:bg-white;
+    }
+
+    .card-kitamo {
+        @apply rounded-[32px] border border-slate-100 bg-white shadow-sm transition;
+    }
+
+    .card-kitamo-hover {
+        @apply hover:-translate-y-1 hover:border-teal-500 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.10)];
+    }
+
+    .mockup-phone {
+        @apply relative mx-auto aspect-[9/18] w-[320px] rounded-[44px] border-[10px] border-slate-900 bg-white shadow-[0_25px_80px_-20px_rgba(0,0,0,0.25)];
+        transform: rotate(8deg);
+    }
+
+    .mockup-phone::before {
+        content: '';
+        @apply absolute left-1/2 top-2 z-10 h-6 w-32 -translate-x-1/2 rounded-b-2xl bg-slate-900;
+    }
+
+    .floaty {
+        animation: kitamo-float 6s ease-in-out infinite;
+    }
+
+    .blob {
+        @apply absolute rounded-full opacity-60 blur-[80px];
+        transform: translateZ(0);
+    }
+}
+
+@keyframes kitamo-float {
+    0%,
+    100% {
+        transform: translateY(0) rotate(8deg);
+    }
+    50% {
+        transform: translateY(-20px) rotate(8deg);
     }
 }
