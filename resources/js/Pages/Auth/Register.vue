@@ -84,19 +84,17 @@ const submit = () => {
                 <div class="mt-8">
                     <a
                         href="/auth/google"
-                        class="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
+                        class="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200"
                     >
-                        <span class="flex items-center gap-3">
-                            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50">
-                                <svg class="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">
-                                    <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3c-1.7 4.7-6.2 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C33.9 6.1 29.2 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c10 0 19-7.3 19-20 0-1.3-.1-2.6-.4-3.9z"/>
-                                    <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 12 24 12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C33.9 6.1 29.2 4 24 4c-7.7 0-14.3 4.3-17.7 10.7z"/>
-                                    <path fill="#4CAF50" d="M24 44c5 0 9.7-1.9 13.1-4.9l-6.1-5c-2 1.4-4.4 2.1-7 2.1-5.1 0-9.4-3.3-11-7.9l-6.5 5C9.8 39.7 16.4 44 24 44z"/>
-                                    <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.4 5.5l6.1 5C39.2 35.5 43 30.3 43 24c0-1.3-.1-2.6-.4-3.9z"/>
-                                </svg>
-                            </span>
-                            <span>Cadastrar com Google <span class="text-slate-400">(mais rapido)</span></span>
+                        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50">
+                            <svg class="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">
+                                <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3c-1.7 4.7-6.2 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C33.9 6.1 29.2 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c10 0 19-7.3 19-20 0-1.3-.1-2.6-.4-3.9z"/>
+                                <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 12 24 12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C33.9 6.1 29.2 4 24 4c-7.7 0-14.3 4.3-17.7 10.7z"/>
+                                <path fill="#4CAF50" d="M24 44c5 0 9.7-1.9 13.1-4.9l-6.1-5c-2 1.4-4.4 2.1-7 2.1-5.1 0-9.4-3.3-11-7.9l-6.5 5C9.8 39.7 16.4 44 24 44z"/>
+                                <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.4 5.5l6.1 5C39.2 35.5 43 30.3 43 24c0-1.3-.1-2.6-.4-3.9z"/>
+                            </svg>
                         </span>
+                        <span>Continuar com Google</span>
                     </a>
                 </div>
 
