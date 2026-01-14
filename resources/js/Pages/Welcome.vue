@@ -111,9 +111,7 @@ function formatBRL(value: number) {
         <main>
             <section class="mx-auto max-w-7xl px-6 py-20 md:py-28">
                 <div class="grid items-center gap-14 lg:grid-cols-2">
-                    <div
-                        class="rounded-[32px] border border-white/70 bg-gradient-to-br from-teal-100 via-teal-50 to-sky-100 px-7 py-10 shadow-sm sm:p-10 lg:px-12 lg:py-14"
-                    >
+                    <div>
                         <div
                             class="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/70 px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-600 shadow-sm"
                         >
@@ -124,7 +122,7 @@ function formatBRL(value: number) {
                         </div>
 
                         <h1
-                            class="mt-7 text-[44px] font-extrabold leading-[1.05] tracking-tight text-slate-900 sm:text-5xl lg:text-6xl"
+                            class="mt-6 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl"
                         >
                             O fim do mês não<br />
                             precisa ser um<br />
@@ -132,18 +130,15 @@ function formatBRL(value: number) {
                         </h1>
 
                         <p
-                            class="mt-6 max-w-xl text-[15px] font-medium leading-relaxed text-slate-600"
+                            class="mt-6 max-w-xl text-base font-medium leading-relaxed text-slate-600"
                         >
                             Chega de suar frio no dia 20. O Kitamo organiza tua
                             grana, te avisa antes do boleto vencer e ainda te
                             mostra se vai sobrar pro churrasco.
                         </p>
 
-                        <div class="mt-10 flex flex-col gap-4 sm:flex-row">
-                            <Link
-                                href="/register"
-                                class="btn-primary w-full justify-center py-4 sm:w-auto"
-                            >
+                        <div class="mt-10 flex flex-wrap gap-4">
+                            <Link href="/register" class="btn-primary">
                                 <span
                                     class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-white/15"
                                 >
@@ -163,10 +158,7 @@ function formatBRL(value: number) {
                                 </span>
                                 Cadastrar com Google
                             </Link>
-                            <a
-                                href="#vantagens"
-                                class="btn-outline w-full justify-center py-4 sm:w-auto"
-                            >
+                            <a href="#vantagens" class="btn-outline">
                                 <span
                                     class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100"
                                 >
@@ -189,7 +181,7 @@ function formatBRL(value: number) {
                         </div>
 
                         <div
-                            class="mt-8 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-400/80"
+                            class="mt-6 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400"
                         >
                             <svg
                                 width="14"
@@ -364,8 +356,8 @@ function formatBRL(value: number) {
                     </p>
                     <div class="logo-marquee mt-6">
                         <div class="logo-track">
-                            <div class="logo-item">
-                                <span class="inline-flex items-center gap-2">
+                            <div class="logo-group">
+                                <span class="logo-pill">
                                     <svg
                                         aria-hidden="true"
                                         width="18"
@@ -373,7 +365,7 @@ function formatBRL(value: number) {
                                         viewBox="0 0 24 24"
                                         fill="none"
                                         xmlns="http://www.w3.org/2000/svg"
-                                        class="text-slate-400"
+                                        class="logo-icon"
                                     >
                                         <path
                                             d="M4 14c5-1 8-4 9-9 3 3 4 7 3 11l-1 3-3-1c-4-1-7-4-8-8Z"
@@ -389,9 +381,7 @@ function formatBRL(value: number) {
                                     </svg>
                                     StartupOne
                                 </span>
-                            </div>
-                            <div class="logo-item">
-                                <span class="inline-flex items-center gap-2">
+                                <span class="logo-pill">
                                     <svg
                                         aria-hidden="true"
                                         width="18"
@@ -399,7 +389,7 @@ function formatBRL(value: number) {
                                         viewBox="0 0 24 24"
                                         fill="none"
                                         xmlns="http://www.w3.org/2000/svg"
-                                        class="text-slate-400"
+                                        class="logo-icon"
                                     >
                                         <path
                                             d="M13 2 3 14h7l-1 8 12-14h-7l-1-6Z"
@@ -409,9 +399,7 @@ function formatBRL(value: number) {
                                     </svg>
                                     FastMoney
                                 </span>
-                            </div>
-                            <div class="logo-item">
-                                <span class="inline-flex items-center gap-2">
+                                <span class="logo-pill">
                                     <svg
                                         aria-hidden="true"
                                         width="18"
@@ -419,7 +407,7 @@ function formatBRL(value: number) {
                                         viewBox="0 0 24 24"
                                         fill="none"
                                         xmlns="http://www.w3.org/2000/svg"
-                                        class="text-slate-400"
+                                        class="logo-icon"
                                     >
                                         <path
                                             d="M12 3 2 8l10 5 10-5-10-5Z"
@@ -443,9 +431,7 @@ function formatBRL(value: number) {
                                     </svg>
                                     StackFin
                                 </span>
-                            </div>
-                            <div class="logo-item">
-                                <span class="inline-flex items-center gap-2">
+                                <span class="logo-pill">
                                     <svg
                                         aria-hidden="true"
                                         width="18"
@@ -453,7 +439,7 @@ function formatBRL(value: number) {
                                         viewBox="0 0 24 24"
                                         fill="none"
                                         xmlns="http://www.w3.org/2000/svg"
-                                        class="text-slate-400"
+                                        class="logo-icon"
                                     >
                                         <path
                                             d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"
@@ -477,9 +463,8 @@ function formatBRL(value: number) {
                                     GlobalBank
                                 </span>
                             </div>
-
-                            <div class="logo-item" aria-hidden="true">
-                                <span class="inline-flex items-center gap-2">
+                            <div class="logo-group" aria-hidden="true">
+                                <span class="logo-pill">
                                     <svg
                                         aria-hidden="true"
                                         width="18"
@@ -487,7 +472,7 @@ function formatBRL(value: number) {
                                         viewBox="0 0 24 24"
                                         fill="none"
                                         xmlns="http://www.w3.org/2000/svg"
-                                        class="text-slate-400"
+                                        class="logo-icon"
                                     >
                                         <path
                                             d="M4 14c5-1 8-4 9-9 3 3 4 7 3 11l-1 3-3-1c-4-1-7-4-8-8Z"
@@ -503,9 +488,7 @@ function formatBRL(value: number) {
                                     </svg>
                                     StartupOne
                                 </span>
-                            </div>
-                            <div class="logo-item" aria-hidden="true">
-                                <span class="inline-flex items-center gap-2">
+                                <span class="logo-pill">
                                     <svg
                                         aria-hidden="true"
                                         width="18"
@@ -513,7 +496,7 @@ function formatBRL(value: number) {
                                         viewBox="0 0 24 24"
                                         fill="none"
                                         xmlns="http://www.w3.org/2000/svg"
-                                        class="text-slate-400"
+                                        class="logo-icon"
                                     >
                                         <path
                                             d="M13 2 3 14h7l-1 8 12-14h-7l-1-6Z"
@@ -523,9 +506,7 @@ function formatBRL(value: number) {
                                     </svg>
                                     FastMoney
                                 </span>
-                            </div>
-                            <div class="logo-item" aria-hidden="true">
-                                <span class="inline-flex items-center gap-2">
+                                <span class="logo-pill">
                                     <svg
                                         aria-hidden="true"
                                         width="18"
@@ -533,7 +514,7 @@ function formatBRL(value: number) {
                                         viewBox="0 0 24 24"
                                         fill="none"
                                         xmlns="http://www.w3.org/2000/svg"
-                                        class="text-slate-400"
+                                        class="logo-icon"
                                     >
                                         <path
                                             d="M12 3 2 8l10 5 10-5-10-5Z"
@@ -557,9 +538,7 @@ function formatBRL(value: number) {
                                     </svg>
                                     StackFin
                                 </span>
-                            </div>
-                            <div class="logo-item" aria-hidden="true">
-                                <span class="inline-flex items-center gap-2">
+                                <span class="logo-pill">
                                     <svg
                                         aria-hidden="true"
                                         width="18"
@@ -567,7 +546,7 @@ function formatBRL(value: number) {
                                         viewBox="0 0 24 24"
                                         fill="none"
                                         xmlns="http://www.w3.org/2000/svg"
-                                        class="text-slate-400"
+                                        class="logo-icon"
                                     >
                                         <path
                                             d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"
