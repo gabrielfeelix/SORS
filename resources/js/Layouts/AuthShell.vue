@@ -6,8 +6,8 @@
         style="--kitamo-accent: #14b8a6; --kitamo-accent-dark: #0f9f8f; --kitamo-ink: #0f172a; --kitamo-soft: #e6faf6;"
     >
         <div class="flex min-h-screen w-full items-stretch lg:p-6">
-            <div class="flex w-full flex-col bg-slate-50 lg:grid lg:grid-cols-[1.1fr_0.9fr] lg:gap-6">
-                <aside class="relative hidden overflow-hidden lg:flex lg:rounded-[36px] lg:bg-slate-950 lg:shadow-[0_35px_80px_-60px_rgba(15,23,42,0.55)]">
+            <div class="flex w-full flex-col bg-slate-50 lg:grid lg:grid-cols-2 lg:gap-6">
+                <aside class="relative hidden overflow-hidden lg:flex lg:rounded-[36px] lg:shadow-[0_35px_80px_-60px_rgba(15,23,42,0.55)]">
                     <div class="flex w-full p-6">
                         <div class="flex w-full overflow-hidden rounded-[28px]">
                             <slot name="aside" />
