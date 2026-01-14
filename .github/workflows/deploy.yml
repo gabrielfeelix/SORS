@@ -25,3 +25,8 @@ jobs:
           rsync -avz -e "ssh -i ~/.ssh/key -p 65002 -o StrictHostKeyChecking=no" \
             --exclude='.git' --exclude='node_modules' \
             ./ u626119115@147.79.84.203:~/domains/kitamo.com.br/public_html
+      - name: Fix build path (Hostinger docroot)
+        run: |
+          ssh -i ~/.ssh/key -p 65002 -o StrictHostKeyChecking=no \
+            u626119115@147.79.84.203 \
+            'cd ~/domains/kitamo.com.br/public_html && mkdir -p build && rsync -a --delete public/build/ build/'
