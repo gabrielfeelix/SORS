@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import type { CreditCard } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
 import KitamoLayout from '@/Layouts/KitamoLayout.vue';
@@ -50,30 +50,19 @@ const openDeleteConfirm = (card: CreditCard) => {
 const saveCard = async (payload: CreditCardModalPayload) => {
   try {
     if (payload.id) {
-      // Update
-      const response = await requestJson<{ creditCard: CreditCard }>(
-        route('credit-cards.update', payload.id),
-        {
-          method: 'PATCH',
-          body: JSON.stringify(payload),
-        }
-      );
-      const index = cardsList.value.findIndex((c) => c.id === payload.id);
-      if (index >= 0) {
-        cardsList.value[index] = response.creditCard;
-      }
+      await requestJson(`/api/cartoes/${payload.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      });
       showToast('✅ Cartão atualizado');
+      router.reload();
     } else {
-      // Create
-      const response = await requestJson<{ creditCard: CreditCard }>(
-        route('credit-cards.store'),
-        {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        }
-      );
-      cardsList.value.push(response.creditCard);
+      await requestJson('/api/cartoes', {
+        method: 'POST',
+        body: JSON.stringify({ ...payload, icone: 'credit-card' }),
+      });
       showToast('✅ Cartão adicionado com sucesso!');
+      router.reload();
     }
   } catch (error) {
     console.error(error);
@@ -86,13 +75,11 @@ const deleteCard = async () => {
   if (!selectedCard.value) return;
 
   try {
-    await requestJson(route('credit-cards.destroy', selectedCard.value.id), {
-      method: 'DELETE',
-    });
-    cardsList.value = cardsList.value.filter((c) => c.id !== selectedCard.value!.id);
+    await requestJson(`/api/cartoes/${selectedCard.value.id}`, { method: 'DELETE' });
     deleteConfirmOpen.value = false;
     selectedCard.value = null;
     showToast('Cartão excluído');
+    router.reload();
   } catch (error) {
     console.error(error);
     showToast('❌ Erro ao excluir cartão');
