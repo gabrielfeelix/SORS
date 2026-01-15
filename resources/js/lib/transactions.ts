@@ -11,4 +11,8 @@ export const buildTransactionRequest = (payload: TransactionModalPayload) => ({
     isPaid: payload.isPaid,
     isInstallment: payload.isInstallment,
     installmentCount: payload.installmentCount,
+    isRecorrente: payload.isRecorrente ?? false,
+    periodicidade: payload.isRecorrente ? payload.periodicidade : null,
+    intervalo_dias: payload.isRecorrente ? payload.intervalo_dias : null,
+    data_fim: payload.isRecorrente ? payload.data_fim : null,
 });

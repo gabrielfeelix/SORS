@@ -20,7 +20,7 @@ export type TransactionModalPayload = {
     transferTo: string;
     transferDescription: string;
     isRecorrente?: boolean;
-    periodicidade?: 'mensal' | 'semanal' | 'diaria';
+    periodicidade?: 'mensal' | 'quinzenal' | 'a_cada_x_dias';
     intervalo_dias?: number | null;
     data_fim?: string | null;
 };
@@ -53,9 +53,10 @@ const isInstallment = ref(false);
 const installmentCount = ref(1);
 const isPaid = ref(false);
 const isRecorrente = ref(false);
-const periodicidade = ref<'mensal' | 'semanal' | 'diaria'>('mensal');
+const periodicidade = ref<'mensal' | 'quinzenal' | 'a_cada_x_dias'>('mensal');
 const intervalo_dias = ref<number | null>(null);
 const data_fim = ref<string>('');
+const fimMode = ref<'sempre' | 'ate'>('sempre');
 
 const isExpense = computed(() => localKind.value === 'expense');
 const isTransfer = computed(() => localKind.value === 'transfer');
@@ -150,11 +151,13 @@ const reset = () => {
     periodicidade.value = draft?.periodicidade ?? 'mensal';
     intervalo_dias.value = draft?.intervalo_dias ?? null;
     data_fim.value = draft?.data_fim ? toBRDate(draft.data_fim) : '';
+    fimMode.value = draft?.data_fim ? 'ate' : 'sempre';
 };
 
 const save = () => {
     const dateOtherISO = dateKind.value === 'other' ? toISODate(dateOther.value) : '';
-    const dataFimISO = isRecorrente.value && data_fim.value ? toISODate(data_fim.value) : null;
+    const dataFimISO = isRecorrente.value && fimMode.value === 'ate' && data_fim.value ? toISODate(data_fim.value) : null;
+    const intervaloDiasValue = isRecorrente.value && periodicidade.value === 'a_cada_x_dias' ? intervalo_dias.value : null;
     emit('save', {
         id: initialId.value,
         kind: localKind.value,
@@ -172,7 +175,7 @@ const save = () => {
         transferDescription: transferDescription.value.trim(),
         isRecorrente: isRecorrente.value,
         periodicidade: periodicidade.value,
-        intervalo_dias: null,
+        intervalo_dias: intervaloDiasValue,
         data_fim: dataFimISO,
     });
     close();
@@ -460,12 +463,15 @@ watch(
                                                 <span class="text-sm text-[#374151]">Todo mês</span>
                                             </label>
                                             <label class="flex items-center gap-3">
-                                                <input type="radio" v-model="periodicidade" value="semanal" class="h-4 w-4" />
-                                                <span class="text-sm text-[#374151]">Toda semana</span>
-                                            </label>
-                                            <label class="flex items-center gap-3">
-                                                <input type="radio" v-model="periodicidade" value="diaria" class="h-4 w-4" />
-                                                <span class="text-sm text-[#374151]">Diária</span>
+                                                <input type="radio" v-model="periodicidade" value="a_cada_x_dias" class="h-4 w-4" />
+                                                <span class="text-sm text-[#374151]">A cada</span>
+                                                <input
+                                                    v-model.number="intervalo_dias"
+                                                    type="number"
+                                                    min="1"
+                                                    class="h-8 w-20 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                                                />
+                                                <span class="text-sm text-[#374151]">dias</span>
                                             </label>
                                         </div>
                                     </div>
@@ -475,17 +481,19 @@ watch(
                                         <div class="mb-2 text-xs text-[#6B7280]">Até quando:</div>
                                         <div class="space-y-2">
                                             <label class="flex items-center gap-3">
-                                                <input type="radio" v-model="data_fim" value="" class="h-4 w-4" />
+                                                <input type="radio" v-model="fimMode" value="sempre" class="h-4 w-4" />
                                                 <span class="text-sm text-[#374151]">Sempre</span>
                                             </label>
                                             <label class="flex items-center gap-3">
-                                                <input type="radio" :value="data_fim || 'temp'" @change="data_fim = ''" class="h-4 w-4" />
+                                                <input type="radio" v-model="fimMode" value="ate" class="h-4 w-4" />
                                                 <span class="text-sm text-[#374151]">Até</span>
                                                 <input
-                                                    v-if="data_fim"
+                                                    v-if="fimMode === 'ate'"
                                                     v-model="data_fim"
-                                                    type="date"
-                                                    class="ml-2 h-8 rounded border border-[#E5E7EB] px-2 text-sm"
+                                                    type="text"
+                                                    placeholder="dd/mm/aaaa"
+                                                    inputmode="numeric"
+                                                    class="ml-2 h-8 w-32 rounded border border-[#E5E7EB] px-2 text-sm"
                                                 />
                                             </label>
                                         </div>

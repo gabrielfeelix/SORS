@@ -30,6 +30,11 @@ const dateOther = ref('');
 const isInstallment = ref(false);
 const installmentCount = ref(1);
 const isPaid = ref(false);
+const isRecorrente = ref(false);
+const periodicidade = ref<'mensal' | 'quinzenal' | 'a_cada_x_dias'>('mensal');
+const intervalo_dias = ref<number | null>(null);
+const data_fim = ref('');
+const fimMode = ref<'sempre' | 'ate'>('sempre');
 
 const transferFrom = ref('Banco Inter');
 const transferTo = ref('Carteira');
@@ -120,6 +125,11 @@ const reset = () => {
     isInstallment.value = draft?.isInstallment ?? false;
     installmentCount.value = draft?.installmentCount ?? 1;
     isPaid.value = draft?.isPaid ?? false;
+    isRecorrente.value = draft?.isRecorrente ?? false;
+    periodicidade.value = draft?.periodicidade ?? 'mensal';
+    intervalo_dias.value = draft?.intervalo_dias ?? null;
+    data_fim.value = draft?.data_fim ? toBRDate(draft.data_fim) : '';
+    fimMode.value = draft?.data_fim ? 'ate' : 'sempre';
     transferFrom.value = draft?.transferFrom ?? 'Banco Inter';
     transferTo.value = draft?.transferTo ?? 'Carteira';
     transferDescription.value = draft?.transferDescription ?? '';
@@ -135,6 +145,8 @@ watch(
 
 const save = () => {
     const dateOtherISO = dateKind.value === 'other' ? toISODate(dateOther.value) : '';
+    const dataFimISO = isRecorrente.value && fimMode.value === 'ate' && data_fim.value ? toISODate(data_fim.value) : null;
+    const intervaloDiasValue = isRecorrente.value && periodicidade.value === 'a_cada_x_dias' ? intervalo_dias.value : null;
     emit('save', {
         id: initialId.value,
         kind: localKind.value,
@@ -147,6 +159,10 @@ const save = () => {
         isInstallment: isInstallment.value,
         installmentCount: installmentCount.value,
         isPaid: isPaid.value,
+        isRecorrente: isRecorrente.value,
+        periodicidade: periodicidade.value,
+        intervalo_dias: intervaloDiasValue,
+        data_fim: dataFimISO,
         transferFrom: transferFrom.value,
         transferTo: transferTo.value,
         transferDescription: transferDescription.value.trim(),
@@ -193,17 +209,32 @@ const save = () => {
                         <div class="w-6"></div>
                     </div>
 
-                    <div v-if="isExpense" class="mt-3 flex items-center justify-center gap-2">
-                        <button type="button" class="inline-flex items-center gap-2" @click="isPaid = !isPaid">
-                            <span class="flex h-5 w-5 items-center justify-center rounded-full border" :class="isPaid ? 'border-transparent bg-[#14B8A6]' : 'border-slate-200 bg-white'">
-                                <svg v-if="isPaid" class="h-3.5 w-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                    <path d="M20 6 9 17l-5-5" />
-                                </svg>
-                            </span>
-                            <span class="text-sm font-semibold text-slate-500">Pago</span>
-                        </button>
-                    </div>
-                </div>
+	                    <div v-if="isExpense" class="mt-3 flex items-center justify-center gap-2">
+	                        <button type="button" class="group relative inline-flex items-center gap-2" @click="isPaid = !isPaid">
+	                            <span class="flex h-5 w-5 items-center justify-center rounded-full border" :class="isPaid ? 'border-transparent bg-[#14B8A6]' : 'border-slate-200 bg-white'">
+	                                <svg v-if="isPaid" class="h-3.5 w-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+	                                    <path d="M20 6 9 17l-5-5" />
+	                                </svg>
+	                            </span>
+	                            <span class="text-sm font-semibold text-slate-500">Pago</span>
+	                            <span
+	                                class="absolute bottom-full left-0 mb-2 hidden w-64 rounded-lg bg-slate-800 px-3 py-2 text-xs font-medium text-white shadow-lg group-hover:block"
+	                            >
+	                                <span class="flex items-start gap-2">
+	                                    <span>✅</span>
+	                                    <span>Marcar como pago atualiza o saldo da conta imediatamente</span>
+	                                </span>
+	                                <span class="mt-1 flex items-start gap-2">
+	                                    <span>⏳</span>
+	                                    <span>Deixar desmarcado: conta aparece em "A pagar"</span>
+	                                </span>
+	                                <span
+	                                    class="absolute top-full left-4 h-0 w-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"
+	                                ></span>
+	                            </span>
+	                        </button>
+	                    </div>
+	                </div>
 
                 <div v-if="isTransfer" class="mt-8 space-y-4">
                     <div class="grid grid-cols-2 gap-4">
@@ -278,9 +309,9 @@ const save = () => {
                         />
                     </div>
 
-                    <div class="rounded-2xl border border-slate-200 bg-white px-5 py-5">
-                        <div class="flex items-center justify-between">
-                            <div class="text-sm font-semibold text-slate-700">Parcelado?</div>
+	                    <div class="rounded-2xl border border-slate-200 bg-white px-5 py-5">
+	                        <div class="flex items-center justify-between">
+	                            <div class="text-sm font-semibold text-slate-700">Parcelado?</div>
                             <button
                                 type="button"
                                 class="relative inline-flex h-6 w-11 items-center rounded-full transition"
@@ -292,16 +323,67 @@ const save = () => {
                             </button>
                         </div>
 
-                        <div v-if="isInstallment" class="mt-4 flex items-center justify-between gap-3">
-                            <div class="text-xs font-semibold text-slate-400">Quantas vezes?</div>
-                            <div class="flex items-center gap-3">
-                                <input v-model.number="installmentCount" type="number" min="1" class="h-10 w-20 rounded-xl border border-slate-200 bg-white px-3 text-center text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-100" />
-                                <div class="text-sm font-semibold text-slate-400">x de {{ formatBRL2(installmentEach) }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+	                        <div v-if="isInstallment" class="mt-4 flex items-center justify-between gap-3">
+	                            <div class="text-xs font-semibold text-slate-400">Quantas vezes?</div>
+	                            <div class="flex items-center gap-3">
+	                                <input v-model.number="installmentCount" type="number" min="1" class="h-10 w-20 rounded-xl border border-slate-200 bg-white px-3 text-center text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-100" />
+	                                <div class="text-sm font-semibold text-slate-400">x de {{ formatBRL2(installmentEach) }}</div>
+	                            </div>
+	                        </div>
+	                    </div>
+
+	                    <div v-if="isExpense" class="rounded-2xl border border-slate-200 bg-white px-5 py-5">
+	                        <div class="flex items-center justify-between">
+	                            <div class="text-sm font-semibold text-slate-700">É uma despesa recorrente?</div>
+	                            <button
+	                                type="button"
+	                                class="relative inline-flex h-6 w-11 items-center rounded-full transition"
+	                                :class="isRecorrente ? 'bg-[#14B8A6]' : 'bg-slate-200'"
+	                                @click="isRecorrente = !isRecorrente"
+	                                aria-label="Recorrente"
+	                            >
+	                                <span class="inline-block h-5 w-5 transform rounded-full bg-white transition" :class="isRecorrente ? 'translate-x-5' : 'translate-x-0.5'"></span>
+	                            </button>
+	                        </div>
+
+	                        <div v-if="isRecorrente" class="mt-4 space-y-4">
+	                            <div>
+	                                <div class="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Repetir</div>
+	                                <label class="flex items-center gap-3 text-sm font-semibold text-slate-600">
+	                                    <input type="radio" v-model="periodicidade" value="mensal" class="h-4 w-4" />
+	                                    Todo mês
+	                                </label>
+	                                <label class="mt-2 flex items-center gap-3 text-sm font-semibold text-slate-600">
+	                                    <input type="radio" v-model="periodicidade" value="a_cada_x_dias" class="h-4 w-4" />
+	                                    A cada
+	                                    <input v-model.number="intervalo_dias" type="number" min="1" class="h-10 w-20 rounded-xl border border-slate-200 bg-white px-3 text-center text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-100" />
+	                                    dias
+	                                </label>
+	                            </div>
+
+	                            <div>
+	                                <div class="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Até quando</div>
+	                                <label class="flex items-center gap-3 text-sm font-semibold text-slate-600">
+	                                    <input type="radio" v-model="fimMode" value="sempre" class="h-4 w-4" />
+	                                    Sempre
+	                                </label>
+	                                <label class="mt-2 flex items-center gap-3 text-sm font-semibold text-slate-600">
+	                                    <input type="radio" v-model="fimMode" value="ate" class="h-4 w-4" />
+	                                    Até
+	                                    <input
+	                                        v-if="fimMode === 'ate'"
+	                                        v-model="data_fim"
+	                                        type="text"
+	                                        placeholder="dd/mm/aaaa"
+	                                        inputmode="numeric"
+	                                        class="h-10 w-36 rounded-xl border border-slate-200 bg-white px-3 text-center text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+	                                    />
+	                                </label>
+	                            </div>
+	                        </div>
+	                    </div>
+	                </div>
+	            </div>
 
             <footer class="border-t border-slate-100 px-8 py-6">
                 <button
