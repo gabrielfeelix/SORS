@@ -1,20 +1,21 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
-import { requestJson } from '@/lib/kitamoApi';
-import { buildTransactionRequest } from '@/lib/transactions';
-import type { BootstrapData, Entry } from '@/types/kitamo';
-import MobileShell from '@/Layouts/MobileShell.vue';
-import DesktopShell from '@/Layouts/DesktopShell.vue';
-import TransactionModal, { type TransactionModalPayload } from '@/Components/TransactionModal.vue';
-import DesktopTransactionModal from '@/Components/DesktopTransactionModal.vue';
-import MobileToast from '@/Components/MobileToast.vue';
-import TransactionDetailModal, { type TransactionDetail } from '@/Components/TransactionDetailModal.vue';
-import TransactionFilterModal, { type TransactionFilterState } from '@/Components/TransactionFilterModal.vue';
-import ImportInvoiceModal from '@/Components/ImportInvoiceModal.vue';
-import DesktopImportChooserModal from '@/Components/DesktopImportChooserModal.vue';
-import DesktopTransactionDrawer from '@/Components/DesktopTransactionDrawer.vue';
-import { useMediaQuery } from '@/composables/useMediaQuery';
+	import { computed, onMounted, ref } from 'vue';
+	import { Link, usePage } from '@inertiajs/vue3';
+	import { requestJson } from '@/lib/kitamoApi';
+	import { buildTransactionRequest } from '@/lib/transactions';
+	import type { BootstrapData, Entry } from '@/types/kitamo';
+	import MobileShell from '@/Layouts/MobileShell.vue';
+	import DesktopShell from '@/Layouts/DesktopShell.vue';
+	import TransactionModal, { type TransactionModalPayload } from '@/Components/TransactionModal.vue';
+	import DesktopTransactionModal from '@/Components/DesktopTransactionModal.vue';
+	import MobileToast from '@/Components/MobileToast.vue';
+	import CreateAccountFlowModal from '@/Components/CreateAccountFlowModal.vue';
+	import TransactionDetailModal, { type TransactionDetail } from '@/Components/TransactionDetailModal.vue';
+	import TransactionFilterModal, { type TransactionFilterState } from '@/Components/TransactionFilterModal.vue';
+	import ImportInvoiceModal from '@/Components/ImportInvoiceModal.vue';
+	import DesktopImportChooserModal from '@/Components/DesktopImportChooserModal.vue';
+	import DesktopTransactionDrawer from '@/Components/DesktopTransactionDrawer.vue';
+	import { useMediaQuery } from '@/composables/useMediaQuery';
 
 const page = usePage();
 const userName = computed(() => page.props.auth?.user?.name ?? 'Gabriel');
@@ -51,11 +52,13 @@ const accountOptions = computed(() => {
 });
 
 const toastOpen = ref(false);
-const toastMessage = ref('');
-const showToast = (message: string) => {
-    toastMessage.value = message;
-    toastOpen.value = true;
-};
+	const toastMessage = ref('');
+	const showToast = (message: string) => {
+	    toastMessage.value = message;
+	    toastOpen.value = true;
+	};
+
+	const createAccountOpen = ref(false);
 
 const isRecurringEntry = (entry: Entry) => Boolean(entry.tags?.includes('Recorrente')) && !Boolean(entry.installment);
 
@@ -516,15 +519,26 @@ onMounted(() => {
 
 <template>
     <MobileShell v-if="isMobile">
-        <header class="flex items-center justify-between pt-2">
-            <div>
-                <div class="text-2xl font-semibold tracking-tight text-slate-900">Lançamentos</div>
-            </div>
-            <div class="flex items-center gap-2">
-                <button
-                    type="button"
-                    class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200/60"
-                    aria-label="Filtrar"
+	        <header class="flex items-center justify-between pt-2">
+	            <div>
+	                <div class="text-2xl font-semibold tracking-tight text-slate-900">Lançamentos</div>
+	            </div>
+	            <div class="flex items-center gap-2">
+	                <button
+	                    type="button"
+	                    class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200/60"
+	                    aria-label="Adicionar conta"
+	                    @click="createAccountOpen = true"
+	                >
+	                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                        <path d="M12 3v18" />
+	                        <path d="M7 7h5a3 3 0 1 1 0 6H7" />
+	                    </svg>
+	                </button>
+	                <button
+	                    type="button"
+	                    class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200/60"
+	                    aria-label="Filtrar"
                     @click="filterOpen = true"
                 >
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -793,11 +807,12 @@ onMounted(() => {
             </button>
         </template>
 
-        <TransactionModal :open="transactionOpen" :kind="transactionKind" :initial="transactionInitial" @close="transactionOpen = false" @save="onTransactionSave" />
-        <TransactionDetailModal
-            :open="detailOpen"
-            :transaction="detailTransaction"
-            @close="detailOpen = false"
+	        <TransactionModal :open="transactionOpen" :kind="transactionKind" :initial="transactionInitial" @close="transactionOpen = false" @save="onTransactionSave" />
+	        <CreateAccountFlowModal :open="createAccountOpen" @close="createAccountOpen = false" @toast="showToast" />
+	        <TransactionDetailModal
+	            :open="detailOpen"
+	            :transaction="detailTransaction"
+	            @close="detailOpen = false"
             @edit="onDetailEdit"
             @duplicate="onDetailDuplicate"
             @delete="onDetailDelete"
@@ -865,8 +880,8 @@ onMounted(() => {
 
         <div class="space-y-8">
             <div class="rounded-2xl bg-white px-6 py-5 shadow-sm ring-1 ring-slate-200/60">
-                <div class="flex items-center justify-between gap-6">
-                    <div class="flex items-center gap-4">
+	                <div class="flex items-center justify-between gap-6">
+	                    <div class="flex items-center gap-4">
                         <div class="flex items-center rounded-2xl border border-slate-200 bg-white px-2 py-1">
                             <button type="button" class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-50" aria-label="Mês anterior" @click="shiftMonth(-1)">
                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -983,17 +998,32 @@ onMounted(() => {
                                 <div v-if="!accountOptions.length" class="px-5 py-4 text-sm text-slate-400">Sem contas disponíveis</div>
                             </div>
                         </div>
-                    </div>
+	                    </div>
 
-                    <button
-                        type="button"
-                        class="inline-flex h-11 items-center rounded-xl bg-[#14B8A6] px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20"
-                        @click="filterOpen = true"
-                    >
-                        Filtrar
-                    </button>
-                </div>
-            </div>
+	                    <div class="flex items-center gap-3">
+	                        <button
+	                            type="button"
+	                            class="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+	                            @click="createAccountOpen = true"
+	                        >
+	                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                <path d="M3 10h18" />
+	                                <path d="M5 10V8l7-5 7 5v2" />
+	                                <path d="M6 10v9" />
+	                                <path d="M18 10v9" />
+	                            </svg>
+	                            Nova conta
+	                        </button>
+	                        <button
+	                            type="button"
+	                            class="inline-flex h-11 items-center rounded-xl bg-[#14B8A6] px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20"
+	                            @click="filterOpen = true"
+	                        >
+	                            Filtrar
+	                        </button>
+	                    </div>
+	                </div>
+	            </div>
 
             <div class="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60">
                 <div class="flex items-center justify-between px-8 py-6">
@@ -1104,17 +1134,18 @@ onMounted(() => {
             @edit="handleDesktopEdit"
             @delete="deleteDesktopSelected"
         />
-        <DesktopTransactionModal
-            :open="desktopTransactionOpen"
-            :kind="desktopTransactionKind"
-            :initial="desktopTransactionInitial"
-            @close="desktopTransactionOpen = false"
-            @save="handleDesktopSave"
-        />
-        <TransactionFilterModal
-            :open="filterOpen"
-            :categories="filterCategories"
-            :initial="filterState"
+	        <DesktopTransactionModal
+	            :open="desktopTransactionOpen"
+	            :kind="desktopTransactionKind"
+	            :initial="desktopTransactionInitial"
+	            @close="desktopTransactionOpen = false"
+	            @save="handleDesktopSave"
+	        />
+	        <CreateAccountFlowModal :open="createAccountOpen" @close="createAccountOpen = false" @toast="showToast" />
+	        <TransactionFilterModal
+	            :open="filterOpen"
+	            :categories="filterCategories"
+	            :initial="filterState"
             :results-count="filteredEntries.length"
             @close="filterOpen = false"
             @clear="clearFilters"
