@@ -20,7 +20,6 @@ const selectMethod = (method: 'manual' | 'automatic') => {
     showComingSoon.value = true;
   } else {
     emit('selectMethod', method);
-    emit('close');
   }
 };
 </script>

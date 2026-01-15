@@ -39,7 +39,6 @@ const bancosFiltrados = computed(() => {
 
 const selectBanco = (banco: typeof bancos[0]) => {
   emit('select', banco);
-  emit('close');
 };
 </script>
 
