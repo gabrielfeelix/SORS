@@ -293,6 +293,8 @@ const showToast = (message: string) => {
     toastOpen.value = true;
 };
 
+const isRecurringEntry = (entry: Entry) => Boolean(entry.tags?.includes('Recorrente')) && !Boolean(entry.installment);
+
 const replaceEntry = (entry: Entry) => {
     const idx = desktopEntries.value.findIndex((item) => item.id === entry.id);
     if (idx >= 0) desktopEntries.value[idx] = entry;
@@ -1004,9 +1006,22 @@ Ver lançamentos
                                 </span>
                                 <div class="truncate">{{ row.title }}</div>
                             </div>
-                            <div>
-                                <span class="inline-flex rounded-md bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">{{ row.categoryLabel }}</span>
-                            </div>
+	                            <div class="flex items-center gap-2">
+	                                <span class="inline-flex rounded-md bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">{{ row.categoryLabel }}</span>
+	                                <span v-if="isRecurringEntry(row)" class="group relative inline-flex items-center">
+	                                    <span class="inline-flex items-center gap-1 rounded bg-[#DBEAFE] px-2 py-0.5 text-[12px] font-semibold text-[#3B82F6]">
+	                                        🔁 Recorrente
+	                                    </span>
+	                                    <span
+	                                        class="absolute bottom-full left-0 mb-2 hidden w-64 rounded-lg bg-slate-800 px-3 py-2 text-xs font-medium text-white shadow-lg group-hover:block"
+	                                    >
+	                                        Despesa recorrente - repete todo mês
+	                                        <span
+	                                            class="absolute top-full left-4 h-0 w-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"
+	                                        ></span>
+	                                    </span>
+	                                </span>
+	                            </div>
                             <div class="text-slate-500">20 Jan 2026</div>
                             <div class="text-right" :class="row.kind === 'income' ? 'text-emerald-600' : 'text-red-500'">
                                 {{ row.kind === 'income' ? '+' : '-' }} {{ formatBRL(row.amount).replace('R$', 'R$') }}
