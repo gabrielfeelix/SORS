@@ -9,7 +9,6 @@
 	import TransactionModal, { type TransactionModalPayload } from '@/Components/TransactionModal.vue';
 	import DesktopTransactionModal from '@/Components/DesktopTransactionModal.vue';
 	import MobileToast from '@/Components/MobileToast.vue';
-	import CreateAccountFlowModal from '@/Components/CreateAccountFlowModal.vue';
 	import TransactionDetailModal, { type TransactionDetail } from '@/Components/TransactionDetailModal.vue';
 	import TransactionFilterModal, { type TransactionFilterState } from '@/Components/TransactionFilterModal.vue';
 	import ImportInvoiceModal from '@/Components/ImportInvoiceModal.vue';
@@ -57,8 +56,6 @@ const toastOpen = ref(false);
 	    toastMessage.value = message;
 	    toastOpen.value = true;
 	};
-
-	const createAccountOpen = ref(false);
 
 const isRecurringEntry = (entry: Entry) => Boolean(entry.tags?.includes('Recorrente')) && !Boolean(entry.installment);
 
@@ -527,17 +524,6 @@ onMounted(() => {
 	                <button
 	                    type="button"
 	                    class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200/60"
-	                    aria-label="Adicionar conta"
-	                    @click="createAccountOpen = true"
-	                >
-	                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                        <path d="M12 3v18" />
-	                        <path d="M7 7h5a3 3 0 1 1 0 6H7" />
-	                    </svg>
-	                </button>
-	                <button
-	                    type="button"
-	                    class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200/60"
 	                    aria-label="Filtrar"
                     @click="filterOpen = true"
                 >
@@ -805,10 +791,9 @@ onMounted(() => {
                     <path d="M5 12h14" />
                 </svg>
             </button>
-        </template>
+	        </template>
 
 	        <TransactionModal :open="transactionOpen" :kind="transactionKind" :initial="transactionInitial" @close="transactionOpen = false" @save="onTransactionSave" />
-	        <CreateAccountFlowModal :open="createAccountOpen" @close="createAccountOpen = false" @toast="showToast" />
 	        <TransactionDetailModal
 	            :open="detailOpen"
 	            :transaction="detailTransaction"
@@ -1000,28 +985,13 @@ onMounted(() => {
                         </div>
 	                    </div>
 
-	                    <div class="flex items-center gap-3">
-	                        <button
-	                            type="button"
-	                            class="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50"
-	                            @click="createAccountOpen = true"
-	                        >
-	                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                <path d="M3 10h18" />
-	                                <path d="M5 10V8l7-5 7 5v2" />
-	                                <path d="M6 10v9" />
-	                                <path d="M18 10v9" />
-	                            </svg>
-	                            Nova conta
-	                        </button>
-	                        <button
-	                            type="button"
-	                            class="inline-flex h-11 items-center rounded-xl bg-[#14B8A6] px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20"
-	                            @click="filterOpen = true"
-	                        >
-	                            Filtrar
-	                        </button>
-	                    </div>
+	                    <button
+	                        type="button"
+	                        class="inline-flex h-11 items-center rounded-xl bg-[#14B8A6] px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20"
+	                        @click="filterOpen = true"
+	                    >
+	                        Filtrar
+	                    </button>
 	                </div>
 	            </div>
 
@@ -1141,7 +1111,6 @@ onMounted(() => {
 	            @close="desktopTransactionOpen = false"
 	            @save="handleDesktopSave"
 	        />
-	        <CreateAccountFlowModal :open="createAccountOpen" @close="createAccountOpen = false" @toast="showToast" />
 	        <TransactionFilterModal
 	            :open="filterOpen"
 	            :categories="filterCategories"
