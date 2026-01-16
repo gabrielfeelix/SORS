@@ -193,6 +193,17 @@ const bankAccounts = computed(() =>
         })),
 );
 
+const creditCards = computed(() =>
+    (bootstrap.value.accounts ?? [])
+        .filter((account) => account.type === 'credit_card')
+        .map((account) => ({
+            id: account.id,
+            label: account.name,
+            subtitle: 'Fatura aberta',
+            amount: account.current_balance,
+        })),
+);
+
 const mobileAccounts = computed(() =>
     (bootstrap.value.accounts ?? []).slice(0, 3).map((account) => ({
         id: account.id,
@@ -202,8 +213,6 @@ const mobileAccounts = computed(() =>
         type: account.type,
     })),
 );
-
-const needsAttention = computed(() => saldoAtual.value < 0);
 
 const projecao = computed(() => ((page.props as unknown as { projecao?: ProjecaoResponse }).projecao ?? null) as ProjecaoResponse | null);
 
@@ -626,28 +635,7 @@ const openBillDetails = (id: string) => {
 	            </button>
 	        </section>
 
-        <section v-if="needsAttention" class="mt-5 rounded-3xl bg-amber-50 px-4 py-4 shadow-sm ring-1 ring-amber-200/60">
-            <div class="flex gap-4">
-                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 9v4" />
-                        <path d="M12 17h.01" />
-                        <path d="M10 3h4l8 18H2L10 3Z" />
-                    </svg>
-                </div>
-                <div class="flex-1">
-                    <div class="text-sm font-semibold text-slate-900">
-                        Atenção: <span class="font-semibold text-red-500">Saldo negativo de {{ formatBRL(Math.abs(saldoAtual)) }}</span> no momento.
-                    </div>
-                    <Link :href="route('accounts.index')" class="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-amber-700">
-Ver lançamentos
-                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 18l6-6-6-6" />
-                        </svg>
-                    </Link>
-                </div>
-            </div>
-        </section>
+	        <!-- Alertas de saldo removidos do mobile -->
 
 	        <section class="mt-5 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200/60">
 	            <div class="flex items-center justify-between">
@@ -813,9 +801,58 @@ Ver lançamentos
 	            </div>
 	        </section>
 
-        <section class="mt-6">
-            <div class="flex items-center justify-between">
-                <div class="text-lg font-semibold text-slate-900">Próximas contas</div>
+	        <section class="mt-6 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200/60">
+	            <div class="flex items-center justify-between">
+	                <div class="text-lg font-semibold text-slate-900">Cartões de crédito</div>
+	                <button class="rounded-2xl p-2 text-slate-400 hover:bg-slate-100" type="button" aria-label="Adicionar cartão" @click="creditCardModalOpen = true">
+	                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                        <path d="M12 5v14" />
+	                        <path d="M5 12h14" />
+	                    </svg>
+	                </button>
+	            </div>
+
+	            <div v-if="creditCards.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-6 text-center">
+	                <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-400">
+	                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                        <rect x="3" y="5" width="18" height="14" rx="3" />
+	                        <path d="M3 10h18" />
+	                    </svg>
+	                </div>
+	                <div class="mt-3 text-sm font-semibold text-slate-900">Você ainda não possui cartões cadastrados.</div>
+	                <div class="mt-1 text-xs text-slate-500">Melhore seu controle financeiro agora!</div>
+	                <button type="button" class="mt-4 rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white" @click="creditCardModalOpen = true">
+	                    Adicionar cartões
+	                </button>
+	            </div>
+
+	            <div v-else class="mt-4 space-y-3">
+	                <Link
+	                    v-for="card in creditCards"
+	                    :key="card.id"
+	                    :href="route('accounts.card')"
+	                    class="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm ring-1 ring-slate-200/60"
+	                >
+	                    <div class="flex items-center gap-3">
+	                        <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white">
+	                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                <rect x="3" y="5" width="18" height="14" rx="3" />
+	                                <path d="M3 10h18" />
+	                            </svg>
+	                        </span>
+	                        <div>
+	                            <div class="text-sm font-semibold text-slate-900">{{ card.label }}</div>
+	                            <div class="text-xs text-slate-500">{{ card.subtitle }}</div>
+	                        </div>
+	                    </div>
+	                    <div class="text-sm font-semibold text-slate-900">R$ {{ card.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
+	                </Link>
+	            </div>
+	        </section>
+
+	        <section class="mt-6">
+	            <div class="flex items-center justify-between">
+	                <div class="text-lg font-semibold text-slate-900">Próximas contas</div>
                 <Link :href="route('accounts.index')" class="text-sm font-semibold text-emerald-600">Ver todas</Link>
             </div>
 
