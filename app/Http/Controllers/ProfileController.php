@@ -6,6 +6,7 @@ use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -39,6 +40,19 @@ class ProfileController extends Controller
         }
 
         $request->user()->fill($request->validated());
+
+        if ($request->hasFile('avatar')) {
+            $user = $request->user();
+            $old = $user->avatar_path;
+
+            $path = $request->file('avatar')->storePublicly('avatars', 'public');
+            $user->avatar_path = $path;
+            $user->save();
+
+            if ($old) {
+                Storage::disk('public')->delete($old);
+            }
+        }
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;

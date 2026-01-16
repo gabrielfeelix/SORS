@@ -88,7 +88,7 @@ const amountTextClass = computed(() => {
 
 const amountInputClass = computed(() => {
     if (!amount.value) return 'text-slate-200';
-    return amountTextClass.value;
+    return 'text-slate-900';
 });
 
 const pillClass = (kind: TransactionKind) => {
@@ -292,7 +292,7 @@ watch(
                     <div class="mt-2 flex items-center justify-center gap-3">
                         <div class="text-2xl font-bold" :class="amountTextClass">R$</div>
                         <input
-                            class="amount-input w-[240px] bg-transparent text-center text-[56px] font-bold leading-none tracking-tight text-slate-200 placeholder:text-slate-200 focus:outline-none focus:ring-0"
+                            class="amount-input w-[240px] bg-transparent text-center text-[56px] font-bold leading-none tracking-tight placeholder:text-slate-200 focus:outline-none focus:ring-0"
                             :class="amountInputClass"
                             inputmode="numeric"
                             autocomplete="off"

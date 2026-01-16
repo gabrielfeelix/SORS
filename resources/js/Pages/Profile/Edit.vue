@@ -20,6 +20,7 @@ const page = usePage();
 const userName = computed(() => page.props.auth?.user?.name ?? 'Gabriel Felix');
 const userEmail = computed(() => page.props.auth?.user?.email ?? 'gab.feelix@gmail.com');
 const userPhone = computed(() => page.props.auth?.user?.phone ?? '');
+const avatarUrl = computed(() => (page.props.auth?.user as any)?.avatar_url ?? null);
 
 const initials = computed(() => {
     const parts = String(userName.value).trim().split(/\s+/).filter(Boolean);
@@ -32,6 +33,8 @@ const form = useForm({
     name: userName.value,
     email: userEmail.value,
     phone: userPhone.value,
+    avatar: null as File | null,
+    _method: 'patch',
 });
 
 watch(
@@ -46,9 +49,20 @@ watch(
 const passwordOpen = ref(false);
 
 const submit = () => {
-    form.patch(route('profile.update'), {
+    form.post(route('profile.update'), {
+        forceFormData: true,
         preserveScroll: true,
     });
+};
+
+const fileInput = ref<HTMLInputElement | null>(null);
+const openFilePicker = () => fileInput.value?.click();
+
+const onAvatarChange = (event: Event) => {
+    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
+    if (!file) return;
+    form.avatar = file;
+    submit();
 };
 </script>
 
@@ -71,19 +85,23 @@ const submit = () => {
 
         <div class="mt-8 flex justify-center">
             <div class="relative">
-                <div class="flex h-24 w-24 items-center justify-center rounded-full bg-slate-200 text-xl font-bold text-slate-700 shadow-sm ring-4 ring-white">
-                    {{ initials }}
+                <div class="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-xl font-bold text-slate-700 shadow-sm ring-4 ring-white">
+                    <img v-if="avatarUrl" :src="avatarUrl" alt="Foto do perfil" class="h-full w-full object-cover" />
+                    <span v-else>{{ initials }}</span>
                 </div>
                 <button
                     type="button"
                     class="absolute bottom-1 right-1 flex h-10 w-10 items-center justify-center rounded-full bg-[#14B8A6] text-white shadow-lg shadow-black/10"
                     aria-label="Alterar foto"
+                    @click="openFilePicker"
                 >
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M4 7h4l2-2h4l2 2h4v12H4V7Z" />
                         <circle cx="12" cy="13" r="3" />
                     </svg>
                 </button>
+
+                <input ref="fileInput" class="hidden" type="file" accept="image/*" @change="onAvatarChange" />
             </div>
         </div>
 

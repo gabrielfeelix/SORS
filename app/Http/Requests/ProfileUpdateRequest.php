@@ -31,6 +31,7 @@ class ProfileUpdateRequest extends FormRequest
                 ...($this->isLocalWithoutDatabaseDriver() ? [] : [Rule::unique(User::class)->ignore($this->user()->id)]),
             ],
             'phone' => ['nullable', 'string', 'max:30'],
+            'avatar' => ['nullable', 'image', 'max:2048'],
         ];
     }
 }
