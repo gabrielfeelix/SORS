@@ -54,6 +54,12 @@ class KitamoBootstrap
         $categoryName = $transaction->category?->name ?? 'Outros';
         $categoryKey = $this->categoryKey($categoryName);
 
+        $tags = $transaction->tags ?? [];
+        if ($transaction->is_recurring && !in_array('Recorrente', $tags, true)) {
+            $tags[] = 'Recorrente';
+        }
+        $tags = array_values(array_unique($tags));
+
         return [
             'id' => (string) $transaction->id,
             'dateLabel' => $dateLabel,
@@ -70,7 +76,7 @@ class KitamoBootstrap
             'categoryLabel' => $categoryName,
             'categoryKey' => $categoryKey,
             'accountLabel' => $transaction->account?->name ?? 'Conta',
-            'tags' => $transaction->tags ?? [],
+            'tags' => $tags,
         ];
     }
 

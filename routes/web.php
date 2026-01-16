@@ -55,6 +55,10 @@ Route::get('/analysis/compare', function () {
     return Inertia::render('Analysis/Compare');
 })->middleware(['auth', 'verified'])->name('analysis.compare');
 
+Route::get('/notifications', function () {
+    return Inertia::render('Notifications/Index');
+})->middleware(['auth', 'verified'])->name('notifications.index');
+
 Route::get('/goals', function () {
     return Inertia::render('Goals/Index');
 })->middleware(['auth', 'verified'])->name('goals.index');

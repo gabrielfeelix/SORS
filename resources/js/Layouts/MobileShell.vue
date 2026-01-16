@@ -15,7 +15,7 @@ const page = usePage();
 
 const navItems = computed(() => [
     {
-        label: 'Visão',
+        label: 'Início',
         href: route('dashboard'),
         active: route().current('dashboard'),
         icon: 'home' as const,
