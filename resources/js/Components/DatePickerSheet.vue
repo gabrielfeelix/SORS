@@ -129,7 +129,6 @@ const selectYesterday = () => {
                                 :auto-apply="true"
                                 :week-start="0"
                                 locale="pt-BR"
-                                :hide-navigation="false"
                             />
                         </div>
                     </div>
@@ -160,4 +159,3 @@ const selectYesterday = () => {
     border-color: #14b8a6;
 }
 </style>
-

@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import type { TransactionModalPayload } from '@/Components/TransactionModal.vue';
 import { formatMoneyInputCentsShift, moneyInputToNumber, numberToMoneyInput } from '@/lib/moneyInput';
+import DatePickerSheet from '@/Components/DatePickerSheet.vue';
 
 type TransactionKind = TransactionModalPayload['kind'];
 type DateKind = TransactionModalPayload['dateKind'];
@@ -28,6 +29,7 @@ const category = ref('Alimentação');
 const account = ref('Carteira');
 const dateKind = ref<DateKind>('today');
 const dateOther = ref('');
+const dateSheetOpen = ref(false);
 const isInstallment = ref(false);
 const installmentCount = ref(1);
 const isPaid = ref(false);
@@ -104,6 +106,20 @@ const toBRDate = (isoDate: string) => {
     return `${dd}/${mm}/${yyyy}`;
 };
 
+const openDateSheet = () => {
+    dateSheetOpen.value = true;
+};
+
+const selectToday = () => {
+    dateKind.value = 'today';
+    dateOther.value = '';
+};
+
+const setDateOther = (br: string) => {
+    dateKind.value = 'other';
+    dateOther.value = br;
+};
+
 const reset = () => {
     const draft = props.initial ?? null;
     initialId.value = draft?.id;
@@ -114,6 +130,7 @@ const reset = () => {
     account.value = draft?.account ?? 'Carteira';
     dateKind.value = draft?.dateKind ?? 'today';
     dateOther.value = draft?.dateOther ? toBRDate(draft.dateOther) : '';
+    dateSheetOpen.value = false;
     isInstallment.value = draft?.isInstallment ?? false;
     installmentCount.value = draft?.installmentCount ?? 1;
     isPaid.value = draft?.isPaid ?? false;
@@ -304,8 +321,18 @@ const save = () => {
                     <div>
                         <div class="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Data</div>
                         <div class="grid grid-cols-2 gap-3">
-                            <button type="button" class="h-11 rounded-xl text-sm font-semibold" :class="dateButtonClass('today')" @click="dateKind = 'today'">Hoje</button>
-                            <button type="button" class="h-11 rounded-xl text-sm font-semibold" :class="dateButtonClass('other')" @click="dateKind = 'other'">Outro</button>
+                            <button type="button" class="h-11 rounded-xl text-sm font-semibold" :class="dateButtonClass('today')" @click="selectToday">Hoje</button>
+                            <button
+                                type="button"
+                                class="h-11 rounded-xl text-sm font-semibold"
+                                :class="dateButtonClass('other')"
+                                @click="
+                                    dateKind = 'other';
+                                    openDateSheet();
+                                "
+                            >
+                                Outro
+                            </button>
                         </div>
                         <input
                             v-if="dateKind === 'other'"
@@ -314,6 +341,7 @@ const save = () => {
                             type="text"
                             placeholder="dd/mm/aaaa"
                             class="mt-3 h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                            @focus="openDateSheet"
                         />
                     </div>
 
@@ -415,6 +443,24 @@ const save = () => {
             </footer>
         </div>
     </div>
+
+    <DatePickerSheet
+        :open="dateSheetOpen"
+        :model-value="dateKind === 'today' ? '' : dateOther"
+        @close="dateSheetOpen = false"
+        @select-today="
+            () => {
+                selectToday();
+                dateSheetOpen = false;
+            }
+        "
+        @update:model-value="
+            (v) => {
+                setDateOther(v);
+                dateSheetOpen = false;
+            }
+        "
+    />
 </template>
 
 <style scoped>
