@@ -71,6 +71,7 @@ const computeTotals = (items: Entry[]) => {
 const saldoAtual = ref(0);
 const receitas = ref(0);
 const despesas = ref(0);
+const hideValues = ref(false);
 
 const syncTotals = () => {
     const totals = computeTotals(desktopEntries.value);
@@ -80,6 +81,23 @@ const syncTotals = () => {
 };
 
 syncTotals();
+
+const formatBRLMasked = (value: number) => (hideValues.value ? 'R$ ••••' : formatBRL(value));
+
+const setHideValues = (next: boolean) => {
+    hideValues.value = next;
+    try {
+        localStorage.setItem('kitamo_hide_values', next ? '1' : '0');
+    } catch {
+        // ignore
+    }
+};
+
+try {
+    hideValues.value = localStorage.getItem('kitamo_hide_values') === '1';
+} catch {
+    // ignore
+}
 
 const cashflowSeries = computed(() => {
     const entries = desktopEntries.value;
@@ -538,7 +556,7 @@ const openBillDetails = (id: string) => {
 </script>
 
 <template>
-	    <MobileShell v-if="isMobile">
+	    <MobileShell v-if="isMobile" @add="openTransaction('expense')">
 	        <header class="flex items-center justify-between pt-2">
 	            <Link :href="route('settings')" class="flex items-center gap-3" aria-label="Abrir configurações">
 	                <span class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
@@ -565,75 +583,66 @@ const openBillDetails = (id: string) => {
 	            </div>
 	        </header>
 
-        <section class="mt-7 text-center">
-            <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Saldo Atual</div>
-            <div class="mt-3 text-5xl font-semibold tracking-tight text-teal-500">
-                {{ formatBRL(saldoAtual) }}
-            </div>
-            <div class="mt-2 flex items-center justify-center gap-2 text-xs font-semibold text-slate-400">
-                <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                Atualizado agora
-            </div>
-        </section>
+            <section class="mt-6 rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-5 shadow-lg ring-1 ring-slate-900/10">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-300">Saldo total</div>
+                        <div class="mt-2 text-4xl font-semibold tracking-tight text-emerald-400">
+                            {{ formatBRLMasked(saldoAtual) }}
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        class="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/10"
+                        :aria-label="hideValues ? 'Mostrar valores' : 'Ocultar valores'"
+                        @click="setHideValues(!hideValues)"
+                    >
+                        <svg v-if="hideValues" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                            <path d="M12 15a3 3 0 1 0 0-6" />
+                            <path d="M4 4l16 16" />
+                        </svg>
+                        <svg v-else class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    </button>
+                </div>
 
-	        <section class="mt-6 grid grid-cols-3 gap-3">
-            <Link
-                :href="route('accounts.index', { kind: 'income' })"
-                class="relative rounded-2xl bg-white px-3 py-4 text-center shadow-sm ring-1 ring-slate-200/60 transition hover:-translate-y-0.5"
-            >
-                <span class="absolute right-3 top-3 text-emerald-500">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 18l6-6-6-6" />
-                    </svg>
-                </span>
-                <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 21V7" />
-                        <path d="M7 12l5-5 5 5" />
-                    </svg>
-                </div>
-                <div class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Receitas</div>
-                <div class="mt-1 text-sm font-semibold text-slate-700">
-                    {{ formatBRL(receitas).replace('R$', '').trim() }}
-                </div>
-            </Link>
+                <div class="mt-4 grid grid-cols-2 gap-3">
+                    <Link
+                        :href="route('accounts.index', { kind: 'income' })"
+                        class="rounded-2xl bg-white/5 p-4 ring-1 ring-white/10"
+                        aria-label="Ver receitas"
+                    >
+                        <div class="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wide text-emerald-300">
+                            <span>Entrou</span>
+                            <svg class="h-4 w-4 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6" />
+                            </svg>
+                        </div>
+                        <div class="mt-1 text-base font-semibold text-white">
+                            {{ formatBRLMasked(receitas) }}
+                        </div>
+                    </Link>
 
-            <Link
-                :href="route('accounts.index', { kind: 'expense' })"
-                class="relative rounded-2xl bg-white px-3 py-4 text-center shadow-sm ring-1 ring-slate-200/60 transition hover:-translate-y-0.5"
-            >
-                <span class="absolute right-3 top-3 text-red-500">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 18l6-6-6-6" />
-                    </svg>
-                </span>
-                <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-500">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 3v14" />
-                        <path d="M7 12l5 5 5-5" />
-                    </svg>
+                    <Link
+                        :href="route('accounts.index', { kind: 'expense' })"
+                        class="rounded-2xl bg-white/5 p-4 ring-1 ring-white/10"
+                        aria-label="Ver despesas"
+                    >
+                        <div class="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wide text-red-300">
+                            <span>Saiu</span>
+                            <svg class="h-4 w-4 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6" />
+                            </svg>
+                        </div>
+                        <div class="mt-1 text-base font-semibold text-white">
+                            {{ formatBRLMasked(despesas) }}
+                        </div>
+                    </Link>
                 </div>
-                <div class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Despesas</div>
-                <div class="mt-1 text-sm font-semibold text-slate-700">
-                    {{ formatBRL(despesas).replace('R$', '').trim() }}
-                </div>
-            </Link>
-
-	            <button
-	                type="button"
-	                class="rounded-2xl bg-white px-3 py-4 text-center shadow-sm ring-1 ring-slate-200/60 transition hover:-translate-y-0.5"
-	                @click="createAccountOpen = true"
-	            >
-	                <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-2xl bg-teal-50 text-teal-600">
-	                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                        <path d="M12 3v18" />
-	                        <path d="M7 7h5a3 3 0 1 1 0 6H7" />
-	                    </svg>
-	                </div>
-	                <div class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Contas</div>
-	                <div class="mt-1 text-sm font-semibold text-slate-700">Adicionar</div>
-	            </button>
-	        </section>
+            </section>
 
 	        <!-- Alertas de saldo removidos do mobile -->
 
@@ -728,7 +737,9 @@ const openBillDetails = (id: string) => {
 	            <div v-else-if="hasCashflow" class="mt-4">
 	                <div class="grid grid-cols-6 items-end gap-3">
 	                    <div v-for="bar in cashflowSeries" :key="bar.label" class="text-center">
-	                        <div class="text-[10px] font-semibold text-slate-400">{{ formatBRL(bar.amount).replace('R$', '').trim() }}</div>
+	                        <div class="text-[10px] font-semibold text-slate-400">
+	                            {{ hideValues ? '••••' : formatBRL(bar.amount).replace('R$', '').trim() }}
+	                        </div>
 	                        <div class="mx-auto mt-2 w-8 rounded-2xl" :class="bar.tone" :style="{ height: `${bar.height}px` }"></div>
 	                        <div class="mt-2 text-[10px] font-semibold" :class="bar.highlight ? 'text-emerald-600' : 'text-slate-400'">{{ bar.label }}</div>
 	                    </div>
@@ -796,7 +807,9 @@ const openBillDetails = (id: string) => {
 	                            <div class="text-xs text-slate-500">{{ account.subtitle }}</div>
 	                        </div>
 	                    </div>
-	                    <div class="text-sm font-semibold text-slate-900">R$ {{ account.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
+	                    <div class="text-sm font-semibold text-slate-900">
+	                        {{ hideValues ? 'R$ ••••' : `R$ ${account.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }}
+	                    </div>
 	                </Link>
 	            </div>
 	        </section>
@@ -845,7 +858,9 @@ const openBillDetails = (id: string) => {
 	                            <div class="text-xs text-slate-500">{{ card.subtitle }}</div>
 	                        </div>
 	                    </div>
-	                    <div class="text-sm font-semibold text-slate-900">R$ {{ card.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
+	                    <div class="text-sm font-semibold text-slate-900">
+	                        {{ hideValues ? 'R$ ••••' : `R$ ${card.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }}
+	                    </div>
 	                </Link>
 	            </div>
 	        </section>
@@ -893,20 +908,6 @@ const openBillDetails = (id: string) => {
                 </div>
             </div>
         </section>
-
-	        <template #fab>
-            <button
-                type="button"
-                class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom)+1rem)] right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-teal-500 text-white shadow-xl shadow-teal-500/30"
-                aria-label="Adicionar"
-                @click="openTransaction('expense')"
-            >
-                <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 5v14" />
-                    <path d="M5 12h14" />
-                </svg>
-            </button>
-        </template>
 
 	        <TransactionModal :open="transactionOpen" :kind="transactionKind" :initial="transactionInitial" @close="transactionOpen = false" @save="onTransactionSave" />
 	        <CreditCardModal :open="creditCardModalOpen" @close="creditCardModalOpen = false" @save="saveCreditCard" />
