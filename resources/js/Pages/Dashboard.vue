@@ -1013,7 +1013,7 @@ onMounted(() => {
 	                <Link
 	                    v-for="card in creditCardsDisplay"
 	                    :key="card.id"
-	                    :href="route('accounts.card')"
+	                    :href="route('credit-cards.show', { account: card.id })"
 	                    class="block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-200/60"
 	                >
                         <div class="px-4 pt-4">

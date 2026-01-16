@@ -21,6 +21,7 @@ use App\Http\Controllers\WidgetController;
 use App\Http\Controllers\MoedasController;
 use App\Http\Controllers\RelatoriosController;
 use App\Http\Controllers\CreditCardController;
+use App\Http\Controllers\CreditCardPageController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -133,6 +134,10 @@ Route::get('/accounts/nubank', function () {
 Route::get('/accounts/nubank-card', function () {
     return Inertia::render('Accounts/CreditCard');
 })->middleware(['auth', 'verified'])->name('accounts.card');
+
+Route::get('/cartoes/{account}', [CreditCardPageController::class, 'show'])
+    ->middleware(['auth', 'verified'])
+    ->name('credit-cards.show');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/exports/transactions', [ExportController::class, 'transactions'])->name('exports.transactions');
