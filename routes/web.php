@@ -121,6 +121,10 @@ Route::get('/accounts', function () {
     return Inertia::render('Accounts/Index');
 })->middleware(['auth', 'verified'])->name('accounts.index');
 
+Route::get('/accounts/overview', function () {
+    return Inertia::render('Accounts/Overview');
+})->middleware(['auth', 'verified'])->name('accounts.overview');
+
 Route::get('/accounts/search', function () {
     return Inertia::render('Accounts/Search');
 })->middleware(['auth', 'verified'])->name('accounts.search');
