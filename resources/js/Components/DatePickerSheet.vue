@@ -77,7 +77,7 @@ const selectYesterday = () => {
                 >
                     <div
                         v-if="open"
-                        class="absolute inset-x-0 bottom-0 mx-auto w-full max-w-md rounded-t-[28px] bg-white px-5 pb-[calc(18px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-18px_60px_-40px_rgba(15,23,42,0.55)]"
+                        class="absolute inset-x-0 bottom-0 mx-auto w-full max-w-md rounded-t-[28px] bg-white px-5 pb-[calc(18px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-18px_60px_-40px_rgba(15,23,42,0.55)] md:max-w-xl"
                         role="dialog"
                         aria-modal="true"
                     >

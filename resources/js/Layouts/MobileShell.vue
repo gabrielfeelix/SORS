@@ -96,7 +96,10 @@ const mainPaddingClass = computed(() =>
 
 <template>
     <div class="min-h-screen" :class="bgClass">
-        <main class="mx-auto w-full max-w-md px-5 pt-[calc(1rem+env(safe-area-inset-top))]" :class="mainPaddingClass">
+        <main
+            class="mx-auto w-full max-w-md px-5 pt-[calc(1rem+env(safe-area-inset-top))] md:max-w-2xl md:px-8"
+            :class="mainPaddingClass"
+        >
             <slot />
         </main>
 
@@ -105,7 +108,10 @@ const mainPaddingClass = computed(() =>
             class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/70 bg-white transition-transform duration-200"
             :class="navVisible ? 'translate-y-0' : 'translate-y-[110%]'"
         >
-            <nav class="mx-auto flex w-full max-w-md items-center justify-between px-6 pb-[env(safe-area-inset-bottom)] pt-2" aria-label="Navegação principal">
+            <nav
+                class="mx-auto flex w-full max-w-md items-center justify-between px-6 pb-[env(safe-area-inset-bottom)] pt-2 md:max-w-2xl md:px-10"
+                aria-label="Navegação principal"
+            >
                 <Link
                     :href="navItems[0].href"
                     class="flex flex-1 flex-col items-center justify-center gap-1 py-2 transition"

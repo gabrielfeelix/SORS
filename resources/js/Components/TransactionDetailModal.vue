@@ -76,7 +76,7 @@ const onReceiptChange = (event: Event) => {
     <div v-if="open" class="fixed inset-0 z-[70]">
         <button class="absolute inset-0 bg-black/50 backdrop-blur-sm" type="button" @click="close" aria-label="Fechar"></button>
 
-        <div class="absolute inset-x-0 bottom-0 w-full max-w-md overflow-hidden rounded-t-[28px] bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.25)]">
+        <div class="absolute inset-x-0 bottom-0 w-full max-w-md overflow-hidden rounded-t-[28px] bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.25)] md:max-w-xl">
             <div class="px-6 pb-[calc(24px+env(safe-area-inset-bottom))] pt-3">
                 <div class="relative flex items-center justify-center">
                     <div class="h-1 w-10 rounded-full bg-slate-200"></div>
