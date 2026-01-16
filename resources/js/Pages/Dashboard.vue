@@ -210,7 +210,9 @@ const bankAccounts = computed(() =>
             label: account.name,
             subtitle: 'Saldo atual',
             amount: account.current_balance,
-            color: account.color ?? null,
+            color:
+                account.color ??
+                (account.type === 'wallet' ? '#14B8A6' : account.icon === 'bank' ? '#3B82F6' : '#14B8A6'),
         })),
 );
 
@@ -922,8 +924,7 @@ onMounted(() => {
 	                    <div class="flex items-center gap-3">
 	                        <span
                                 class="flex h-11 w-11 items-center justify-center rounded-2xl text-white"
-                                :class="account.color ? '' : 'bg-slate-900'"
-                                :style="account.color ? { backgroundColor: account.color } : undefined"
+                                :style="{ backgroundColor: account.color }"
                             >
 	                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 	                                <path d="M3 10h18" />
