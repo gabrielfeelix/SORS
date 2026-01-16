@@ -254,10 +254,11 @@ const confirmInstallments = (_payload: { installments: number; interestRate: num
                     </svg>
                 </button>
 
-                <div
-                    v-if="actionsOpen"
-                    class="absolute right-0 top-12 w-56 overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-slate-200/70"
-                >
+                <div v-if="actionsOpen" class="fixed inset-0 z-[65]" @click="actionsOpen = false">
+                    <div
+                        class="absolute right-5 top-16 w-60 overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200/70"
+                        @click.stop
+                    >
                     <button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50" @click="openAddTransaction">
                         <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
                             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -286,6 +287,7 @@ const confirmInstallments = (_payload: { installments: number; interestRate: num
                         </span>
                         Excluir cartão
                     </button>
+                    </div>
                 </div>
             </div>
         </header>

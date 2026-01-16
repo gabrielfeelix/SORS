@@ -54,10 +54,13 @@ const confirm = () => emit('confirm', { installments: installments.value, intere
     <div v-if="open" class="fixed inset-0 z-[70]">
         <button type="button" class="absolute inset-0 bg-black/40 backdrop-blur-sm" aria-label="Fechar" @click="close"></button>
 
-        <div class="absolute inset-x-0 bottom-0 rounded-t-3xl bg-white pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-2xl">
+        <div
+            class="absolute inset-x-0 bottom-0 flex max-h-[calc(100vh-1.5rem)] flex-col rounded-t-3xl bg-white shadow-2xl"
+            style="height: min(720px, calc(100vh - 1.5rem));"
+        >
             <div class="mx-auto mt-2 h-1.5 w-12 rounded-full bg-slate-200"></div>
 
-            <div class="px-5 pt-5">
+            <div class="flex-1 overflow-y-auto px-5 pb-6 pt-5">
                 <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
                     <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 1v22" />
@@ -163,4 +166,3 @@ const confirm = () => emit('confirm', { installments: installments.value, intere
         </div>
     </div>
 </template>
-

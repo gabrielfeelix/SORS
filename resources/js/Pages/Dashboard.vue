@@ -954,13 +954,39 @@ onMounted(() => {
                 <div class="mt-3 text-sm font-semibold text-slate-900">Sem projeções ainda</div>
                 <div class="mt-1 text-xs text-slate-500">Adicione seus primeiros lançamentos para ver o fluxo.</div>
             </div>
-        </section>
+	        </section>
 
-	        <section v-if="showAccountsSection" class="mt-6 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200/60">
-	            <div class="flex items-center justify-between">
-	                <div class="text-lg font-semibold text-slate-900">Contas bancárias</div>
-	                <button class="rounded-2xl p-2 text-slate-400 hover:bg-slate-100" type="button" aria-label="Adicionar conta" @click="createAccountOpen = true">
-	                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <section class="mt-6 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200/60">
+                <button
+                    type="button"
+                    class="flex w-full items-center justify-between rounded-2xl bg-slate-50 px-4 py-4 text-left ring-1 ring-slate-200/60"
+                    @click="homeWidgetsModalOpen = true"
+                >
+                    <div class="flex items-center gap-4">
+                        <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200/60">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="8" height="8" rx="2" />
+                                <rect x="13" y="3" width="8" height="5" rx="2" />
+                                <rect x="13" y="10" width="8" height="11" rx="2" />
+                                <rect x="3" y="13" width="8" height="8" rx="2" />
+                            </svg>
+                        </span>
+                        <div>
+                            <div class="text-sm font-semibold text-slate-900">Gerencie sua tela inicial aqui</div>
+                            <div class="mt-1 text-xs font-semibold text-slate-400">Escolha o que aparece na Home.</div>
+                        </div>
+                    </div>
+                    <svg class="h-5 w-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18l6-6-6-6" />
+                    </svg>
+                </button>
+            </section>
+
+		        <section v-if="showAccountsSection" class="mt-6 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200/60">
+		            <div class="flex items-center justify-between">
+		                <div class="text-lg font-semibold text-slate-900">Contas bancárias</div>
+		                <button class="rounded-2xl p-2 text-slate-400 hover:bg-slate-100" type="button" aria-label="Adicionar conta" @click="createAccountOpen = true">
+		                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 	                        <path d="M12 5v14" />
 	                        <path d="M5 12h14" />
 	                    </svg>
@@ -1014,16 +1040,16 @@ onMounted(() => {
 	            </div>
 	        </section>
 
-	        <section v-if="showCreditCardsSection" class="mt-6 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200/60">
-	            <div class="flex items-center justify-between">
-	                <div class="text-lg font-semibold text-slate-900">Cartões de crédito</div>
-	                <button class="rounded-2xl p-2 text-slate-400 hover:bg-slate-100" type="button" aria-label="Adicionar cartão" @click="creditCardModalOpen = true">
-	                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                        <path d="M12 5v14" />
-	                        <path d="M5 12h14" />
-	                    </svg>
-	                </button>
-	            </div>
+		        <section v-if="showCreditCardsSection" class="mt-6 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200/60">
+		            <div class="flex items-center justify-between">
+		                <div class="text-lg font-semibold text-slate-900">Cartões de crédito</div>
+		                <button class="rounded-2xl p-2 text-slate-400 hover:bg-slate-100" type="button" aria-label="Adicionar cartão" @click="creditCardModalOpen = true">
+		                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+		                        <path d="M12 5v14" />
+		                        <path d="M5 12h14" />
+		                    </svg>
+		                </button>
+		            </div>
 
                 <div
                     v-if="creditCards.length > 0"
@@ -1061,71 +1087,23 @@ onMounted(() => {
 	                </button>
 	            </div>
 
-	            <div v-else class="mt-4 space-y-3">
-                    <div
-                        v-if="creditCardsDisplay.length === 0"
-                        class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center"
-                    >
-                        <div class="text-sm font-semibold text-slate-900">Nada por aqui.</div>
-                        <div class="mt-1 text-xs text-slate-500">Quando houver cartões com esse status, eles aparecem aqui.</div>
-                    </div>
+		            <div v-else class="mt-4 space-y-3">
+	                    <div
+	                        v-if="creditCardsDisplay.length === 0"
+	                        class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center"
+	                    >
+	                        <div class="text-sm font-semibold text-slate-900">Nada por aqui.</div>
+	                        <div class="mt-1 text-xs text-slate-500">Quando houver cartões com esse status, eles aparecem aqui.</div>
+	                    </div>
 
 		                <div
                             v-for="card in creditCardsDisplay"
                             :key="card.id"
                             class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-200/60"
                         >
-                            <Link :href="route('credit-cards.show', { account: card.id })" class="block">
-	                            <div class="px-4 pt-4">
-	                            <div class="flex items-start justify-between gap-4">
-	                                <div>
-	                                    <div class="flex items-center gap-2">
-	                                        <span
-	                                            class="flex h-6 items-center justify-center rounded-full px-3 text-[10px] font-bold text-white"
-	                                            :style="{ backgroundColor: card.color }"
-	                                        >
-	                                            {{ card.brandLabel }}
-	                                        </span>
-	                                        <div class="text-sm font-semibold text-slate-900">{{ card.label }}</div>
-	                                    </div>
-	                                    <div v-if="card.closingDateLabel" class="mt-1 text-xs font-semibold text-red-500">
-	                                        {{ card.closed ? 'Fechou em' : 'Fecha em' }} {{ card.closingDateLabel }}
-	                                    </div>
-	                                </div>
-	                                <div class="text-right text-sm font-semibold text-slate-900">
-	                                    {{ hideValues ? 'R$ ••••' : `R$ ${card.used.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }}
-	                                </div>
-	                            </div>
-
-                            <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
-                                <div class="h-2 rounded-full bg-emerald-600" :style="{ width: `${card.percent}%` }"></div>
-                            </div>
-                            <div class="mt-2 flex items-center justify-between text-[11px] font-semibold text-slate-400">
-                                <span></span>
-                                <span>{{ card.percentLabel }}</span>
-                            </div>
-
-                            <div class="mt-2 text-[11px] font-semibold text-slate-500">
-                                Limite Disponível
-                                <span class="font-semibold text-slate-700">
-                                    {{ hideValues ? 'R$ ••••' : `R$ ${card.available.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }}
-                                </span>
-                            </div>
-                        </div>
-
-	                        <div class="mt-4 border-t border-slate-100 px-4 py-3">
-	                            <div class="flex items-center justify-between text-xs font-semibold text-slate-500">
-	                                <span>Ver mais</span>
-	                                <span class="text-slate-400">›</span>
-	                            </div>
-	                        </div>
-
-	                        <div class="border-t border-slate-100 px-4 py-3 text-center text-xs font-semibold text-emerald-700">VER MAIS</div>
-                            </Link>
-
                             <button
                                 type="button"
-                                class="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-2xl bg-white/90 text-slate-600 shadow-sm ring-1 ring-slate-200/60 backdrop-blur hover:bg-white"
+                                class="absolute right-3 top-3 z-[2] flex h-9 w-9 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200/70"
                                 aria-label="Adicionar movimentação na fatura"
                                 @click.stop="openAddCardTransaction(card.label)"
                             >
@@ -1134,6 +1112,50 @@ onMounted(() => {
                                     <path d="M5 12h14" />
                                 </svg>
                             </button>
+
+                            <Link :href="route('credit-cards.show', { account: card.id })" class="block">
+	                            <div class="px-4 py-4">
+	                                <div class="flex items-start justify-between gap-4 pr-12">
+	                                    <div class="min-w-0">
+	                                        <div class="flex items-center gap-2">
+	                                            <span
+	                                                class="flex h-6 items-center justify-center rounded-full px-3 text-[10px] font-bold text-white"
+	                                                :style="{ backgroundColor: card.color }"
+	                                            >
+	                                                {{ card.brandLabel }}
+	                                            </span>
+	                                            <div class="truncate text-sm font-semibold text-slate-900">{{ card.label }}</div>
+	                                        </div>
+	                                        <div v-if="card.closingDateLabel" class="mt-1 text-xs font-semibold text-red-500">
+	                                            {{ card.closed ? 'Fechou em' : 'Fecha em' }} {{ card.closingDateLabel }}
+	                                        </div>
+	                                    </div>
+	                                    <div class="shrink-0 text-right text-sm font-semibold text-slate-900">
+	                                        {{ hideValues ? 'R$ ••••' : `R$ ${card.used.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }}
+	                                    </div>
+	                                </div>
+
+	                                <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+	                                    <div class="h-2 rounded-full bg-emerald-600" :style="{ width: `${card.percent}%` }"></div>
+	                                </div>
+	                                <div class="mt-2 flex items-center justify-between text-[11px] font-semibold text-slate-400">
+	                                    <span class="truncate">
+	                                        Limite disponível
+	                                        <span class="font-semibold text-slate-700">
+	                                            {{ hideValues ? 'R$ ••••' : `R$ ${card.available.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }}
+	                                        </span>
+	                                    </span>
+	                                    <span>{{ card.percentLabel }}</span>
+	                                </div>
+
+	                                <div class="mt-3 border-t border-slate-100 pt-3">
+	                                    <div class="flex items-center justify-between text-xs font-semibold text-emerald-700">
+	                                        <span>Ver mais</span>
+	                                        <span class="text-emerald-700">›</span>
+	                                    </div>
+	                                </div>
+	                            </div>
+                            </Link>
                         </div>
 
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-700">
@@ -1147,33 +1169,7 @@ onMounted(() => {
 	            </div>
 		        </section>
 
-                <section class="mt-6 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200/60">
-                    <button
-                        type="button"
-                        class="flex w-full items-center justify-between rounded-2xl bg-slate-50 px-4 py-4 text-left ring-1 ring-slate-200/60"
-                        @click="homeWidgetsModalOpen = true"
-                    >
-                        <div class="flex items-center gap-4">
-                            <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200/60">
-                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="3" y="3" width="8" height="8" rx="2" />
-                                    <rect x="13" y="3" width="8" height="5" rx="2" />
-                                    <rect x="13" y="10" width="8" height="11" rx="2" />
-                                    <rect x="3" y="13" width="8" height="8" rx="2" />
-                                </svg>
-                            </span>
-                            <div>
-                                <div class="text-sm font-semibold text-slate-900">Gerencie sua tela inicial aqui</div>
-                                <div class="mt-1 text-xs font-semibold text-slate-400">Escolha o que aparece na Home.</div>
-                            </div>
-                        </div>
-                        <svg class="h-5 w-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 18l6-6-6-6" />
-                        </svg>
-                    </button>
-                </section>
-
-		        <section v-if="showUpcomingBillsSection" class="mt-6">
+			        <section v-if="showUpcomingBillsSection" class="mt-6">
 	            <div class="flex items-center justify-between">
 	                <div class="text-lg font-semibold text-slate-900">Próximas contas</div>
                 <Link :href="route('accounts.index')" class="text-sm font-semibold text-emerald-600">Ver todas</Link>
