@@ -1,6 +1,7 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from 'vue';
 import { formatMoneyInputCentsShift } from '@/lib/moneyInput';
+import { preventNonDigitKeydown } from '@/lib/inputGuards';
 
 	type AccountType = 'wallet' | 'bank' | 'card';
 
@@ -103,7 +104,7 @@ const close = () => emit('close');
                         v-model="name"
                         type="text"
                         placeholder="Ex: Banco Inter, Carteira..."
-                        class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-700 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none"
+                        class="w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-700 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-0 focus-visible:outline-none"
                     />
                 </div>
 
@@ -142,10 +143,12 @@ const close = () => emit('close');
 	                    <input
 	                        :value="initialBalance"
 	                        @input="onInitialBalanceInput"
-	                        inputmode="decimal"
 	                        type="text"
+	                        inputmode="numeric"
+	                        pattern="[0-9]*"
 	                        placeholder="0,00"
-	                        class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-700 focus:border-teal-400 focus:outline-none"
+	                        class="w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-700 focus:border-teal-400 focus:outline-none focus:ring-0 focus-visible:outline-none"
+	                        @keydown="preventNonDigitKeydown"
 	                        aria-label="Saldo inicial"
 	                    />
 	                </div>

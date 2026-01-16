@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import type { BancoSelecionado } from './CreateAccountStep1.vue';
 import { formatMoneyInputCentsShift, moneyInputToNumber } from '@/lib/moneyInput';
+import { preventNonDigitKeydown } from '@/lib/inputGuards';
 
 export type AccountPayload = {
   banco_nome: string;
@@ -134,10 +135,13 @@ watch(
             <div class="text-center">
               <div class="text-4xl font-bold text-[#14B8A6]">R$</div>
               <input
-                class="mt-2 w-full bg-transparent text-center text-3xl font-bold text-slate-900 focus:outline-none focus:ring-0"
+                class="mt-2 w-full appearance-none border-0 bg-transparent text-center text-3xl font-bold text-slate-900 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none"
+                type="text"
                 inputmode="numeric"
+                pattern="[0-9]*"
                 :value="saldo"
                 @input="onSaldoInput"
+                @keydown="preventNonDigitKeydown"
                 placeholder="0,00"
                 aria-label="Saldo inicial"
               />
@@ -171,7 +175,7 @@ watch(
               v-model="descricao"
               type="text"
               placeholder="Ex: Conta salário, Conta pessoal..."
-              class="w-full rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-4 py-3 text-sm placeholder:text-[#9CA3AF] focus:border-[#14B8A6] focus:outline-none focus:ring-0"
+              class="w-full appearance-none rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-4 py-3 text-sm placeholder:text-[#9CA3AF] focus:border-[#14B8A6] focus:outline-none focus:ring-0 focus-visible:outline-none"
             />
           </div>
 

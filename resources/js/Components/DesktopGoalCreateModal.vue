@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { requestJson } from '@/lib/kitamoApi';
 import type { Goal } from '@/types/kitamo';
 import { formatMoneyInputCentsShift, moneyInputToNumber } from '@/lib/moneyInput';
+import { preventNonDigitKeydown } from '@/lib/inputGuards';
 
 const props = defineProps<{
     open: boolean;
@@ -138,10 +139,13 @@ watch(
                         <div class="mt-3 flex h-12 items-center gap-3 rounded-xl bg-slate-50 px-4 ring-1 ring-slate-200/60 focus-within:ring-2 focus-within:ring-[#14B8A6]">
                             <div class="text-sm font-semibold text-slate-400">R$</div>
                             <input
-                                class="w-full bg-transparent text-lg font-bold tracking-tight text-slate-900 focus:outline-none"
-                                inputmode="decimal"
+                                class="w-full appearance-none border-0 bg-transparent text-lg font-bold tracking-tight text-slate-900 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none"
+                                type="text"
+                                inputmode="numeric"
+                                pattern="[0-9]*"
                                 :value="target"
                                 @input="onTargetInput"
+                                @keydown="preventNonDigitKeydown"
                                 placeholder="0,00"
                                 aria-label="Valor objetivo"
                             />

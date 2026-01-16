@@ -7,6 +7,7 @@ import MobileShell from '@/Layouts/MobileShell.vue';
 import KitamoLayout from '@/Layouts/KitamoLayout.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
 import { formatMoneyInputCentsShift, moneyInputToNumber } from '@/lib/moneyInput';
+import { preventNonDigitKeydown } from '@/lib/inputGuards';
 
 const isMobile = useIsMobile();
 
@@ -150,10 +151,12 @@ const submit = async () => {
                 <input
                     :value="target"
                     @input="onTargetInput"
-                    inputmode="decimal"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
                     type="text"
                     placeholder="0,00"
                     class="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 focus:border-[#14B8A6] focus:outline-none focus:ring-0"
+                    @keydown="preventNonDigitKeydown"
                 />
             </div>
 

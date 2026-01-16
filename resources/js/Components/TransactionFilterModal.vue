@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { formatMoneyInputCentsShift } from '@/lib/moneyInput';
+import { preventNonDigitKeydown } from '@/lib/inputGuards';
 
 export type TransactionFilterState = {
     categories: string[];
@@ -256,10 +257,12 @@ const canApply = computed(() => true);
                                 <div class="flex items-center gap-2 text-xs font-semibold text-slate-900">
                                     <span class="text-slate-500">R$</span>
                                     <input
-                                        class="w-full bg-transparent text-xs font-semibold text-slate-900 focus:outline-none"
+                                        class="w-full appearance-none border-0 bg-transparent text-xs font-semibold text-slate-900 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none"
                                         :value="local.min"
                                         inputmode="numeric"
+                                        pattern="[0-9]*"
                                         @input="onMinInput"
+                                        @keydown="preventNonDigitKeydown"
                                         aria-label="Valor mínimo"
                                     />
                                 </div>
@@ -271,10 +274,12 @@ const canApply = computed(() => true);
                                 <div class="flex items-center gap-2 text-xs font-semibold text-slate-900">
                                     <span class="text-slate-500">R$</span>
                                     <input
-                                        class="w-full bg-transparent text-xs font-semibold text-slate-900 focus:outline-none"
+                                        class="w-full appearance-none border-0 bg-transparent text-xs font-semibold text-slate-900 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none"
                                         :value="local.max"
                                         inputmode="numeric"
+                                        pattern="[0-9]*"
                                         @input="onMaxInput"
+                                        @keydown="preventNonDigitKeydown"
                                         aria-label="Valor máximo"
                                     />
                                 </div>

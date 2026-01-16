@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { formatMoneyInputCentsShift, moneyInputToNumber, numberToMoneyInput } from '@/lib/moneyInput';
+import { preventNonDigitKeydown } from '@/lib/inputGuards';
 
 export type CreditCardModalPayload = {
   id?: string;
@@ -47,6 +48,21 @@ const cores = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#1F2937']
 const onLimiteInput = (event: Event) => {
   const target = event.target as HTMLInputElement;
   limite.value = formatMoneyInputCentsShift(target.value);
+};
+
+const onDayInput = (event: Event, which: 'fechamento' | 'vencimento') => {
+  const target = event.target as HTMLInputElement;
+  const next = clampDay(target.value);
+  if (which === 'fechamento') dia_fechamento.value = next;
+  else dia_vencimento.value = next;
+};
+
+const clampDay = (value: string) => {
+  const digits = String(value ?? '').replace(/[^\d]/g, '');
+  if (!digits) return null;
+  const parsed = Number(digits);
+  if (!Number.isFinite(parsed)) return null;
+  return Math.min(31, Math.max(1, parsed));
 };
 
 const limiteNumber = computed(() => {
@@ -133,7 +149,7 @@ watch(
               type="text"
               placeholder="Ex: Nubank Roxo"
               maxlength="50"
-              class="h-11 w-full rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 text-base text-[#374151] placeholder:text-[#9CA3AF] focus:border-[#14B8A6] focus:outline-none focus:ring-0"
+              class="h-11 w-full appearance-none rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 text-base text-[#374151] placeholder:text-[#9CA3AF] focus:border-[#14B8A6] focus:outline-none focus:ring-0 focus-visible:outline-none"
             />
           </div>
 
@@ -164,11 +180,14 @@ watch(
             <div class="flex h-11 items-center gap-1 rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3">
               <span class="text-base text-[#6B7280]">R$</span>
               <input
-                class="h-full w-full flex-1 bg-transparent text-center text-base text-[#374151] focus:outline-none focus:ring-0"
+                class="h-full w-full flex-1 appearance-none border-0 bg-transparent text-center text-base text-[#374151] outline-none focus:outline-none focus:ring-0 focus-visible:outline-none"
+                type="text"
                 inputmode="numeric"
+                pattern="[0-9]*"
                 autocomplete="off"
                 :value="limite"
                 @input="onLimiteInput"
+                @keydown="preventNonDigitKeydown"
                 placeholder="0,00"
                 aria-label="Limite"
               />
@@ -183,24 +202,26 @@ watch(
                 <label class="mb-2 block text-xs text-[#6B7280]">Fechamento</label>
                 <input
                   :value="dia_fechamento ?? ''"
-                  type="number"
-                  min="1"
-                  max="31"
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
                   placeholder="Dia"
-                  class="h-11 w-full rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 text-center text-base text-[#374151] placeholder:text-[#9CA3AF] focus:border-[#14B8A6] focus:outline-none focus:ring-0"
-                  @input="(e) => { const v = Number((e.target as HTMLInputElement).value); dia_fechamento = Number.isFinite(v) && v > 0 ? v : null }"
+                  class="h-11 w-full appearance-none rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 text-center text-base text-[#374151] placeholder:text-[#9CA3AF] focus:border-[#14B8A6] focus:outline-none focus:ring-0 focus-visible:outline-none"
+                  @input="(e) => onDayInput(e, 'fechamento')"
+                  @keydown="preventNonDigitKeydown"
                 />
               </div>
               <div>
                 <label class="mb-2 block text-xs text-[#6B7280]">Vencimento</label>
                 <input
                   :value="dia_vencimento ?? ''"
-                  type="number"
-                  min="1"
-                  max="31"
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
                   placeholder="Dia"
-                  class="h-11 w-full rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 text-center text-base text-[#374151] placeholder:text-[#9CA3AF] focus:border-[#14B8A6] focus:outline-none focus:ring-0"
-                  @input="(e) => { const v = Number((e.target as HTMLInputElement).value); dia_vencimento = Number.isFinite(v) && v > 0 ? v : null }"
+                  class="h-11 w-full appearance-none rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 text-center text-base text-[#374151] placeholder:text-[#9CA3AF] focus:border-[#14B8A6] focus:outline-none focus:ring-0 focus-visible:outline-none"
+                  @input="(e) => onDayInput(e, 'vencimento')"
+                  @keydown="preventNonDigitKeydown"
                 />
               </div>
             </div>

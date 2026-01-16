@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { formatMoneyInputCentsShift } from '@/lib/moneyInput';
+import { preventNonDigitKeydown } from '@/lib/inputGuards';
 
 const props = defineProps<{
     open: boolean;
@@ -49,10 +50,13 @@ watch(
                 <div class="mt-3 flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200/60">
                     <div class="text-sm font-semibold text-slate-400">R$</div>
                     <input
-                        class="w-full bg-transparent text-2xl font-bold tracking-tight text-slate-900 focus:outline-none"
-                        inputmode="decimal"
+                        class="w-full appearance-none border-0 bg-transparent text-2xl font-bold tracking-tight text-slate-900 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none"
+                        type="text"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
                         :value="amount"
                         @input="onAmountInput"
+                        @keydown="preventNonDigitKeydown"
                         placeholder="0,00"
                         aria-label="Valor"
                     />

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { formatMoneyInputCentsShift } from '@/lib/moneyInput';
+import { preventNonDigitKeydown } from '@/lib/inputGuards';
 
 const props = defineProps<{
     open: boolean;
@@ -61,11 +62,14 @@ const accentShadow = computed(() => (props.accent === 'blue' ? 'shadow-[0_2px_8p
                             <div class="w-10 text-base text-[#6B7280]">R$</div>
                             <input
                                 class="amount-input h-[72px] w-full flex-1 bg-transparent text-center text-[56px] font-bold leading-none tracking-tight focus:outline-none focus:ring-0"
+                                type="text"
                                 inputmode="numeric"
+                                pattern="[0-9]*"
                                 autocomplete="off"
                                 spellcheck="false"
                                 :value="amount"
                                 @input="onAmountInput"
+                                @keydown="preventNonDigitKeydown"
                                 placeholder="0,00"
                                 aria-label="Valor"
                             />

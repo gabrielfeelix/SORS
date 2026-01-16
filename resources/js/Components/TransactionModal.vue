@@ -1,6 +1,7 @@
 <script setup lang="ts">
-	import { computed, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { formatMoneyInputCentsShift, moneyInputToNumber, numberToMoneyInput } from '@/lib/moneyInput';
+import { preventNonDigitKeydown } from '@/lib/inputGuards';
 import DatePickerSheet from '@/Components/DatePickerSheet.vue';
 import CategoryPickerSheet, { type CategoryOption } from '@/Components/CategoryPickerSheet.vue';
 import AccountPickerSheet, { type AccountOption } from '@/Components/AccountPickerSheet.vue';
@@ -298,6 +299,7 @@ watch(
                             spellcheck="false"
                             :value="amount"
                             @input="onAmountInput"
+                            @keydown="preventNonDigitKeydown"
                             placeholder="0,00"
                             aria-label="Valor"
                         />
