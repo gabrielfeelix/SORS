@@ -125,6 +125,7 @@ class KitamoBootstrap
             'type' => $account->type,
             'icon' => $account->icon,
             'color' => $account->color,
+            'card_brand' => $account->card_brand,
             'current_balance' => (float) $account->current_balance,
             'credit_limit' => $account->credit_limit ? (float) $account->credit_limit : null,
             'closing_day' => $account->closing_day,

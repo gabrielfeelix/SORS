@@ -222,6 +222,8 @@ const creditCards = computed(() =>
         .map((account) => ({
             id: account.id,
             label: account.name,
+            brand: (account.card_brand ?? 'visa') as string,
+            color: account.color ?? '#8B5CF6',
             limit: Number(account.credit_limit ?? 0),
             used: Math.max(0, Number(account.current_balance ?? 0)),
             closingDay: Number(account.closing_day ?? 0) || null,
@@ -271,6 +273,8 @@ const creditCardsDisplay = computed(() => {
             ? creditCards.value.map((c) => ({
                   id: c.id,
                   label: c.label,
+                  brand: c.brand,
+                  color: c.color,
                   limit: c.limit,
                   used: c.used,
                   closingDay: c.closingDay,
@@ -279,6 +283,8 @@ const creditCardsDisplay = computed(() => {
             : creditCardsApi.value.map((c) => ({
                   id: c.id,
                   label: c.nome,
+                  brand: c.bandeira,
+                  color: c.cor,
                   limit: c.limite,
                   used: c.limite_usado ?? 0,
                   closingDay: c.dia_fechamento ?? null,
@@ -298,10 +304,13 @@ const creditCardsDisplay = computed(() => {
                 closed,
                 closingDateLabel: closingDate ? formatLongDate(closingDate) : null,
                 percentLabel: `${percent.toFixed(2)}%`,
+                brandLabel: card.brand === 'mastercard' ? 'Mastercard' : card.brand === 'elo' ? 'Elo' : card.brand === 'amex' ? 'Amex' : 'Visa',
             };
         })
         .filter((card) => (creditCardsTab.value === 'open' ? !card.closed : card.closed));
 });
+
+const creditCardsTotalUsed = computed(() => creditCardsDisplay.value.reduce((sum, c) => sum + (c.used || 0), 0));
 
 const mobileAccounts = computed(() =>
     (bootstrap.value.accounts ?? []).slice(0, 3).map((account) => ({
@@ -1010,7 +1019,15 @@ onMounted(() => {
                         <div class="px-4 pt-4">
                             <div class="flex items-start justify-between gap-4">
                                 <div>
-                                    <div class="text-sm font-semibold text-slate-900">{{ card.label }}</div>
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            class="flex h-6 items-center justify-center rounded-full px-3 text-[10px] font-bold text-white"
+                                            :style="{ backgroundColor: card.color }"
+                                        >
+                                            {{ card.brandLabel }}
+                                        </span>
+                                        <div class="text-sm font-semibold text-slate-900">{{ card.label }}</div>
+                                    </div>
                                     <div v-if="card.closingDateLabel" class="mt-1 text-xs font-semibold text-red-500">
                                         {{ card.closed ? 'Fechou em' : 'Fecha em' }} {{ card.closingDateLabel }}
                                     </div>
@@ -1038,17 +1055,22 @@ onMounted(() => {
 
                         <div class="mt-4 border-t border-slate-100 px-4 py-3">
                             <div class="flex items-center justify-between text-xs font-semibold text-slate-500">
-                                <span>TOTAL</span>
-                                <span class="text-slate-900">
-                                    {{ hideValues ? 'R$ ••••' : `R$ ${card.used.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }}
-                                </span>
+                                <span>Ver mais</span>
+                                <span class="text-slate-400">›</span>
                             </div>
                         </div>
 
-                        <div class="border-t border-slate-100 px-4 py-3 text-center text-xs font-semibold text-emerald-700">
-                            VER MAIS
-                        </div>
+                        <div class="border-t border-slate-100 px-4 py-3 text-center text-xs font-semibold text-emerald-700">VER MAIS</div>
 	                </Link>
+
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-700">
+                        <div class="flex items-center justify-between">
+                            <span>Total (todos cartões)</span>
+                            <span class="text-slate-900">
+                                {{ hideValues ? 'R$ ••••' : `R$ ${creditCardsTotalUsed.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }}
+                            </span>
+                        </div>
+                    </div>
 	            </div>
 	        </section>
 

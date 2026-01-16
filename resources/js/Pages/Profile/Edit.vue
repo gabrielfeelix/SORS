@@ -6,7 +6,7 @@ import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
 import MobileShell from '@/Layouts/MobileShell.vue';
 import ChangePasswordModal from '@/Components/ChangePasswordModal.vue';
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { useIsMobile } from '@/composables/useIsMobile';
 
 defineProps<{
@@ -50,6 +50,9 @@ const passwordOpen = ref(false);
 const submitProfile = () => {
     form.patch(route('profile.update'), {
         preserveScroll: true,
+        onSuccess: () => {
+            router.visit(route('settings'));
+        },
     });
 };
 
@@ -59,6 +62,7 @@ const submitAvatar = () => {
         preserveScroll: true,
         onSuccess: () => {
             form.avatar = null;
+            router.visit(route('settings'));
         },
     });
 };

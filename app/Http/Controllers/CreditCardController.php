@@ -19,12 +19,12 @@ class CreditCardController extends Controller
             ->map(fn (Account $account) => [
                 'id' => (string) $account->id,
                 'nome' => $account->name,
-                'bandeira' => 'visa',
+                'bandeira' => ($account->card_brand ?: 'visa'),
                 'limite' => (float) ($account->credit_limit ?? 0),
                 'limite_usado' => (float) ($account->current_balance ?? 0),
                 'dia_fechamento' => (int) ($account->closing_day ?? 10),
                 'dia_vencimento' => (int) ($account->due_day ?? 17),
-                'cor' => '#8B5CF6',
+                'cor' => ($account->color ?: '#8B5CF6'),
             ]);
 
         return response()->json([
@@ -49,6 +49,8 @@ class CreditCardController extends Controller
             'name' => $data['nome'],
             'type' => 'credit_card',
             'icon' => $data['icone'] ?? 'credit-card',
+            'color' => $data['cor'] ?? '#8B5CF6',
+            'card_brand' => $data['bandeira'] ?? 'visa',
             'initial_balance' => 0,
             'current_balance' => 0,
             'credit_limit' => $data['limite'],
@@ -82,6 +84,8 @@ class CreditCardController extends Controller
             'closing_day' => array_key_exists('dia_fechamento', $data) ? $data['dia_fechamento'] : $cartao->closing_day,
             'due_day' => array_key_exists('dia_vencimento', $data) ? $data['dia_vencimento'] : $cartao->due_day,
             'icon' => $data['icone'] ?? $cartao->icon,
+            'color' => $data['cor'] ?? $cartao->color,
+            'card_brand' => $data['bandeira'] ?? $cartao->card_brand,
         ]);
         $cartao->save();
 
@@ -98,4 +102,3 @@ class CreditCardController extends Controller
         return response()->json(['ok' => true]);
     }
 }
-

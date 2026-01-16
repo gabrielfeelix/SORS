@@ -18,6 +18,7 @@ class Account extends Model
         'moeda',
         'icon',
         'color',
+        'card_brand',
         'initial_balance',
         'current_balance',
         'credit_limit',
