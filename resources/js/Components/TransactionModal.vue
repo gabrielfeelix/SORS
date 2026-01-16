@@ -1,6 +1,7 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from 'vue';
 import { formatMoneyInputCentsShift, moneyInputToNumber, numberToMoneyInput } from '@/lib/moneyInput';
+import DatePickerSheet from '@/Components/DatePickerSheet.vue';
 
 type TransactionKind = 'expense' | 'income' | 'transfer';
 type DateKind = 'today' | 'other';
@@ -50,6 +51,7 @@ const transferTo = ref('Carteira');
 const transferDescription = ref('');
 const dateKind = ref<DateKind>('today');
 const dateOther = ref<string>('');
+const dateSheetOpen = ref(false);
 const isInstallment = ref(false);
 const installmentCount = ref(1);
 const isPaid = ref(false);
@@ -106,8 +108,6 @@ const installmentEach = computed(() => {
     return amountNumber.value / count;
 });
 
-const dateButtonClass = (value: DateKind) => (dateKind.value === value ? 'bg-[#14B8A6] text-white' : 'bg-[#F3F4F6] text-[#6B7280]');
-
 const toISODate = (brDate: string) => {
     const match = brDate.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
     if (!match) return '';
@@ -146,6 +146,20 @@ const reset = () => {
     intervalo_dias.value = draft?.intervalo_dias ?? null;
     data_fim.value = draft?.data_fim ? toBRDate(draft.data_fim) : '';
     fimMode.value = draft?.data_fim ? 'ate' : 'sempre';
+};
+
+const openDateSheet = () => {
+    dateSheetOpen.value = true;
+};
+
+const selectToday = () => {
+    dateKind.value = 'today';
+    dateOther.value = '';
+};
+
+const setDateOther = (br: string) => {
+    dateKind.value = 'other';
+    dateOther.value = br;
 };
 
 	const save = () => {
@@ -313,7 +327,7 @@ watch(
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
-                        <button type="button" class="rounded-2xl bg-slate-50 px-4 py-4 text-left ring-1 ring-slate-200/70" @click="dateKind = dateKind === 'today' ? 'other' : 'today'">
+                        <button type="button" class="rounded-2xl bg-slate-50 px-4 py-4 text-left ring-1 ring-slate-200/70" @click="openDateSheet">
                             <div class="flex items-center gap-3">
                                 <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-200 text-slate-500">
                                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -325,7 +339,7 @@ watch(
                                 </span>
                                 <div class="min-w-0 flex-1">
                                     <div class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Data</div>
-                                    <div class="truncate text-sm font-semibold text-slate-900">{{ dateKind === 'today' ? 'Hoje' : dateOther || 'Outra' }}</div>
+                                    <div class="truncate text-sm font-semibold text-slate-900">{{ dateKind === 'today' ? 'Hoje' : dateOther || 'Selecione' }}</div>
                                 </div>
                             </div>
                         </button>
@@ -350,17 +364,6 @@ watch(
                                 </button>
                             </div>
                         </div>
-                    </div>
-
-                    <div v-if="dateKind === 'other'" class="rounded-2xl bg-slate-50 px-4 py-4 ring-1 ring-slate-200/70">
-                        <input
-                            v-model="dateOther"
-                            inputmode="numeric"
-                            type="text"
-                            placeholder="dd/mm/aaaa"
-                            class="h-11 w-full rounded-xl bg-white px-4 text-sm font-semibold text-slate-700 ring-1 ring-slate-200/60 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-                            aria-label="Data"
-                        />
                     </div>
 
                     <button
@@ -537,7 +540,7 @@ watch(
                 </div>
                 </div>
 
-                <footer class="px-6 pt-4 pb-[calc(24px+env(safe-area-inset-bottom))]">
+            <footer class="px-6 pt-4 pb-[calc(24px+env(safe-area-inset-bottom))]">
                     <button
                         class="h-[52px] w-full rounded-xl text-base font-bold text-white"
                         :class="localKind === 'transfer' ? 'bg-[#3B82F6] shadow-[0_2px_8px_rgba(59,130,246,0.25)]' : 'bg-[#14B8A6] shadow-[0_2px_8px_rgba(20,184,166,0.25)]'"
@@ -546,30 +549,19 @@ watch(
                     >
                         {{ localKind === 'transfer' ? 'Transferir' : 'Salvar' }}
                     </button>
-                </footer>
+            </footer>
         </div>
+        <DatePickerSheet
+            :open="dateSheetOpen"
+            :model-value="dateKind === 'today' ? '' : dateOther"
+            @close="dateSheetOpen = false"
+            @select-today="() => { selectToday(); dateSheetOpen = false; }"
+            @update:model-value="(v) => { setDateOther(v); dateSheetOpen = false; }"
+        />
     </div>
 </template>
 
 <style scoped>
-.transaction-modal input,
-.transaction-modal select,
-.transaction-modal textarea {
-    outline: none !important;
-    box-shadow: none !important;
-    border: 0 !important;
-}
-.transaction-modal input:focus,
-.transaction-modal input:focus-visible,
-.transaction-modal select:focus,
-.transaction-modal select:focus-visible,
-.transaction-modal textarea:focus,
-.transaction-modal textarea:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
-    border: 0 !important;
-}
-
 .amount-input {
     outline: none !important;
     box-shadow: none !important;
