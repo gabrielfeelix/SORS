@@ -956,32 +956,6 @@ onMounted(() => {
             </div>
 	        </section>
 
-            <section class="mt-6 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200/60">
-                <button
-                    type="button"
-                    class="flex w-full items-center justify-between rounded-2xl bg-slate-50 px-4 py-4 text-left ring-1 ring-slate-200/60"
-                    @click="homeWidgetsModalOpen = true"
-                >
-                    <div class="flex items-center gap-4">
-                        <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200/60">
-                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="3" width="8" height="8" rx="2" />
-                                <rect x="13" y="3" width="8" height="5" rx="2" />
-                                <rect x="13" y="10" width="8" height="11" rx="2" />
-                                <rect x="3" y="13" width="8" height="8" rx="2" />
-                            </svg>
-                        </span>
-                        <div>
-                            <div class="text-sm font-semibold text-slate-900">Gerencie sua tela inicial aqui</div>
-                            <div class="mt-1 text-xs font-semibold text-slate-400">Escolha o que aparece na Home.</div>
-                        </div>
-                    </div>
-                    <svg class="h-5 w-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 18l6-6-6-6" />
-                    </svg>
-                </button>
-            </section>
-
 		        <section v-if="showAccountsSection" class="mt-6 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200/60">
 		            <div class="flex items-center justify-between">
 		                <div class="text-lg font-semibold text-slate-900">Contas bancárias</div>
@@ -1174,7 +1148,7 @@ onMounted(() => {
 	            </div>
 		        </section>
 
-			        <section v-if="showUpcomingBillsSection" class="mt-6">
+		        <section v-if="showUpcomingBillsSection" class="mt-6">
 	            <div class="flex items-center justify-between">
 	                <div class="text-lg font-semibold text-slate-900">Próximas contas</div>
                 <Link :href="route('accounts.index')" class="text-sm font-semibold text-emerald-600">Ver todas</Link>
@@ -1216,7 +1190,33 @@ onMounted(() => {
                     </div>
                 </div>
             </div>
-        </section>
+		        </section>
+
+            <section class="mt-6 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200/60">
+                <button
+                    type="button"
+                    class="flex w-full items-center justify-between rounded-2xl bg-slate-50 px-4 py-4 text-left ring-1 ring-slate-200/60"
+                    @click="homeWidgetsModalOpen = true"
+                >
+                    <div class="flex items-center gap-4">
+                        <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200/60">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="8" height="8" rx="2" />
+                                <rect x="13" y="3" width="8" height="5" rx="2" />
+                                <rect x="13" y="10" width="8" height="11" rx="2" />
+                                <rect x="3" y="13" width="8" height="8" rx="2" />
+                            </svg>
+                        </span>
+                        <div>
+                            <div class="text-sm font-semibold text-slate-900">Gerencie sua tela inicial aqui</div>
+                            <div class="mt-1 text-xs font-semibold text-slate-400">Escolha o que aparece na Home.</div>
+                        </div>
+                    </div>
+                    <svg class="h-5 w-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18l6-6-6-6" />
+                    </svg>
+                </button>
+            </section>
 
 	        <TransactionModal
                 :open="transactionOpen"
