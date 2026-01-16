@@ -198,16 +198,9 @@ watch(
 </script>
 
 <template>
-    <div v-if="open" class="fixed inset-0 z-[60]">
-        <button class="absolute inset-0 bg-black/50 backdrop-blur-sm" type="button" @click="close" aria-label="Fechar"></button>
-
-        <div
-            class="absolute inset-x-0 bottom-0 h-[650px] max-h-[calc(100vh-150px)] w-full overflow-hidden rounded-t-[24px] bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.25)]"
-            role="dialog"
-            aria-modal="true"
-        >
-            <div class="flex h-full flex-col">
-                <header class="relative flex h-14 items-center px-4">
+    <div v-if="open" class="fixed inset-0 z-[60] bg-white" role="dialog" aria-modal="true">
+        <div class="flex h-full flex-col">
+                <header class="relative flex h-14 items-center px-4 pt-[env(safe-area-inset-top)]">
                     <button class="h-6 w-6 text-[#6B7280]" type="button" @click="close" aria-label="Fechar">
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M18 6L6 18" />
@@ -551,7 +544,6 @@ watch(
                         {{ localKind === 'transfer' ? 'Transferir' : 'Salvar' }}
                     </button>
                 </footer>
-            </div>
         </div>
     </div>
 </template>
