@@ -33,13 +33,9 @@ const selectMethod = (method: 'manual' | 'automatic') => {
       aria-label="Fechar"
     ></button>
 
-    <div
-      class="absolute inset-x-0 bottom-0 max-h-[calc(100vh-150px)] w-full overflow-hidden rounded-t-[24px] bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.25)]"
-      role="dialog"
-      aria-modal="true"
-    >
+    <div class="absolute inset-0 w-full bg-white" role="dialog" aria-modal="true">
       <div class="flex h-full flex-col">
-        <header class="relative flex h-14 items-center px-4">
+        <header class="relative flex items-center px-4 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-3">
           <button class="h-6 w-6 text-[#6B7280]" type="button" @click="$emit('back')" aria-label="Voltar">
             <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M15 18l-6-6 6-6" />
@@ -58,7 +54,7 @@ const selectMethod = (method: 'manual' | 'automatic') => {
           </button>
         </header>
 
-        <div class="flex-1 overflow-y-auto px-6 pb-6">
+        <div class="flex-1 overflow-y-auto px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
           <!-- Banco Selecionado -->
           <div v-if="banco" class="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
             <div class="flex items-center gap-2">

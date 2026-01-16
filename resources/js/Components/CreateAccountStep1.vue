@@ -51,13 +51,9 @@ const selectBanco = (banco: typeof bancos[0]) => {
       aria-label="Fechar"
     ></button>
 
-    <div
-      class="absolute inset-x-0 bottom-0 max-h-[calc(100vh-150px)] w-full overflow-hidden rounded-t-[24px] bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.25)]"
-      role="dialog"
-      aria-modal="true"
-    >
+    <div class="absolute inset-0 w-full bg-white" role="dialog" aria-modal="true">
       <div class="flex h-full flex-col">
-        <header class="relative flex h-14 items-center px-4">
+        <header class="relative flex items-center px-4 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-3">
           <button class="h-6 w-6 text-[#6B7280]" type="button" @click="$emit('close')" aria-label="Fechar">
             <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 6L6 18" />
@@ -72,7 +68,7 @@ const selectBanco = (banco: typeof bancos[0]) => {
           </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto px-6 pb-6">
+        <div class="flex-1 overflow-y-auto px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
           <!-- Search -->
           <div class="mt-4">
             <input
