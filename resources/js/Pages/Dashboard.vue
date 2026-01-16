@@ -217,10 +217,55 @@ const creditCards = computed(() =>
         .map((account) => ({
             id: account.id,
             label: account.name,
-            subtitle: 'Fatura aberta',
-            amount: account.current_balance,
+            limit: Number(account.credit_limit ?? 0),
+            used: Math.max(0, Number(account.current_balance ?? 0)),
+            closingDay: Number(account.closing_day ?? 0) || null,
+            dueDay: Number(account.due_day ?? 0) || null,
         })),
 );
+
+type CreditCardTab = 'open' | 'closed';
+const creditCardsTab = ref<CreditCardTab>('open');
+
+const formatLongDate = (date: Date) =>
+    new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+
+const nextDateByDayOfMonth = (dayOfMonth: number, from: Date) => {
+    const year = from.getFullYear();
+    const month = from.getMonth();
+    const todayDay = from.getDate();
+    const targetMonth = todayDay <= dayOfMonth ? month : month + 1;
+    // clamp para último dia do mês
+    const lastDay = new Date(year, targetMonth + 1, 0).getDate();
+    const day = Math.min(dayOfMonth, lastDay);
+    return new Date(year, targetMonth, day);
+};
+
+const isInvoiceClosed = (closingDay: number | null, now: Date) => {
+    if (!closingDay) return false;
+    return now.getDate() > closingDay;
+};
+
+const creditCardsDisplay = computed(() => {
+    const now = new Date();
+
+    return creditCards.value
+        .map((card) => {
+            const percent = card.limit > 0 ? Math.min(100, Math.max(0, (card.used / card.limit) * 100)) : 0;
+            const available = card.limit > 0 ? Math.max(0, card.limit - card.used) : 0;
+            const closed = isInvoiceClosed(card.closingDay, now);
+            const closingDate = card.closingDay ? nextDateByDayOfMonth(card.closingDay, now) : null;
+            return {
+                ...card,
+                percent,
+                available,
+                closed,
+                closingDateLabel: closingDate ? formatLongDate(closingDate) : null,
+                percentLabel: `${percent.toFixed(2)}%`,
+            };
+        })
+        .filter((card) => (creditCardsTab.value === 'open' ? !card.closed : card.closed));
+});
 
 const mobileAccounts = computed(() =>
     (bootstrap.value.accounts ?? []).slice(0, 3).map((account) => ({
@@ -825,6 +870,25 @@ const openBillDetails = (id: string) => {
 	                </button>
 	            </div>
 
+                <div class="mt-4 inline-flex w-full rounded-full bg-slate-50 p-1 ring-1 ring-slate-200/70">
+                    <button
+                        type="button"
+                        class="flex-1 rounded-full px-4 py-2 text-xs font-semibold transition"
+                        :class="creditCardsTab === 'open' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-500'"
+                        @click="creditCardsTab = 'open'"
+                    >
+                        Faturas abertas
+                    </button>
+                    <button
+                        type="button"
+                        class="flex-1 rounded-full px-4 py-2 text-xs font-semibold transition"
+                        :class="creditCardsTab === 'closed' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-500'"
+                        @click="creditCardsTab = 'closed'"
+                    >
+                        Faturas fechadas
+                    </button>
+                </div>
+
 	            <div v-if="creditCards.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-6 text-center">
 	                <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-400">
 	                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -840,27 +904,61 @@ const openBillDetails = (id: string) => {
 	            </div>
 
 	            <div v-else class="mt-4 space-y-3">
+                    <div
+                        v-if="creditCardsDisplay.length === 0"
+                        class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center"
+                    >
+                        <div class="text-sm font-semibold text-slate-900">Nada por aqui.</div>
+                        <div class="mt-1 text-xs text-slate-500">Quando houver cartões com esse status, eles aparecem aqui.</div>
+                    </div>
+
 	                <Link
-	                    v-for="card in creditCards"
+	                    v-for="card in creditCardsDisplay"
 	                    :key="card.id"
 	                    :href="route('accounts.card')"
-	                    class="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm ring-1 ring-slate-200/60"
+	                    class="block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-200/60"
 	                >
-	                    <div class="flex items-center gap-3">
-	                        <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white">
-	                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                <rect x="3" y="5" width="18" height="14" rx="3" />
-	                                <path d="M3 10h18" />
-	                            </svg>
-	                        </span>
-	                        <div>
-	                            <div class="text-sm font-semibold text-slate-900">{{ card.label }}</div>
-	                            <div class="text-xs text-slate-500">{{ card.subtitle }}</div>
-	                        </div>
-	                    </div>
-	                    <div class="text-sm font-semibold text-slate-900">
-	                        {{ hideValues ? 'R$ ••••' : `R$ ${card.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }}
-	                    </div>
+                        <div class="px-4 pt-4">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <div class="text-sm font-semibold text-slate-900">{{ card.label }}</div>
+                                    <div v-if="card.closingDateLabel" class="mt-1 text-xs font-semibold text-red-500">
+                                        {{ card.closed ? 'Fechou em' : 'Fecha em' }} {{ card.closingDateLabel }}
+                                    </div>
+                                </div>
+                                <div class="text-right text-sm font-semibold text-slate-900">
+                                    {{ hideValues ? 'R$ ••••' : `R$ ${card.used.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }}
+                                </div>
+                            </div>
+
+                            <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+                                <div class="h-2 rounded-full bg-emerald-600" :style="{ width: `${card.percent}%` }"></div>
+                            </div>
+                            <div class="mt-2 flex items-center justify-between text-[11px] font-semibold text-slate-400">
+                                <span></span>
+                                <span>{{ card.percentLabel }}</span>
+                            </div>
+
+                            <div class="mt-2 text-[11px] font-semibold text-slate-500">
+                                Limite Disponível
+                                <span class="font-semibold text-slate-700">
+                                    {{ hideValues ? 'R$ ••••' : `R$ ${card.available.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 border-t border-slate-100 px-4 py-3">
+                            <div class="flex items-center justify-between text-xs font-semibold text-slate-500">
+                                <span>TOTAL</span>
+                                <span class="text-slate-900">
+                                    {{ hideValues ? 'R$ ••••' : `R$ ${card.used.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-slate-100 px-4 py-3 text-center text-xs font-semibold text-emerald-700">
+                            VER MAIS
+                        </div>
 	                </Link>
 	            </div>
 	        </section>
