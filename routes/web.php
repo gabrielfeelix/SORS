@@ -20,6 +20,7 @@ use App\Http\Controllers\NotificationPreferencesController;
 use App\Http\Controllers\WidgetController;
 use App\Http\Controllers\MoedasController;
 use App\Http\Controllers\RelatoriosController;
+use App\Http\Controllers\CreditCardController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -141,6 +142,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/api/contas', [AccountController::class, 'store'])->name('api.contas.store');
     Route::patch('/api/contas/{account}', [AccountController::class, 'update'])->name('api.contas.update');
     Route::delete('/api/contas/{account}', [AccountController::class, 'destroy'])->name('api.contas.destroy');
+
+    Route::get('/api/cartoes', [CreditCardController::class, 'index'])->name('api.cartoes.index');
+    Route::post('/api/cartoes', [CreditCardController::class, 'store'])->name('api.cartoes.store');
+    Route::patch('/api/cartoes/{cartao}', [CreditCardController::class, 'update'])->name('api.cartoes.update');
+    Route::delete('/api/cartoes/{cartao}', [CreditCardController::class, 'destroy'])->name('api.cartoes.destroy');
 
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
     Route::patch('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
