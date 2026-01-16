@@ -950,7 +950,10 @@ onMounted(() => {
 	                </button>
 	            </div>
 
-                <div class="mt-4 inline-flex w-full rounded-full bg-slate-50 p-1 ring-1 ring-slate-200/70">
+                <div
+                    v-if="creditCards.length > 0"
+                    class="mt-4 inline-flex w-full rounded-full bg-slate-50 p-1 ring-1 ring-slate-200/70"
+                >
                     <button
                         type="button"
                         class="flex-1 rounded-full px-4 py-2 text-xs font-semibold transition"
