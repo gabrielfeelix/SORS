@@ -755,20 +755,6 @@ onMounted(() => {
             </div>
         </div>
 
-        <template #fab>
-            <button
-                type="button"
-                class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom)+1rem)] right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-teal-500 text-white shadow-xl shadow-teal-500/30"
-                aria-label="Adicionar"
-                @click="openCreate"
-            >
-                <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 5v14" />
-                    <path d="M5 12h14" />
-                </svg>
-            </button>
-	        </template>
-
 	        <TransactionModal :open="transactionOpen" :kind="transactionKind" :initial="transactionInitial" @close="transactionOpen = false" @save="onTransactionSave" />
 	        <TransactionDetailModal
 	            :open="detailOpen"

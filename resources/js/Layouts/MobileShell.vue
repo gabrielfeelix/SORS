@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 
 const emit = defineEmits<{
@@ -16,6 +16,45 @@ const props = withDefaults(
 );
 
 const page = usePage();
+
+const navVisible = ref(true);
+let lastScrollY = 0;
+let ticking = false;
+
+const updateNavVisibility = () => {
+    const current = window.scrollY || 0;
+    const delta = current - lastScrollY;
+    lastScrollY = current;
+
+    if (current <= 0) {
+        navVisible.value = true;
+        return;
+    }
+
+    // evita flicker com pequenos deltas
+    if (Math.abs(delta) < 8) return;
+
+    if (delta > 0) navVisible.value = false; // scroll para baixo
+    else navVisible.value = true; // scroll para cima
+};
+
+const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+        updateNavVisibility();
+        ticking = false;
+    });
+};
+
+onMounted(() => {
+    lastScrollY = window.scrollY || 0;
+    window.addEventListener('scroll', onScroll, { passive: true });
+});
+
+onUnmounted(() => {
+    window.removeEventListener('scroll', onScroll);
+});
 
 const navItems = computed(() => [
     {
@@ -61,7 +100,11 @@ const mainPaddingClass = computed(() =>
             <slot />
         </main>
 
-        <div v-if="showNav" class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/70 bg-white">
+        <div
+            v-if="showNav"
+            class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/70 bg-white transition-transform duration-200"
+            :class="navVisible ? 'translate-y-0' : 'translate-y-[110%]'"
+        >
             <nav class="mx-auto flex w-full max-w-md items-center justify-between px-6 pb-[env(safe-area-inset-bottom)] pt-2" aria-label="Navegação principal">
                 <Link
                     :href="navItems[0].href"
