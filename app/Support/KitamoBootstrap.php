@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\Category;
 use App\Models\Goal;
 use App\Models\GoalDeposit;
+use App\Models\Tag;
 use App\Models\Transaction;
 use App\Models\User;
 use Carbon\Carbon;
@@ -37,11 +38,16 @@ class KitamoBootstrap
             ->orderBy('name')
             ->get();
 
+        $tags = Tag::where('user_id', $user->id)
+            ->orderBy('nome')
+            ->get();
+
         return [
             'entries' => $transactions->map(fn (Transaction $t) => $this->entry($t))->values(),
             'goals' => $goals->map(fn (Goal $g) => $this->goal($g))->values(),
             'accounts' => $accounts->map(fn (Account $a) => $this->account($a))->values(),
             'categories' => $categories->map(fn (Category $c) => $this->category($c))->values(),
+            'tags' => $tags->map(fn (Tag $t) => $this->tag($t))->values(),
         ];
     }
 
@@ -142,6 +148,15 @@ class KitamoBootstrap
             'color' => $category->color,
             'icon' => $category->icon,
             'is_default' => (bool) $category->is_default,
+        ];
+    }
+
+    public function tag(Tag $tag): array
+    {
+        return [
+            'id' => (string) $tag->id,
+            'nome' => $tag->nome,
+            'cor' => $tag->cor,
         ];
     }
 

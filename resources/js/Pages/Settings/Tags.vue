@@ -17,13 +17,11 @@ interface Tag {
     cor: string;
 }
 
-const tags = ref<Tag[]>([
-    { id: '1', nome: 'viagem-uruguai', cor: '#3B82F6' },
-    { id: '2', nome: 'uber', cor: '#EF4444' },
-    { id: '3', nome: 'reforma-casa', cor: '#F59E0B' },
-    { id: '4', nome: 'freela', cor: '#10B981' },
-    { id: '5', nome: 'mercado', cor: '#6B7280' },
-]);
+const props = defineProps<{
+    userTags: Tag[];
+}>();
+
+const tags = ref<Tag[]>(props.userTags || []);
 
 const editTagOpen = ref(false);
 const selectedTag = ref<Tag | null>(null);
@@ -86,14 +84,17 @@ const saveTag = async () => {
     }
 
     try {
-        // TODO: Implementar endpoint de update no backend
-        const idx = tags.value.findIndex((t) => t.id === selectedTag.value!.id);
-        if (idx >= 0) {
-            tags.value[idx] = {
-                ...tags.value[idx],
+        const response = await requestJson<Tag>(`/api/tags/${selectedTag.value.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
                 nome: editTagNome.value.trim(),
                 cor: editTagCor.value,
-            };
+            }),
+        });
+
+        const idx = tags.value.findIndex((t) => t.id === selectedTag.value!.id);
+        if (idx >= 0) {
+            tags.value[idx] = response;
         }
         editTagOpen.value = false;
         showToast('Tag atualizada com sucesso!');
@@ -106,7 +107,10 @@ const deleteTag = async () => {
     if (!selectedTag.value) return;
 
     try {
-        // TODO: Implementar endpoint de delete no backend
+        await requestJson(`/api/tags/${selectedTag.value.id}`, {
+            method: 'DELETE',
+        });
+
         tags.value = tags.value.filter((t) => t.id !== selectedTag.value!.id);
         editTagOpen.value = false;
         showToast('Tag excluída com sucesso!');

@@ -94,7 +94,19 @@ Route::get('/settings/categories', function () {
 })->middleware(['auth', 'verified'])->name('settings.categories');
 
 Route::get('/settings/tags', function () {
-    return Inertia::render('Settings/Tags');
+    $user = request()->user();
+    $tags = \App\Models\Tag::where('user_id', $user->id)
+        ->orderBy('nome')
+        ->get()
+        ->map(fn ($tag) => [
+            'id' => (string) $tag->id,
+            'nome' => $tag->nome,
+            'cor' => $tag->cor,
+        ]);
+
+    return Inertia::render('Settings/Tags', [
+        'userTags' => $tags,
+    ]);
 })->middleware(['auth', 'verified'])->name('settings.tags');
 
 Route::get('/settings/appearance', function () {
@@ -175,6 +187,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/api/transferencias', [TransferenciaController::class, 'executar'])->name('api.transferencias.executar');
     Route::get('/api/transactions', [TransactionsApiController::class, 'index'])->name('api.transactions.index');
     Route::post('/api/tags', [TagController::class, 'store'])->name('api.tags.store');
+    Route::patch('/api/tags/{tag}', [TagController::class, 'update'])->name('api.tags.update');
+    Route::delete('/api/tags/{tag}', [TagController::class, 'destroy'])->name('api.tags.destroy');
     Route::post('/api/transactions/{transaction}/tags', [TransactionTagsController::class, 'sync'])->name('api.transactions.tags.sync');
     Route::get('/api/user/profile', [UserApiController::class, 'profile'])->name('api.user.profile');
     Route::patch('/api/user/theme', [UserApiController::class, 'updateTheme'])->name('api.user.theme');
