@@ -412,6 +412,18 @@ const toastOpen = ref(false);
     
 		        <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
 		        <NewAccountModal :open="editOpen" :initial="editInitial" @close="editOpen = false" @save="saveAccountEdit" />
+		        <WalletEditModal
+		            :open="walletEditOpen"
+		            :wallet="account ? {
+		                id: account.id,
+		                name: account.name,
+		                initial_balance: account.initial_balance,
+		                current_balance: account.current_balance,
+		                color: account.color ?? '#14B8A6',
+		            } : null"
+		            @close="walletEditOpen = false"
+		            @save="saveWalletEdit"
+		        />
 		        <ConfirmationModal
 		            :open="deleteOpen"
 	            title="Excluir conta?"
