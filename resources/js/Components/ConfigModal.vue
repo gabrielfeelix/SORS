@@ -32,7 +32,7 @@ const menuItems = computed(() => [
     },
     {
         label: 'Contas Bancárias',
-        href: route('accounts.index'),
+        href: route('accounts.overview'),
         icon: 'wallet',
         tone: 'emerald' as const,
     },

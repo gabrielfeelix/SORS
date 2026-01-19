@@ -95,7 +95,7 @@ const closingLabel = (closingDay: number | null) => {
 <template>
     <Head title="Minhas Contas" />
 
-    <MobileShell v-if="isMobile" :show-nav="false">
+    <MobileShell v-if="isMobile">
         <header class="flex items-center justify-between pt-2">
             <Link
                 :href="route('dashboard')"
