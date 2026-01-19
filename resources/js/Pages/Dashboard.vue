@@ -1108,7 +1108,7 @@ onMounted(() => {
 	                </button>
 	            </div>
 
-		            <div v-else class="mt-4 space-y-3">
+		            <div v-else class="mt-4">
 	                    <div
 	                        v-if="creditCardsDisplay.length === 0"
 	                        class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center"
@@ -1117,69 +1117,50 @@ onMounted(() => {
 	                        <div class="mt-1 text-xs text-slate-500">Quando houver cartões com esse status, eles aparecem aqui.</div>
 	                    </div>
 
-		                <div
+		                <div v-else class="flex gap-3 overflow-x-auto pb-2">
+	                        <Link
                             v-for="card in creditCardsDisplay"
                             :key="card.id"
-                            class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-200/60"
+                            :href="route('credit-cards.show', { account: card.id })"
+                            class="relative shrink-0 overflow-hidden rounded-3xl p-5 shadow-lg transition hover:shadow-xl"
+                            :style="{ backgroundColor: card.color, width: '280px', minHeight: '160px' }"
                         >
-                            <button
-                                type="button"
-                                class="absolute right-3 top-3 z-[2] flex h-9 w-9 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200/70"
-                                aria-label="Adicionar movimentação na fatura"
-                                @click.stop="openAddCardTransaction(card.label)"
-                            >
-                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 5v14" />
-                                    <path d="M5 12h14" />
-                                </svg>
-                            </button>
+                            <div class="relative z-10 flex h-full flex-col text-white">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <div class="text-xs font-semibold opacity-80">{{ card.brandLabel }}</div>
+                                        <div class="text-sm font-semibold">{{ card.label }}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-[10px] font-semibold opacity-80">FATURA ATUAL</div>
+                                    </div>
+                                </div>
 
-                            <Link :href="route('credit-cards.show', { account: card.id })" class="block">
-	                            <div class="px-4 py-4">
-	                                <div class="flex items-start justify-between gap-4 pr-12">
-	                                    <div class="min-w-0">
-	                                        <div class="flex items-center gap-2">
-	                                            <span
-	                                                class="flex h-6 items-center justify-center rounded-full px-3 text-[10px] font-bold text-white"
-	                                                :style="{ backgroundColor: card.color }"
-	                                            >
-	                                                {{ card.brandLabel }}
-	                                            </span>
-	                                            <div class="truncate text-sm font-semibold text-slate-900">{{ card.label }}</div>
-	                                        </div>
-	                                        <div v-if="card.closingDateLabel" class="mt-1 text-xs font-semibold text-red-500">
-	                                            {{ card.closed ? 'Fechou em' : 'Fecha em' }} {{ card.closingDateLabel }}
-	                                        </div>
-	                                    </div>
-	                                    <div class="shrink-0 text-right text-sm font-semibold text-slate-900">
-	                                        {{ hideValues ? 'R$ ••••' : `R$ ${card.used.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }}
-	                                    </div>
-	                                </div>
+                                <div class="mt-auto">
+                                    <div class="text-2xl font-bold">
+                                        {{ hideValues ? 'R$ ••••' : `R$ ${card.used.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` }}
+                                    </div>
+                                    <div class="mt-2 text-[11px] opacity-80">
+                                        Limite: {{ hideValues ? 'R$ ••••' : `R$ ${card.limit.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` }}
+                                    </div>
+                                    <div v-if="card.closingDateLabel" class="mt-1 text-[11px] opacity-90">
+                                        Vence {{ card.closingDateLabel.split(' ').slice(-2).join(' ') }}
+                                    </div>
+                                    <div class="mt-2 flex items-center justify-between">
+                                        <div class="text-[11px] font-semibold opacity-80">{{ card.percentLabel }}</div>
+                                        <div class="text-xs font-semibold opacity-90">›</div>
+                                    </div>
+                                </div>
+                            </div>
 
-	                                <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
-	                                    <div class="h-2 rounded-full bg-emerald-600" :style="{ width: `${card.percent}%` }"></div>
-	                                </div>
-	                                <div class="mt-2 flex items-center justify-between text-[11px] font-semibold text-slate-400">
-	                                    <span class="truncate">
-	                                        Limite disponível
-	                                        <span class="font-semibold text-slate-700">
-	                                            {{ hideValues ? 'R$ ••••' : `R$ ${card.available.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }}
-	                                        </span>
-	                                    </span>
-	                                    <span>{{ card.percentLabel }}</span>
-	                                </div>
+                            <div
+                                class="absolute inset-0 rounded-3xl opacity-20"
+                                :style="{ backgroundColor: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)' }"
+                            ></div>
+                        </Link>
+                    </div>
 
-	                                <div class="mt-3 border-t border-slate-100 pt-3">
-	                                    <div class="flex items-center justify-between text-xs font-semibold text-emerald-700">
-	                                        <span>Ver mais</span>
-	                                        <span class="text-emerald-700">›</span>
-	                                    </div>
-	                                </div>
-	                            </div>
-                            </Link>
-                        </div>
-
-                    <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-700">
+                    <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-700">
                         <div class="flex items-center justify-between">
                             <span>Total (todos cartões)</span>
                             <span class="text-slate-900">
