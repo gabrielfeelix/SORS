@@ -83,10 +83,11 @@ const handleSelect = (href: string) => {
                         <path d="M6 9.01V9" />
                         <path d="m15 5 6.3 6.3a2.4 2.4 0 0 1 0 3.4L17 19" />
                     </svg>
-                    <!-- Metas Icon (Target/Flag) -->
+                    <!-- Metas Icon (Target) -->
                     <svg v-else-if="item.icon === 'target'" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-                        <line x1="4" y1="22" x2="4" y2="15" />
+                        <circle cx="12" cy="12" r="10" />
+                        <circle cx="12" cy="12" r="6" />
+                        <circle cx="12" cy="12" r="2" />
                     </svg>
                     <!-- Contas Icon (Wallet) -->
                     <svg v-else-if="item.icon === 'wallet'" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
