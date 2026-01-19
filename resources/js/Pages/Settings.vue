@@ -1,21 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
-import { requestJson } from '@/lib/kitamoApi';
-import type { Account, BootstrapData, Category } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
 import DesktopSettingsShell from '@/Layouts/DesktopSettingsShell.vue';
-import TransactionModal, { type TransactionModalPayload } from '@/Components/TransactionModal.vue';
-import NewAccountModal from '@/Components/NewAccountModal.vue';
-import NewCategoryModal from '@/Components/NewCategoryModal.vue';
-import MobileToast from '@/Components/MobileToast.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
 
 const isMobile = useIsMobile();
 const page = usePage();
-const bootstrap = computed(
-    () => (page.props.bootstrap ?? { entries: [], goals: [], accounts: [], categories: [] }) as BootstrapData,
-);
 const userName = computed(() => page.props.auth?.user?.name ?? 'Gabriel Felix');
 const userEmail = computed(() => page.props.auth?.user?.email ?? 'gab.feelix@gmail.com');
 const userPhone = computed(() => page.props.auth?.user?.phone ?? '');
@@ -54,166 +45,6 @@ const initials = computed(() => {
     const last = parts.length > 1 ? parts[parts.length - 1]?.[0] : 'F';
     return `${first}${last}`.toUpperCase();
 });
-
-type AccountIcon = 'wallet' | 'bank' | 'card' | 'phone';
-type AccountItem = { key: string; label: string; amount: number; icon: AccountIcon };
-
-type CategoryIcon = 'food' | 'home' | 'car' | 'game' | 'briefcase' | 'heart' | 'shirt' | 'bolt' | 'pill';
-type CategoryItem = { key: string; label: string; icon: CategoryIcon; bg: string; fg: string };
-
-const accountIcons = new Set<AccountIcon>(['wallet', 'bank', 'card', 'phone']);
-const resolveAccountIcon = (account: Account): AccountIcon => {
-    const icon = (account.icon ?? '').toString() as AccountIcon;
-    if (accountIcons.has(icon)) return icon;
-    if (account.type === 'credit_card') return 'card';
-    if (account.type === 'bank') return 'bank';
-    return 'wallet';
-};
-
-const mapAccount = (account: Account): AccountItem => ({
-    key: account.id,
-    label: account.name,
-    amount: account.current_balance ?? 0,
-    icon: resolveAccountIcon(account),
-});
-
-const categoryIcons = new Set<CategoryIcon>(['food', 'home', 'car', 'game', 'briefcase', 'heart', 'shirt', 'bolt', 'pill']);
-const categoryStyles: Record<CategoryIcon, { bg: string; fg: string }> = {
-    food: { bg: 'bg-amber-50', fg: 'text-amber-600' },
-    home: { bg: 'bg-blue-50', fg: 'text-blue-600' },
-    car: { bg: 'bg-slate-100', fg: 'text-slate-700' },
-    game: { bg: 'bg-emerald-50', fg: 'text-emerald-600' },
-    briefcase: { bg: 'bg-slate-100', fg: 'text-slate-700' },
-    heart: { bg: 'bg-red-50', fg: 'text-red-500' },
-    shirt: { bg: 'bg-pink-50', fg: 'text-pink-500' },
-    bolt: { bg: 'bg-yellow-50', fg: 'text-yellow-600' },
-    pill: { bg: 'bg-purple-50', fg: 'text-purple-600' },
-};
-
-const resolveCategoryIcon = (category: Category): CategoryIcon => {
-    const icon = (category.icon ?? '').toString() as CategoryIcon;
-    if (categoryIcons.has(icon)) return icon;
-    if (category.name.toLowerCase().includes('mora')) return 'home';
-    if (category.name.toLowerCase().includes('trans')) return 'car';
-    if (category.name.toLowerCase().includes('saú') || category.name.toLowerCase().includes('saude')) return 'heart';
-    if (category.name.toLowerCase().includes('lazer')) return 'game';
-    if (category.name.toLowerCase().includes('roup')) return 'shirt';
-    return 'food';
-};
-
-const mapCategory = (category: Category): CategoryItem => {
-    const icon = resolveCategoryIcon(category);
-    const styles = categoryStyles[icon] ?? categoryStyles.food;
-    return {
-        key: category.id,
-        label: category.name,
-        icon,
-        bg: styles.bg,
-        fg: styles.fg,
-    };
-};
-
-const accounts = ref<AccountItem[]>([]);
-const categories = ref<CategoryItem[]>([]);
-
-watch(
-    () => bootstrap.value.accounts,
-    (value) => {
-        accounts.value = (value ?? []).map(mapAccount);
-    },
-    { immediate: true },
-);
-
-watch(
-    () => bootstrap.value.categories,
-    (value) => {
-        categories.value = (value ?? []).map(mapCategory);
-    },
-    { immediate: true },
-);
-
-const formatMoney = (value: number) =>
-    new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-    }).format(value);
-
-const transactionOpen = ref(false);
-const transactionKind = ref<'expense' | 'income'>('expense');
-
-const newAccountOpen = ref(false);
-const newCategoryOpen = ref(false);
-
-const toastOpen = ref(false);
-const toastMessage = ref('');
-const showToast = (message: string) => {
-    toastMessage.value = message;
-    toastOpen.value = true;
-};
-
-const onTransactionSave = async (payload: TransactionModalPayload) => {
-    if (payload.kind === 'transfer') {
-        showToast('Transferência realizada');
-        return;
-    }
-
-    await requestJson(route('transactions.store'), {
-        method: 'POST',
-        body: JSON.stringify({
-            kind: payload.kind,
-            amount: payload.amount,
-            description: payload.description,
-            category: payload.category,
-            account: payload.account,
-            dateKind: payload.dateKind,
-            dateOther: payload.dateOther,
-            isPaid: payload.isPaid,
-            isInstallment: payload.isInstallment,
-            installmentCount: payload.installmentCount,
-        }),
-    });
-
-    showToast('Movimentação salva');
-};
-
-const parseBalance = (value: string) => Number(value.replace(/\./g, '').replace(',', '.')) || 0;
-
-const onSaveAccount = async (payload: { name: string; type: 'wallet' | 'bank' | 'card'; initialBalance: string; icon: string }) => {
-    const response = await requestJson<{ account: Account }>(route('accounts.store'), {
-        method: 'POST',
-        body: JSON.stringify({
-            name: payload.name || 'Nova conta',
-            type: payload.type,
-            initial_balance: parseBalance(payload.initialBalance),
-            icon: payload.icon || null,
-        }),
-    });
-
-    if (response?.account) {
-        accounts.value = [...accounts.value, mapAccount(response.account)];
-    }
-
-    newAccountOpen.value = false;
-    showToast('Conta criada');
-};
-
-const onSaveCategory = async (payload: { name: string; type: 'expense' | 'income'; icon: CategoryIcon }) => {
-    const response = await requestJson<{ category: Category }>(route('categories.store'), {
-        method: 'POST',
-        body: JSON.stringify({
-            name: payload.name || 'Nova categoria',
-            type: payload.type,
-            icon: payload.icon,
-        }),
-    });
-
-    if (response?.category) {
-        categories.value = [...categories.value, mapCategory(response.category)];
-    }
-
-    newCategoryOpen.value = false;
-    showToast('Categoria criada');
-};
 </script>
 
 
@@ -235,159 +66,6 @@ const onSaveCategory = async (payload: { name: string; type: 'expense' | 'income
             >
                 Editar perfil
             </Link>
-        </div>
-
-        <div class="mt-6 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200/60">
-            <Link :href="route('settings.home-widgets')" class="flex items-center justify-between gap-4 px-5 py-5">
-                <div class="flex items-center gap-4">
-                    <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
-                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="8" height="8" rx="2" />
-                            <rect x="13" y="3" width="8" height="5" rx="2" />
-                            <rect x="13" y="10" width="8" height="11" rx="2" />
-                            <rect x="3" y="13" width="8" height="8" rx="2" />
-                        </svg>
-                    </span>
-                    <div>
-                        <div class="text-sm font-semibold text-slate-900">Gerenciar tela inicial</div>
-                        <div class="mt-1 text-xs font-semibold text-slate-400">Escolha o que aparece na Home</div>
-                    </div>
-                </div>
-                <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 18l6-6-6-6" />
-                </svg>
-            </Link>
-        </div>
-
-        <div class="mt-8">
-            <div class="text-lg font-semibold text-slate-900">Minhas Contas</div>
-
-            <div class="mt-4 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200/60">
-                <Link
-                    v-for="acc in accounts"
-                    :key="acc.key"
-                    :href="route('accounts.show', { accountKey: acc.key })"
-                    class="flex items-center justify-between gap-4 px-5 py-4"
-                    :class="acc.key !== accounts[0]?.key ? 'border-t border-slate-100' : ''"
-                >
-                    <div class="flex items-center gap-4">
-                        <span
-                            class="flex h-12 w-12 items-center justify-center rounded-2xl"
-                            :class="acc.icon === 'bank' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-600'"
-                        >
-                            <svg v-if="acc.icon === 'wallet'" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 7h16v12H4z" />
-                                <path d="M4 7V5h12v2" />
-                                <path d="M16 12h4" />
-                            </svg>
-                            <svg v-else-if="acc.icon === 'card'" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="5" width="18" height="14" rx="3" />
-                                <path d="M3 10h18" />
-                            </svg>
-                            <svg v-else-if="acc.icon === 'phone'" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="7" y="2" width="10" height="20" rx="2" />
-                                <path d="M11 19h2" />
-                            </svg>
-                            <svg v-else class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M3 10h18" />
-                                <path d="M5 10V8l7-5 7 5v2" />
-                                <path d="M6 10v9" />
-                                <path d="M18 10v9" />
-                                <path d="M9 19v-6h6v6" />
-                            </svg>
-                        </span>
-                        <div class="text-sm font-semibold text-slate-900">{{ acc.label }}</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="text-sm font-semibold text-slate-700">{{ formatMoney(acc.amount) }}</div>
-                        <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 18l6-6-6-6" />
-                        </svg>
-                    </div>
-                </Link>
-
-                <button type="button" class="flex w-full items-center gap-4 border-t border-slate-100 px-5 py-4 text-left" @click="newAccountOpen = true">
-                    <span class="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-dashed border-teal-300 text-teal-500">
-                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 5v14" />
-                            <path d="M5 12h14" />
-                        </svg>
-                    </span>
-                    <div class="text-sm font-semibold text-teal-600">Adicionar conta</div>
-                </button>
-            </div>
-        </div>
-
-        <div class="mt-8">
-            <div class="text-lg font-semibold text-slate-900">Categorias</div>
-
-            <div class="mt-4 grid grid-cols-2 gap-3">
-                <button
-                    v-for="cat in categories"
-                    :key="cat.key"
-                    type="button"
-                    class="flex items-center gap-3 rounded-2xl bg-white px-4 py-4 text-left shadow-sm ring-1 ring-slate-200/60"
-                >
-                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl" :class="[cat.bg, cat.fg]">
-                        <svg v-if="cat.icon === 'food'" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 3v7" />
-                            <path d="M8 3v7" />
-                            <path d="M6 3v7" />
-                            <path d="M14 3v7c0 2 1 3 3 3v8" />
-                            <path d="M20 3v7" />
-                        </svg>
-                        <svg v-else-if="cat.icon === 'home'" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 10.5L12 3l9 7.5" />
-                            <path d="M5 10v10h14V10" />
-                        </svg>
-                        <svg v-else-if="cat.icon === 'car'" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M5 16l1-5 1-3h10l1 3 1 5" />
-                            <path d="M7 16h10" />
-                            <circle cx="8" cy="17" r="1.5" />
-                            <circle cx="16" cy="17" r="1.5" />
-                        </svg>
-                        <svg v-else-if="cat.icon === 'game'" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M7 12h4" />
-                            <path d="M9 10v4" />
-                            <path d="M17 11h.01" />
-                            <path d="M19 13h.01" />
-                            <path d="M6 18l-2-3 2-7h12l2 7-2 3H6Z" />
-                        </svg>
-                        <svg v-else-if="cat.icon === 'briefcase'" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="7" width="18" height="13" rx="3" />
-                            <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
-                            <path d="M3 12h18" />
-                        </svg>
-                        <svg v-else-if="cat.icon === 'heart'" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 8c0 5-8 10-8 10S4 13 4 8a4 4 0 0 1 8 0 4 4 0 0 1 8 0Z" />
-                        </svg>
-                        <svg v-else-if="cat.icon === 'pill'" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M10 14 8 16a4 4 0 0 1-6-6l2-2a4 4 0 0 1 6 6Z" />
-                            <path d="M14 10l2-2a4 4 0 0 1 6 6l-2 2a4 4 0 0 1-6-6Z" />
-                            <path d="M8 16l8-8" />
-                        </svg>
-                        <svg v-else-if="cat.icon === 'bolt'" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z" />
-                        </svg>
-                        <svg v-else class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M15 3H9l-2 4h10l-2-4Z" />
-                            <path d="M7 7v14" />
-                            <path d="M17 7v14" />
-                        </svg>
-                    </span>
-                    <div class="text-sm font-semibold text-slate-900">{{ cat.label }}</div>
-                </button>
-
-                <button type="button" class="flex items-center gap-3 rounded-2xl border-2 border-dashed border-teal-300 bg-white px-4 py-4 text-left text-teal-600" @click="newCategoryOpen = true">
-                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl border border-teal-300">
-                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 5v14" />
-                            <path d="M5 12h14" />
-                        </svg>
-                    </span>
-                    <div class="text-sm font-semibold">Adicionar</div>
-                </button>
-            </div>
         </div>
 
         <div class="mt-8 pb-4">
@@ -477,10 +155,6 @@ const onSaveCategory = async (payload: { name: string; type: 'expense' | 'income
             </div>
         </div>
 
-        <TransactionModal :open="transactionOpen" :kind="transactionKind" @close="transactionOpen = false" @save="onTransactionSave" />
-        <NewAccountModal :open="newAccountOpen" @close="newAccountOpen = false" @save="onSaveAccount" />
-        <NewCategoryModal :open="newCategoryOpen" @close="newCategoryOpen = false" @save="onSaveCategory" />
-        <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
     </MobileShell>
 
     <div v-else-if="false">
@@ -570,6 +244,5 @@ const onSaveCategory = async (payload: { name: string; type: 'expense' | 'income
             </div>
         </div>
 
-        <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
     </DesktopSettingsShell>
 </template>
