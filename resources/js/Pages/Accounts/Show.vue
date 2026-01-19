@@ -78,10 +78,16 @@ const entries = computed(() => bootstrap.value.entries ?? []);
         const month = selectedMonth.value?.date?.getMonth();
         const year = selectedMonth.value?.date?.getFullYear();
         if (month == null || year == null) return [];
-        return entriesForAccount.value.filter((e) => {
+        const filtered = entriesForAccount.value.filter((e) => {
             if (!e.transactionDate) return true;
             const d = new Date(e.transactionDate);
             return d.getMonth() === month && d.getFullYear() === year;
+        });
+        // Sort in descending order (most recent first)
+        return filtered.sort((a, b) => {
+            const dateA = a.transactionDate ? new Date(a.transactionDate).getTime() : 0;
+            const dateB = b.transactionDate ? new Date(b.transactionDate).getTime() : 0;
+            return dateB - dateA;
         });
     });
 
@@ -219,7 +225,7 @@ const toastOpen = ref(false);
 	    transactionModalOpen.value = true;
 	};
 
-	const saveWalletEdit = async (payload: { id: string; name: string; initial_balance: number; color: string }) => {
+	const saveWalletEdit = async (payload: { id: string; name: string; initial_balance: number; color: string; incluir_soma: boolean }) => {
 	    try {
 	        await requestJson(`/api/contas/${payload.id}`, {
 	            method: 'PATCH',
@@ -229,6 +235,7 @@ const toastOpen = ref(false);
 	                icon: 'wallet',
 	                initial_balance: payload.initial_balance,
 	                color: payload.color,
+	                incluir_soma: payload.incluir_soma,
 	            }),
 	        });
 	        showToast('Carteira atualizada');
@@ -420,6 +427,7 @@ const toastOpen = ref(false);
 		                initial_balance: account.initial_balance,
 		                current_balance: account.current_balance,
 		                color: account.color ?? '#14B8A6',
+		                incluir_soma: account.incluir_soma ?? true,
 		            } : null"
 		            @close="walletEditOpen = false"
 		            @save="saveWalletEdit"
@@ -512,6 +520,7 @@ const toastOpen = ref(false);
 	                initial_balance: account.initial_balance,
 	                current_balance: account.current_balance,
 	                color: account.color ?? '#14B8A6',
+	                incluir_soma: account.incluir_soma ?? true,
 	            } : null"
 	            @close="walletEditOpen = false"
 	            @save="saveWalletEdit"

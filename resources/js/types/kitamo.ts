@@ -52,6 +52,7 @@ export type Account = {
     credit_limit?: number | null;
     closing_day?: number | null;
     due_day?: number | null;
+    incluir_soma?: boolean;
 };
 
 export type CreditCard = {
