@@ -62,11 +62,11 @@ const colorOptions = [
 
 const renderIcon = (icon: IconKey) => {
     const icons: Record<IconKey, string> = {
-        home: 'M3 10l9-7 9 7v11H3z',
-        food: 'M3 2v7c0 1 1 2 2 2h14c1 0 2-1 2-2V2M7 2v4M12 2v4M17 2v4',
-        car: 'M5 11l2-6h10l2 6M3 11h18v6H3zM7 17v2M17 17v2',
-        game: 'M6 7h12l2 7-2 5H6l-2-5 2-7zM8 15h1M15 15h1',
-        heart: 'M12 21l-7-7a5 5 0 1 1 7-7 5 5 0 1 1 7 7z',
+        home: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+        food: 'M3 2v7c0 1.1 1 2 2 2h14c1 0 2-.9 2-2V2M7 2v4M12 2v4M17 2v4',
+        car: 'M5 11l2-6h10l2 6M3 11h18v7H3zM7 15h2M15 15h2',
+        game: 'M6 7h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zM8 13h2M14 13h2',
+        heart: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z',
         money: 'M2 7h20M2 17h20M6 2v20M18 2v20',
         trend: 'M3 17l6-6 4 4 8-8M17 7h4v4',
     };
