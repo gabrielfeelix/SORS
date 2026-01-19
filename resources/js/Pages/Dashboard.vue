@@ -18,7 +18,6 @@ import CreateAccountFlowModal from '@/Components/CreateAccountFlowModal.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
 import Modal from '@/Components/Modal.vue';
 import HomeWidgetsManager from '@/Components/HomeWidgetsManager.vue';
-import ConfigModal from '@/Components/ConfigModal.vue';
 
 type ProjecaoResponse = {
     projecao_diaria: Array<{
@@ -38,8 +37,6 @@ const bootstrap = computed(
 );
 
 const isMobile = useIsMobile();
-
-const configModalOpen = ref(false);
 
 type HomeWidgetsState = {
     accounts: boolean;
@@ -760,7 +757,7 @@ onMounted(() => {
 </script>
 
 <template>
-	    <MobileShell v-if="isMobile" @add="openTransaction('expense')" @config="configModalOpen = true">
+	    <MobileShell v-if="isMobile" @add="openTransaction('expense')">
 	        <header class="flex items-center justify-between pt-2">
 	            <button type="button" @click="openProfileSettings" class="flex items-center gap-3" aria-label="Abrir perfil">
 	                <span class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
@@ -1268,7 +1265,6 @@ onMounted(() => {
         </Modal>
 
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
-        <ConfigModal :open="configModalOpen" @close="configModalOpen = false" />
     </MobileShell>
 
 	    <DesktopShell v-else title="Visão Geral" subtitle="Domingo, 11 Jan 2026" @new-transaction="openDesktopTransaction">

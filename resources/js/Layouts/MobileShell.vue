@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
+import ConfigModal from '@/Components/ConfigModal.vue';
 
 const emit = defineEmits<{
     (e: 'add'): void;
     (e: 'config'): void;
 }>();
+
+const configModalOpen = ref(false);
 
 const props = withDefaults(
     defineProps<{
@@ -174,7 +177,7 @@ const mainPaddingClass = computed(() =>
                     type="button"
                     class="flex flex-1 flex-col items-center justify-center gap-1 py-2 transition text-slate-400"
                     aria-label="Gerenciamento"
-                    @click="emit('config')"
+                    @click="configModalOpen = true"
                 >
                     <span class="flex h-11 w-11 items-center justify-center">
                         <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -189,5 +192,7 @@ const mainPaddingClass = computed(() =>
         </div>
 
         <slot name="fab" />
+
+        <ConfigModal :open="configModalOpen" @close="configModalOpen = false" />
     </div>
 </template>
