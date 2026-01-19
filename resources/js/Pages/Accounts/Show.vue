@@ -36,13 +36,28 @@ const entries = computed(() => bootstrap.value.entries ?? []);
     const months = computed(() => {
         const now = new Date();
         const items: Array<{ key: string; label: string; date: Date }> = [];
-        for (let i = 2; i >= -3; i -= 1) {
-            const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-            const label = new Intl.DateTimeFormat('pt-BR', { month: 'short' })
-                .format(d)
-                .replace('.', '')
-                .toUpperCase();
-            items.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label, date: d });
+
+        // Se for carteira, mostra apenas meses passados + atual
+        if (account.value?.type === 'wallet') {
+            // Começar de 5 meses atrás até o mês atual
+            for (let i = 5; i >= 0; i -= 1) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const label = new Intl.DateTimeFormat('pt-BR', { month: 'short' })
+                    .format(d)
+                    .replace('.', '')
+                    .toUpperCase();
+                items.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label, date: d });
+            }
+        } else {
+            // Bancos e cartões mantêm lógica original (2 passados + atual + 3 futuros)
+            for (let i = 2; i >= -3; i -= 1) {
+                const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+                const label = new Intl.DateTimeFormat('pt-BR', { month: 'short' })
+                    .format(d)
+                    .replace('.', '')
+                    .toUpperCase();
+                items.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label, date: d });
+            }
         }
         return items;
     });
@@ -75,6 +90,31 @@ const entries = computed(() => bootstrap.value.entries ?? []);
     const monthExpense = computed(() =>
         entriesForMonth.value.filter((e) => e.kind === 'expense').reduce((sum, e) => sum + (Number(e.amount) || 0), 0),
     );
+
+    const isCurrentMonth = computed(() => {
+        const now = new Date();
+        const selected = selectedMonth.value?.date;
+        if (!selected) return true;
+        return selected.getMonth() === now.getMonth() && selected.getFullYear() === now.getFullYear();
+    });
+
+    const monthStartBalance = computed(() => {
+        if (!account.value) return 0;
+        const currentBalance = account.value.current_balance;
+        // Balanço final = saldo atual
+        // Balanço inicial = saldo atual - (entradas - saídas do mês)
+        return currentBalance - (monthIncome.value - monthExpense.value);
+    });
+
+    const monthEndBalance = computed(() => {
+        return monthStartBalance.value + monthIncome.value - monthExpense.value;
+    });
+
+    const hasNegativeBalance = computed(() => {
+        if (account.value?.type !== 'wallet') return false;
+        if (!isCurrentMonth.value) return false;
+        return monthExpense.value > monthIncome.value;
+    });
 
     const grouped = computed(() => {
         const groups = new Map<string, Entry[]>();
@@ -159,6 +199,22 @@ const toastOpen = ref(false);
 	    } finally {
 	        deleteOpen.value = false;
 	    }
+	};
+
+	const transactionModalOpen = ref(false);
+	const transactionModalKind = ref<'income' | 'expense' | 'transfer'>('income');
+	const transactionModalInitial = ref<{ account: string } | null>(null);
+
+	const handleAddMoney = () => {
+	    transactionModalKind.value = 'income';
+	    transactionModalInitial.value = { account: accountName.value };
+	    transactionModalOpen.value = true;
+	};
+
+	const handleCreateTransfer = () => {
+	    transactionModalKind.value = 'transfer';
+	    transactionModalInitial.value = { account: accountName.value };
+	    transactionModalOpen.value = true;
 	};
 </script>
 
@@ -251,8 +307,13 @@ const toastOpen = ref(false);
                 </div>
     
                 <section class="mt-6 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/60">
-                    <div class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Saldo atual</div>
+                    <div class="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                        {{ isCurrentMonth ? 'Saldo atual' : 'Balanço final' }}
+                    </div>
                     <div class="mt-2 text-3xl font-bold tracking-tight text-slate-900">{{ formatMoney(balance) }}</div>
+                    <div v-if="!isCurrentMonth && account?.type === 'wallet'" class="mt-2 text-xs text-slate-400">
+                        (início: {{ formatMoney(monthStartBalance) }} - final: {{ formatMoney(monthEndBalance) }})
+                    </div>
     
                     <div class="mt-5 grid grid-cols-2 gap-3">
                         <div class="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
@@ -268,6 +329,42 @@ const toastOpen = ref(false);
                                 <span>›</span>
                             </div>
                             <div class="mt-1 text-base font-semibold text-red-600">{{ formatMoney(monthExpense) }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Alerta de saldo negativo (apenas para carteiras no mês atual) -->
+                    <div v-if="hasNegativeBalance" class="mt-4 rounded-lg border-l-4 border-red-500 bg-red-50 p-4">
+                        <div class="flex items-start gap-3">
+                            <div class="text-xl">⚠️</div>
+                            <div class="flex-1">
+                                <h3 class="mb-1 font-semibold text-red-900">
+                                    Você registrou mais gastos do que tinha na carteira
+                                </h3>
+                                <p class="text-sm text-red-700 mb-3">
+                                    Há R$ {{ formatMoney(monthExpense - monthIncome) }} a mais em gastos do que entradas.
+                                </p>
+                                <div class="space-y-2">
+                                    <div class="text-xs font-semibold uppercase text-red-600 mb-2">
+                                        Ações sugeridas:
+                                    </div>
+                                    <button
+                                        type="button"
+                                        class="flex w-full items-center gap-2 rounded-lg bg-white px-3 py-2 text-left text-sm font-semibold text-red-700 hover:bg-red-100"
+                                        @click="handleAddMoney"
+                                    >
+                                        <span>💰</span>
+                                        <span>Adicionar dinheiro (registrar entrada)</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="flex w-full items-center gap-2 rounded-lg bg-white px-3 py-2 text-left text-sm font-semibold text-red-700 hover:bg-red-100"
+                                        @click="handleCreateTransfer"
+                                    >
+                                        <span>🔄</span>
+                                        <span>Criar transferência (ex: Banco → Carteira)</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>

@@ -22,6 +22,16 @@ const initialBalance = ref('');
 
 	const isEdit = computed(() => Boolean(props.initial?.id));
 
+	const isWalletEdit = computed(() => {
+	    return isEdit.value && props.initial?.type === 'wallet';
+	});
+
+	const initialBalanceChanged = computed(() => {
+	    if (!isEdit.value) return false;
+	    // Para edição, o saldo inicial não é mostrado, então nunca muda
+	    return false;
+	});
+
 const onInitialBalanceInput = (event: Event) => {
     const target = event.target as HTMLInputElement;
     initialBalance.value = formatMoneyInputCentsShift(target.value);
@@ -73,7 +83,19 @@ const close = () => emit('close');
 	        </header>
 
         <main class="mx-auto w-full max-w-md px-5 pb-[calc(6rem+env(safe-area-inset-bottom))]">
-            <div class="flex justify-center pt-2">
+            <!-- Ícone de carteira quando editando carteira -->
+            <div v-if="isWalletEdit" class="flex justify-center pt-4 pb-2">
+                <div class="flex h-20 w-20 items-center justify-center rounded-3xl bg-teal-50 text-teal-600">
+                    <svg class="h-10 w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="5" width="20" height="14" rx="3"/>
+                        <path d="M2 10h20"/>
+                        <circle cx="16" cy="14" r="2"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Ícone padrão (criação ou edição de outro tipo) -->
+            <div v-else class="flex justify-center pt-2">
                 <div class="flex h-16 w-16 items-center justify-center rounded-full bg-amber-400 text-white shadow-lg shadow-black/10">
                     <svg v-if="headerIcon === 'wallet'" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M4 7h16v12H4z" />
@@ -135,6 +157,19 @@ const close = () => emit('close');
                         >
                             Cartão
                         </button>
+                    </div>
+                </div>
+
+                <!-- Aviso para edição de carteira -->
+                <div v-if="isWalletEdit" class="rounded-lg border-l-4 border-amber-500 bg-amber-50 p-4">
+                    <div class="flex items-start gap-3">
+                        <div class="text-xl">⚠️</div>
+                        <div class="flex-1">
+                            <h3 class="mb-1 font-semibold text-amber-900">Atenção!</h3>
+                            <p class="text-sm text-amber-700">
+                                Alterar a carteira pode afetar o cálculo do saldo total. Recomendamos apenas atualizar o apelido e a cor.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
