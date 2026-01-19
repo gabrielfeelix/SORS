@@ -1117,46 +1117,63 @@ onMounted(() => {
 	                        <div class="mt-1 text-xs text-slate-500">Quando houver cartões com esse status, eles aparecem aqui.</div>
 	                    </div>
 
-		                <div v-else class="flex gap-3 overflow-x-auto pb-2">
+		                <div v-else class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
 	                        <Link
                             v-for="card in creditCardsDisplay"
                             :key="card.id"
                             :href="route('credit-cards.show', { account: card.id })"
                             class="relative shrink-0 overflow-hidden rounded-3xl p-5 shadow-lg transition hover:shadow-xl"
-                            :style="{ backgroundColor: card.color, width: '280px', minHeight: '160px' }"
+                            :style="{ backgroundColor: card.color, width: '260px' }"
                         >
-                            <div class="relative z-10 flex h-full flex-col text-white">
+                            <div class="relative z-10 flex h-full flex-col justify-between text-white" style="min-height: 180px">
+                                <!-- Header -->
                                 <div class="flex items-start justify-between">
-                                    <div>
-                                        <div class="text-xs font-semibold opacity-80">{{ card.brandLabel }}</div>
-                                        <div class="text-sm font-semibold">{{ card.label }}</div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex h-6 w-6 items-center justify-center rounded bg-white/20">
+                                            <svg class="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect x="3" y="5" width="18" height="14" rx="3" />
+                                                <path d="M3 10h18" />
+                                            </svg>
+                                        </div>
+                                        <span class="text-sm font-semibold">{{ card.label }}</span>
                                     </div>
-                                    <div class="text-right">
-                                        <div class="text-[10px] font-semibold opacity-80">FATURA ATUAL</div>
-                                    </div>
+                                    <span class="rounded bg-white/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide">
+                                        PRINCIPAL
+                                    </span>
                                 </div>
 
-                                <div class="mt-auto">
-                                    <div class="text-2xl font-bold">
-                                        {{ hideValues ? 'R$ ••••' : `R$ ${card.used.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` }}
+                                <!-- Body -->
+                                <div class="mt-4">
+                                    <div class="text-[10px] font-semibold uppercase tracking-wide opacity-90">FATURA ATUAL</div>
+                                    <div class="mt-1 text-3xl font-bold tracking-tight">
+                                        {{ hideValues ? 'R$ ••••' : formatBRL(card.used).replace('R$', 'R$') }}
                                     </div>
-                                    <div class="mt-2 text-[11px] opacity-80">
-                                        Limite: {{ hideValues ? 'R$ ••••' : `R$ ${card.limit.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` }}
+
+                                    <!-- Progress bar -->
+                                    <div class="mt-4 h-1.5 overflow-hidden rounded-full bg-white/30">
+                                        <div class="h-full rounded-full bg-white" :style="{ width: `${card.percent}%` }"></div>
                                     </div>
-                                    <div v-if="card.closingDateLabel" class="mt-1 text-[11px] opacity-90">
-                                        Vence {{ card.closingDateLabel.split(' ').slice(-2).join(' ') }}
+
+                                    <!-- Limite e Percentual -->
+                                    <div class="mt-2 flex items-center justify-between text-[11px] font-semibold">
+                                        <span class="opacity-90">
+                                            Limite: {{ hideValues ? 'R$ ••••' : `R$ ${card.limit.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` }}
+                                        </span>
+                                        <span class="opacity-90">{{ Math.round(card.percent) }}%</span>
                                     </div>
-                                    <div class="mt-2 flex items-center justify-between">
-                                        <div class="text-[11px] font-semibold opacity-80">{{ card.percentLabel }}</div>
-                                        <div class="text-xs font-semibold opacity-90">›</div>
+
+                                    <!-- Vencimento -->
+                                    <div v-if="card.dueDay" class="mt-3 flex items-center gap-1.5 text-[11px] font-semibold opacity-90">
+                                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" />
+                                            <path d="M16 2v4" />
+                                            <path d="M8 2v4" />
+                                            <path d="M3 10h18" />
+                                        </svg>
+                                        <span>Vence dia {{ card.dueDay }}</span>
                                     </div>
                                 </div>
                             </div>
-
-                            <div
-                                class="absolute inset-0 rounded-3xl opacity-20"
-                                :style="{ backgroundColor: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)' }"
-                            ></div>
                         </Link>
                     </div>
 
