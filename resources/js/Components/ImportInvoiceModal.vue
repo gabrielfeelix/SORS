@@ -154,15 +154,15 @@ const importNow = () => {
                     <div class="mt-8 space-y-3">
                         <button
                             type="button"
-                            class="flex h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-2xl bg-[#14B8A6]/70 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20"
+                            class="flex h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-2xl bg-slate-300 text-sm font-semibold text-slate-500"
                             disabled
                         >
-                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="h-5 w-5 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M4 7h4l2-2h4l2 2h4v12H4V7Z" />
                                 <circle cx="12" cy="13" r="3" />
                             </svg>
-                            Tirar foto
-                            <span class="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">Em breve</span>
+                            <span class="line-through opacity-60">Tirar foto</span>
+                            <span class="rounded-full bg-slate-400 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Em breve</span>
                         </button>
                         <button
                             type="button"
