@@ -355,35 +355,27 @@ const toastOpen = ref(false);
                     </div>
 
                     <!-- Alerta de saldo negativo (apenas para carteiras no mês atual) -->
-                    <div v-if="hasNegativeBalance" class="mt-4 rounded-lg border-l-4 border-red-500 bg-red-50 p-4">
-                        <div class="flex items-start gap-3">
-                            <div class="text-xl">⚠️</div>
+                    <div v-if="hasNegativeBalance" class="mt-4 rounded-lg border-l-4 border-amber-500 bg-amber-50 p-3">
+                        <div class="flex items-start gap-2">
+                            <div class="text-lg">⚠️</div>
                             <div class="flex-1">
-                                <h3 class="mb-1 font-semibold text-red-900">
+                                <h3 class="text-sm font-semibold text-amber-900">
                                     Você registrou mais gastos do que tinha na carteira
                                 </h3>
-                                <p class="text-sm text-red-700 mb-3">
-                                    Há R$ {{ formatMoney(monthExpense - monthIncome) }} a mais em gastos do que entradas.
-                                </p>
-                                <div class="space-y-2">
-                                    <div class="text-xs font-semibold uppercase text-red-600 mb-2">
-                                        Ações sugeridas:
-                                    </div>
+                                <div class="mt-2 space-y-1">
                                     <button
                                         type="button"
-                                        class="flex w-full items-center gap-2 rounded-lg bg-white px-3 py-2 text-left text-sm font-semibold text-red-700 hover:bg-red-100"
+                                        class="flex w-full items-center gap-2 rounded-lg bg-white px-3 py-2 text-left text-sm font-semibold text-amber-700 hover:bg-amber-100"
                                         @click="handleAddMoney"
                                     >
-                                        <span>💰</span>
-                                        <span>Adicionar dinheiro (registrar entrada)</span>
+                                        <span>Adicionar dinheiro</span>
                                     </button>
                                     <button
                                         type="button"
-                                        class="flex w-full items-center gap-2 rounded-lg bg-white px-3 py-2 text-left text-sm font-semibold text-red-700 hover:bg-red-100"
+                                        class="flex w-full items-center gap-2 rounded-lg bg-white px-3 py-2 text-left text-sm font-semibold text-amber-700 hover:bg-amber-100"
                                         @click="handleCreateTransfer"
                                     >
-                                        <span>🔄</span>
-                                        <span>Criar transferência (ex: Banco → Carteira)</span>
+                                        <span>Criar transferência</span>
                                     </button>
                                 </div>
                             </div>

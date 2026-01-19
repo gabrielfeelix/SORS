@@ -1525,12 +1525,6 @@ onMounted(() => {
 	                <div class="rounded-2xl bg-white p-7 shadow-sm ring-1 ring-slate-200/60">
 	                    <div class="flex items-center justify-between">
 	                        <div class="text-sm font-semibold text-slate-900">Contas bancárias</div>
-	                        <button type="button" class="text-slate-300 hover:text-slate-400" aria-label="Adicionar conta" @click="createAccountOpen = true">
-	                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                <path d="M12 5v14" />
-	                                <path d="M5 12h14" />
-	                            </svg>
-	                        </button>
 	                    </div>
 
 	                    <div v-if="bankAccounts.length === 0" class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-center">
