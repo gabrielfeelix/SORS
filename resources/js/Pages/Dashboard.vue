@@ -15,6 +15,7 @@ import type { CategoryOption } from '@/Components/CategoryPickerSheet.vue';
 import MobileToast from '@/Components/MobileToast.vue';
 import CreditCardModal, { type CreditCardModalPayload } from '@/Components/CreditCardModal.vue';
 import CreateAccountFlowModal from '@/Components/CreateAccountFlowModal.vue';
+import CreateCreditCardFlowModal from '@/Components/CreateCreditCardFlowModal.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
 import Modal from '@/Components/Modal.vue';
 import HomeWidgetsManager from '@/Components/HomeWidgetsManager.vue';
@@ -451,6 +452,8 @@ const showToast = (message: string) => {
 const createAccountOpen = ref(false);
 
 const creditCardModalOpen = ref(false);
+const createCreditCardFlowOpen = ref(false);
+
 const saveCreditCard = async (payload: CreditCardModalPayload) => {
     try {
         await requestJson('/api/cartoes', {
@@ -464,6 +467,13 @@ const saveCreditCard = async (payload: CreditCardModalPayload) => {
     } catch {
         showToast('Não foi possível adicionar o cartão');
     }
+};
+
+const handleCreateCreditCardFlowSave = async () => {
+    // The actual save happens inside CreateCreditCardStep3, which emits 'save'
+    // After the flow closes, reload to show the new card
+    await loadCreditCardsApi();
+    router.reload();
 };
 
 const isRecurringEntry = (entry: Entry) => Boolean(entry.tags?.includes('Recorrente')) && !Boolean(entry.installment);
@@ -1103,7 +1113,7 @@ onMounted(() => {
 	                </div>
 	                <div class="mt-3 text-sm font-semibold text-slate-900">Você ainda não possui cartões cadastrados.</div>
 	                <div class="mt-1 text-xs text-slate-500">Melhore seu controle financeiro agora!</div>
-	                <button type="button" class="mt-4 rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white" @click="creditCardModalOpen = true">
+	                <button type="button" class="mt-4 rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white" @click="createCreditCardFlowOpen = true">
 	                    Adicionar cartões
 	                </button>
 	            </div>
@@ -1123,7 +1133,7 @@ onMounted(() => {
                             :key="card.id"
                             :href="route('credit-cards.show', { account: card.id })"
                             class="relative shrink-0 overflow-hidden rounded-3xl p-5 shadow-lg transition hover:shadow-xl"
-                            :style="{ backgroundColor: card.color, width: '260px' }"
+                            :style="{ backgroundColor: card.color, width: '320px' }"
                         >
                             <div class="relative z-10 flex h-full flex-col justify-between text-white" style="min-height: 180px">
                                 <!-- Header -->
@@ -1269,6 +1279,7 @@ onMounted(() => {
             />
 	        <CreditCardModal :open="creditCardModalOpen" @close="creditCardModalOpen = false" @save="saveCreditCard" />
 	        <CreateAccountFlowModal :open="createAccountOpen" @close="createAccountOpen = false" @toast="showToast" />
+	        <CreateCreditCardFlowModal :open="createCreditCardFlowOpen" @close="createCreditCardFlowOpen = false" @save="handleCreateCreditCardFlowSave" />
 	        <TransactionDetailModal
 	            :open="mobileDetailOpen"
 	            :transaction="mobileTransactionDetail"
@@ -1599,6 +1610,7 @@ onMounted(() => {
 	        <DesktopTransactionModal :open="desktopTransactionOpen" :kind="transactionKind" :initial="desktopTransactionInitial" @close="desktopTransactionOpen = false" @save="onTransactionSave" />
 	        <CreditCardModal :open="creditCardModalOpen" @close="creditCardModalOpen = false" @save="saveCreditCard" />
 	        <CreateAccountFlowModal :open="createAccountOpen" @close="createAccountOpen = false" @toast="showToast" />
+	        <CreateCreditCardFlowModal :open="createCreditCardFlowOpen" @close="createCreditCardFlowOpen = false" @save="handleCreateCreditCardFlowSave" />
 
 	        <DesktopTransactionDrawer
 	            :open="desktopDrawerOpen"

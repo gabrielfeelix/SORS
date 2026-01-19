@@ -2,31 +2,22 @@
 import { computed, ref, watch } from 'vue';
 import { formatMoneyInputCentsShift, moneyInputToNumber, numberToMoneyInput } from '@/lib/moneyInput';
 import { preventNonDigitKeydown } from '@/lib/inputGuards';
-
-export type CreditCardModalPayload = {
-  id?: string;
-  nome: string;
-  bandeira: 'visa' | 'mastercard' | 'elo' | 'amex';
-  limite: number;
-  dia_fechamento: number;
-  dia_vencimento: number;
-  cor: string;
-};
+import { requestJson } from '@/lib/kitamoApi';
+import type { BancoSelecionado } from './CreateCreditCardStep1.vue';
+import type { CreditCardModalPayload } from './CreditCardModal.vue';
 
 const props = defineProps<{
   open: boolean;
-  initial?: CreditCardModalPayload | null;
+  banco: BancoSelecionado | null;
 }>();
 
 const emit = defineEmits<{
   (event: 'close'): void;
-  (event: 'save', payload: CreditCardModalPayload): void;
+  (event: 'back'): void;
+  (event: 'save'): void;
 }>();
 
-const close = () => emit('close');
-
 // State
-const initialId = ref<string | undefined>(undefined);
 const nome = ref('');
 const bandeira = ref<'visa' | 'mastercard' | 'elo' | 'amex'>('visa');
 const limite = ref('');
@@ -55,19 +46,6 @@ const limiteNumber = computed(() => {
   return moneyInputToNumber(limite.value);
 });
 
-const title = computed(() => (initialId.value ? 'Editar cartão' : 'Adicionar cartão de crédito'));
-
-const reset = () => {
-  const draft = props.initial ?? null;
-  initialId.value = draft?.id;
-  nome.value = draft?.nome ?? '';
-  bandeira.value = (draft?.bandeira ?? 'visa') as any;
-  limite.value = draft ? numberToMoneyInput(draft.limite) : '';
-  dia_fechamento.value = draft?.dia_fechamento ?? null;
-  dia_vencimento.value = draft?.dia_vencimento ?? null;
-  cor.value = draft?.cor ?? '#8B5CF6';
-};
-
 const isFormValid = computed(() => {
   return (
     nome.value.trim() !== '' &&
@@ -82,25 +60,48 @@ const isFormValid = computed(() => {
   );
 });
 
-const save = () => {
+const reset = () => {
+  nome.value = props.banco?.nome ?? '';
+  bandeira.value = 'visa';
+  limite.value = '';
+  dia_fechamento.value = null;
+  dia_vencimento.value = null;
+  cor.value = props.banco?.cor ?? '#8B5CF6';
+};
+
+const isSaving = ref(false);
+
+const save = async () => {
   if (!isFormValid.value) return;
 
-  emit('save', {
-    id: initialId.value,
-    nome: nome.value.trim(),
-    bandeira: bandeira.value,
-    limite: limiteNumber.value,
-    dia_fechamento: dia_fechamento.value as number,
-    dia_vencimento: dia_vencimento.value as number,
-    cor: cor.value,
-  });
+  isSaving.value = true;
+  try {
+    await requestJson('/api/cartoes', {
+      method: 'POST',
+      body: JSON.stringify({
+        nome: nome.value.trim(),
+        bandeira: bandeira.value,
+        limite: limiteNumber.value,
+        dia_fechamento: dia_fechamento.value,
+        dia_vencimento: dia_vencimento.value,
+        cor: cor.value,
+        icone: 'credit-card',
+      }),
+    });
+    emit('save');
+  } catch (error) {
+    console.error('Erro ao salvar cartão:', error);
+  } finally {
+    isSaving.value = false;
+  }
 };
 
 watch(
   () => props.open,
   (isOpen) => {
-    if (!isOpen) return;
-    reset();
+    if (isOpen) {
+      reset();
+    }
   }
 );
 </script>
@@ -110,26 +111,43 @@ watch(
     <button
       class="absolute inset-0 bg-black/50 backdrop-blur-sm"
       type="button"
-      @click="close"
+      @click="$emit('close')"
       aria-label="Fechar"
     ></button>
 
     <div class="absolute inset-0 w-full bg-white" role="dialog" aria-modal="true">
       <div class="flex h-full flex-col">
         <header class="relative flex items-center px-4 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-3">
-          <button class="h-6 w-6 text-[#6B7280]" type="button" @click="close" aria-label="Fechar">
+          <button class="h-6 w-6 text-[#6B7280]" type="button" @click="$emit('back')" aria-label="Voltar">
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+
+          <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div class="text-[14px] font-bold text-[#1F2937]">Novo Cartão</div>
+          </div>
+
+          <button class="ml-auto h-6 w-6 text-[#6B7280]" type="button" @click="$emit('close')" aria-label="Fechar">
             <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 6L6 18" />
               <path d="M6 6l12 12" />
             </svg>
           </button>
-
-          <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div class="text-[18px] font-bold text-[#1F2937]">{{ title }}</div>
-          </div>
         </header>
 
         <div class="flex-1 overflow-y-auto px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+          <!-- Banco Info -->
+          <div v-if="banco" class="mt-6">
+            <div class="mb-2 text-xs font-semibold uppercase text-slate-500">Instituição financeira</div>
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+              <div class="flex items-center gap-3">
+                <span class="text-3xl">{{ banco.logo }}</span>
+                <span class="font-semibold text-slate-900">{{ banco.nome }}</span>
+              </div>
+            </div>
+          </div>
+
           <!-- Nome do Cartão -->
           <div class="mt-6">
             <div class="mb-2 text-sm font-bold text-[#374151]">Nome do cartão</div>
@@ -249,17 +267,17 @@ watch(
             <button
               class="flex-1 rounded-xl border border-[#E5E7EB] py-3 text-sm font-semibold text-[#6B7280] transition hover:bg-slate-50"
               type="button"
-              @click="close"
+              @click="$emit('close')"
             >
               Cancelar
             </button>
             <button
-              :disabled="!isFormValid"
+              :disabled="!isFormValid || isSaving"
               class="flex-1 rounded-xl bg-[#14B8A6] py-3 text-sm font-semibold text-white shadow-lg shadow-teal-500/20 transition hover:bg-[#0D9488] disabled:opacity-50 disabled:cursor-not-allowed"
               type="button"
               @click="save"
             >
-              {{ initialId ? 'Salvar alterações' : 'Adicionar' }}
+              {{ isSaving ? 'Adicionando...' : 'Adicionar cartão' }}
             </button>
           </div>
         </footer>
@@ -267,3 +285,12 @@ watch(
     </div>
   </div>
 </template>
+
+<style scoped>
+select {
+  background-image: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+</style>
