@@ -20,7 +20,7 @@ const menuItems = computed(() => [
     },
     {
         label: 'Tags',
-        href: route('settings'),
+        href: route('settings.tags'),
         icon: 'tag2',
         tone: 'blue' as const,
     },

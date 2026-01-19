@@ -93,6 +93,10 @@ Route::get('/settings/categories', function () {
     return Inertia::render('Settings/Categories');
 })->middleware(['auth', 'verified'])->name('settings.categories');
 
+Route::get('/settings/tags', function () {
+    return Inertia::render('Settings/Tags');
+})->middleware(['auth', 'verified'])->name('settings.tags');
+
 Route::get('/settings/appearance', function () {
     return Inertia::render('Settings/Appearance');
 })->middleware(['auth', 'verified'])->name('settings.appearance');
