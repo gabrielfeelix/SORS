@@ -49,8 +49,8 @@ const initials = computed(() => {
 
 
 <template>
-    <MobileShell v-if="isMobile">
-        <div class="flex min-h-screen flex-col bg-[#14B8A6]">
+    <MobileShell v-if="isMobile" :show-nav="false">
+        <div class="fixed inset-0 flex flex-col bg-[#14B8A6]">
             <!-- Header com perfil -->
             <div class="px-5 pb-6 pt-[calc(0.5rem+env(safe-area-inset-top))]">
                 <Link :href="route('dashboard')" class="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 text-white">
@@ -167,6 +167,59 @@ const initials = computed(() => {
                 <div class="pb-[calc(5.5rem+env(safe-area-inset-bottom))] text-center text-[11px] font-semibold text-slate-300">
                     v1.0.2 (Build 8402)
                 </div>
+            </div>
+
+            <!-- Navbar inferior -->
+            <div class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/70 bg-white">
+                <nav class="mx-auto flex w-full max-w-md items-center justify-between px-6 pb-[env(safe-area-inset-bottom)] pt-2 md:max-w-2xl md:px-10">
+                    <Link :href="route('dashboard')" class="flex flex-1 flex-col items-center justify-center gap-1 py-2 text-slate-400">
+                        <span class="flex h-11 w-11 items-center justify-center">
+                            <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 10.5L12 3l9 7.5" />
+                                <path d="M5 10v10h14V10" />
+                            </svg>
+                        </span>
+                        <span class="text-[10px] font-semibold leading-none">Início</span>
+                    </Link>
+
+                    <Link :href="route('accounts.index')" class="flex flex-1 flex-col items-center justify-center gap-1 py-2 text-slate-400">
+                        <span class="flex h-11 w-11 items-center justify-center">
+                            <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="5" width="18" height="14" rx="3" />
+                                <path d="M3 10h18" />
+                            </svg>
+                        </span>
+                        <span class="text-[10px] font-semibold leading-none">Lançamentos</span>
+                    </Link>
+
+                    <button type="button" class="mx-2 -mt-7 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 ring-8 ring-white" aria-label="Nova movimentação">
+                        <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14" />
+                            <path d="M5 12h14" />
+                        </svg>
+                    </button>
+
+                    <Link :href="route('analysis')" class="flex flex-1 flex-col items-center justify-center gap-1 py-2 text-slate-400">
+                        <span class="flex h-11 w-11 items-center justify-center">
+                            <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 3v9h9" />
+                                <path d="M21 12a9 9 0 1 1-9-9" />
+                            </svg>
+                        </span>
+                        <span class="text-[10px] font-semibold leading-none">Análise</span>
+                    </Link>
+
+                    <Link :href="route('settings')" class="flex flex-1 flex-col items-center justify-center gap-1 py-2 text-emerald-600">
+                        <span class="flex h-11 w-11 items-center justify-center">
+                            <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 6h16" />
+                                <path d="M4 12h16" />
+                                <path d="M4 18h16" />
+                            </svg>
+                        </span>
+                        <span class="text-[10px] font-semibold leading-none">Mais</span>
+                    </Link>
+                </nav>
             </div>
         </div>
     </MobileShell>
