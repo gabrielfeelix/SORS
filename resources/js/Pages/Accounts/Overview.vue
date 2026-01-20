@@ -28,8 +28,16 @@ const monthItems = computed(() => {
     }
     return items;
 });
-const selectedMonthKey = ref(monthItems.value[2]?.key ?? monthItems.value[0]?.key ?? '');
+const selectedMonthKey = ref('');
 const accountsDataByMonth = ref<Map<string, any[]>>(new Map());
+
+// Initialize selectedMonthKey after monthItems is computed
+onMounted(() => {
+    selectedMonthKey.value = monthItems.value[2]?.key ?? monthItems.value[0]?.key ?? '';
+    if (selectedMonthKey.value) {
+        loadAccountsForMonth(selectedMonthKey.value);
+    }
+});
 
 const formatBRL = (value: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
@@ -178,14 +186,11 @@ const closingLabel = (closingDay: number | null) => {
 watch(
     () => selectedMonthKey.value,
     (newMonthKey) => {
-        loadAccountsForMonth(newMonthKey);
+        if (newMonthKey) {
+            loadAccountsForMonth(newMonthKey);
+        }
     }
 );
-
-// Load initial month data
-onMounted(() => {
-    loadAccountsForMonth(selectedMonthKey.value);
-});
 </script>
 
 <template>
@@ -271,11 +276,7 @@ onMounted(() => {
         <section class="mt-6 rounded-3xl bg-gradient-to-br from-[#14B8A6] to-[#0D9488] p-5 text-white shadow-lg shadow-teal-600/20">
             <div class="text-[11px] font-bold uppercase tracking-wide text-white/80">Patrimônio líquido</div>
             <div class="mt-2 text-3xl font-bold tracking-tight">{{ formatBRL(netWorth) }}</div>
-            <div class="mt-4 flex items-center justify-between">
-                <button type="button" class="inline-flex items-center gap-2 rounded-2xl bg-white/15 px-4 py-2 text-xs font-semibold ring-1 ring-white/15">
-                    <span class="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-white/20">↗</span>
-                    + R$ 500
-                </button>
+            <div class="mt-4 flex items-center justify-end">
                 <button
                     type="button"
                     class="inline-flex items-center gap-2 rounded-2xl bg-white/10 px-4 py-2 text-xs font-semibold ring-1 ring-white/15"
