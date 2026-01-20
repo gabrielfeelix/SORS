@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch, onMounted } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import type { BootstrapData } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
@@ -29,20 +29,52 @@ const monthItems = computed(() => {
     return items;
 });
 const selectedMonthKey = ref(monthItems.value[2]?.key ?? monthItems.value[0]?.key ?? '');
+const accountsDataByMonth = ref<Map<string, any[]>>(new Map());
 
 const formatBRL = (value: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
 
-const bankAccounts = computed(() =>
-    (bootstrap.value.accounts ?? []).filter((a) => a.type !== 'credit_card').map((a) => ({
+const loadAccountsForMonth = async (monthKey: string) => {
+    if (accountsDataByMonth.value.has(monthKey)) {
+        return;
+    }
+
+    try {
+        const [year, month] = monthKey.split('-').map(Number);
+        const response = await requestJson<{ accounts: any[] }>(`/api/contas-by-month?year=${year}&month=${month}`, {
+            method: 'GET',
+        });
+        accountsDataByMonth.value.set(monthKey, response.accounts);
+    } catch {
+        // Fallback to bootstrap data if API call fails
+        console.error('Failed to load accounts for month');
+    }
+};
+
+const bankAccounts = computed(() => {
+    const monthKey = selectedMonthKey.value;
+    const monthData = accountsDataByMonth.value.get(monthKey);
+    
+    if (monthData) {
+        return monthData.filter((a: any) => a.type !== 'credit_card').map((a: any) => ({
+            id: a.id,
+            name: a.name,
+            subtitle: a.subtitle,
+            balance: Number(a.current_balance ?? 0),
+            color: a.color ?? '#14B8A6',
+            icon: a.icon ?? (a.type === 'wallet' ? 'wallet' : 'bank'),
+        }));
+    }
+
+    return (bootstrap.value.accounts ?? []).filter((a) => a.type !== 'credit_card').map((a) => ({
         id: a.id,
         name: a.name,
         subtitle: a.type === 'wallet' ? 'Dinheiro físico' : a.type === 'bank' ? 'Corrente' : 'Conta',
         balance: Number(a.current_balance ?? 0),
         color: (a as any).color ?? '#14B8A6',
         icon: a.icon ?? (a.type === 'wallet' ? 'wallet' : 'bank'),
-    })),
-);
+    }));
+});
 
 const creditCards = computed(() =>
     (bootstrap.value.accounts ?? []).filter((a) => a.type === 'credit_card').map((a) => ({
@@ -68,6 +100,7 @@ const showToast = (message: string) => {
 };
 
 const createAccountOpen = ref(false);
+const createAccountWithWallet = ref(false);
 const creditCardModalOpen = ref(false);
 const createCreditCardFlowOpen = ref(false);
 const accountMenuOpen = ref(false);
@@ -75,8 +108,10 @@ const accountMenuOpen = ref(false);
 const openAccountMenuOption = (option: 'bank' | 'wallet' | 'card') => {
     accountMenuOpen.value = false;
     if (option === 'bank') {
+        createAccountWithWallet.value = false;
         createAccountOpen.value = true;
     } else if (option === 'wallet') {
+        createAccountWithWallet.value = true;
         createAccountOpen.value = true;
     } else if (option === 'card') {
         createCreditCardFlowOpen.value = true;
@@ -108,6 +143,19 @@ const closingLabel = (closingDay: number | null) => {
     const label = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' }).format(d).replace('.', '').toUpperCase();
     return `Fecha em ${label}`;
 };
+
+// Watch for month changes and load data
+watch(
+    () => selectedMonthKey.value,
+    (newMonthKey) => {
+        loadAccountsForMonth(newMonthKey);
+    }
+);
+
+// Load initial month data
+onMounted(() => {
+    loadAccountsForMonth(selectedMonthKey.value);
+});
 </script>
 
 <template>
@@ -279,7 +327,7 @@ const closingLabel = (closingDay: number | null) => {
         </section>
 
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
-        <CreateAccountFlowModal :open="createAccountOpen" @close="createAccountOpen = false" @toast="showToast" />
+        <CreateAccountFlowModal :open="createAccountOpen" :start-with-wallet="createAccountWithWallet" @close="() => { createAccountOpen = false; createAccountWithWallet = false; }" @toast="showToast" />
         <CreateCreditCardFlowModal :open="createCreditCardFlowOpen" @close="createCreditCardFlowOpen = false" @save="handleCreateCreditCardFlowSave" />
         <CreditCardModal :open="creditCardModalOpen" @close="creditCardModalOpen = false" @save="saveCreditCard" />
     </MobileShell>

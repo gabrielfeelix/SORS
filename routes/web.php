@@ -193,6 +193,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/api/contas', [AccountController::class, 'store'])->name('api.contas.store');
     Route::patch('/api/contas/{account}', [AccountController::class, 'update'])->name('api.contas.update');
     Route::delete('/api/contas/{account}', [AccountController::class, 'destroy'])->name('api.contas.destroy');
+    Route::get('/api/contas-by-month', [AccountController::class, 'getByMonth'])->name('api.contas.by-month');
 
     Route::get('/api/cartoes', [CreditCardController::class, 'index'])->name('api.cartoes.index');
     Route::post('/api/cartoes', [CreditCardController::class, 'store'])->name('api.cartoes.store');

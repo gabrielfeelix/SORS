@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Support\KitamoBootstrap;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class AccountController extends Controller
 {
@@ -98,5 +99,80 @@ class AccountController extends Controller
         $account->delete();
 
         return response()->json(['ok' => true]);
+    }
+
+    public function getByMonth(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        $data = $request->validate([
+            'year' => ['required', 'integer', 'min:2020', 'max:2099'],
+            'month' => ['required', 'integer', 'min:0', 'max:11'],
+        ]);
+
+        $year = (int) $data['year'];
+        $month = (int) $data['month'];
+
+        // Get the first and last day of the month
+        $startOfMonth = Carbon::create($year, $month + 1, 1)->startOfDay();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth();
+
+        $accounts = Account::where('user_id', $user->id)
+            ->where('type', '!=', 'credit_card')
+            ->get();
+
+        $result = $accounts->map(function (Account $account) use ($startOfMonth, $endOfMonth, $user) {
+            // Get all transactions for this account in this month
+            $transactions = $account->transactions()
+                ->where('user_id', $user->id)
+                ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
+                ->where('status', 'completed')
+                ->get();
+
+            // Calculate balance at end of month
+            $balanceAtMonth = $account->initial_balance;
+            
+            // Get all transactions before the start of the month
+            $transactionsBefore = $account->transactions()
+                ->where('user_id', $user->id)
+                ->where('transaction_date', '<', $startOfMonth)
+                ->where('status', 'completed')
+                ->get();
+
+            foreach ($transactionsBefore as $transaction) {
+                if ($transaction->kind === 'income') {
+                    $balanceAtMonth += $transaction->amount;
+                } else {
+                    $balanceAtMonth -= $transaction->amount;
+                }
+            }
+
+            // Apply transactions for this month
+            foreach ($transactions as $transaction) {
+                if ($transaction->kind === 'income') {
+                    $balanceAtMonth += $transaction->amount;
+                } else {
+                    $balanceAtMonth -= $transaction->amount;
+                }
+            }
+
+            return [
+                'id' => $account->id,
+                'name' => $account->name,
+                'type' => $account->type,
+                'icon' => $account->icon,
+                'color' => $account->color,
+                'current_balance' => (float) $balanceAtMonth,
+                'initial_balance' => (float) $account->initial_balance,
+                'credit_limit' => $account->credit_limit,
+                'closing_day' => $account->closing_day,
+                'due_day' => $account->due_day,
+                'subtitle' => $account->type === 'wallet' ? 'Dinheiro físico' : ($account->type === 'bank' ? 'Corrente' : 'Conta'),
+            ];
+        });
+
+        return response()->json([
+            'accounts' => $result->values(),
+        ]);
     }
 }

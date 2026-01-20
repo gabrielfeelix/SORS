@@ -8,6 +8,7 @@ import CreateAccountStep3, { type AccountPayload } from '@/Components/CreateAcco
 
 const props = defineProps<{
   open: boolean;
+  startWithWallet?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -23,8 +24,13 @@ watch(
   () => props.open,
   (isOpen) => {
     if (!isOpen) return;
-    step.value = 1;
-    banco.value = null;
+    if (props.startWithWallet) {
+      banco.value = { nome: 'Carteira', logo: '💼', cor: '#14B8A6' };
+      step.value = 3;
+    } else {
+      step.value = 1;
+      banco.value = null;
+    }
   },
 );
 

@@ -837,43 +837,6 @@ onMounted(() => {
                                 <circle cx="12" cy="12" r="3" />
                             </svg>
                         </button>
-                        <div class="relative">
-                            <button
-                                type="button"
-                                class="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/10"
-                                aria-label="Menu de contas"
-                                @click="accountMenuOpen = !accountMenuOpen"
-                            >
-                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                                    <circle cx="12" cy="5" r="2" />
-                                    <circle cx="12" cy="12" r="2" />
-                                    <circle cx="12" cy="19" r="2" />
-                                </svg>
-                            </button>
-                            <div v-if="accountMenuOpen" class="absolute right-0 mt-2 w-48 rounded-2xl bg-white shadow-lg ring-1 ring-slate-200/60 z-50">
-                                <button
-                                    type="button"
-                                    class="w-full text-left px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-50 rounded-t-2xl border-b border-slate-100"
-                                    @click="openAccountMenuOption('bank')"
-                                >
-                                    Adicionar Conta Bancária
-                                </button>
-                                <button
-                                    type="button"
-                                    class="w-full text-left px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-50 border-b border-slate-100"
-                                    @click="openAccountMenuOption('wallet')"
-                                >
-                                    Carteira
-                                </button>
-                                <button
-                                    type="button"
-                                    class="w-full text-left px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-50 rounded-b-2xl"
-                                    @click="openAccountMenuOption('card')"
-                                >
-                                    Cartão de Crédito
-                                </button>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
