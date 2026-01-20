@@ -29,6 +29,14 @@ const props = defineProps<{
         <circle cx="16" cy="17" r="1.5" />
     </svg>
 
+    <!-- Game icon -->
+    <svg v-else-if="icon === 'game'" :class="props.class || 'h-6 w-6'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 7h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z" />
+        <path d="M8 13h2" />
+        <path d="M9 12v2" />
+        <path d="M15 13h2" />
+    </svg>
+
     <!-- Pill icon -->
     <svg v-else-if="icon === 'pill'" :class="props.class || 'h-6 w-6'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M10 14 8 16a4 4 0 0 1-6-6l2-2a4 4 0 0 1 6 6Z" />
@@ -58,6 +66,20 @@ const props = defineProps<{
     <!-- Bolt/Energy icon -->
     <svg v-else-if="icon === 'bolt'" :class="props.class || 'h-6 w-6'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z" />
+    </svg>
+
+    <!-- Money icon -->
+    <svg v-else-if="icon === 'money'" :class="props.class || 'h-6 w-6'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="6" width="18" height="12" rx="2" />
+        <path d="M7 10h0" />
+        <path d="M17 14h0" />
+        <path d="M12 10a2 2 0 1 0 0 4a2 2 0 1 0 0-4" />
+    </svg>
+
+    <!-- Trend icon -->
+    <svg v-else-if="icon === 'trend'" :class="props.class || 'h-6 w-6'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 17l6-6 4 4 8-8" />
+        <path d="M17 7h4v4" />
     </svg>
 
     <!-- Other/default icon -->

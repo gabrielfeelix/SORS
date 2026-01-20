@@ -8,6 +8,7 @@ import DesktopShell from '@/Layouts/DesktopShell.vue';
 import TransactionModal, { type TransactionModalPayload } from '@/Components/TransactionModal.vue';
 import ExportReportModal from '@/Components/ExportReportModal.vue';
 import MobileToast from '@/Components/MobileToast.vue';
+import CategoryIcon from '@/Components/CategoryIcon.vue';
 import type { AccountOption } from '@/Components/AccountPickerSheet.vue';
 import type { CategoryOption } from '@/Components/CategoryPickerSheet.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
@@ -138,6 +139,23 @@ const receitas = computed(() => scopedEntries.value.filter((e) => e.kind === 'in
 const despesas = computed(() => scopedEntries.value.filter((e) => e.kind === 'expense').reduce((acc, e) => acc + e.amount, 0));
 const balanco = computed(() => receitas.value - despesas.value);
 
+const normalizeKey = (value: string) => String(value ?? '').trim().toLowerCase();
+const categoryIconByName = computed(() => {
+    const map = new Map<string, string>();
+    for (const c of bootstrap.value.categories ?? []) {
+        map.set(`${normalizeKey(c.name)}|${c.type}`, c.icon ?? 'other');
+    }
+    return map;
+});
+
+const fallbackCategoryIcon = (entry: (typeof entries.value)[number]) => {
+    const key = String(entry.categoryKey ?? '').toLowerCase();
+    if (key === 'food') return 'food';
+    if (key === 'home') return 'home';
+    if (key === 'car') return 'car';
+    return 'other';
+};
+
 type Category = {
     key: string;
     label: string;
@@ -227,6 +245,7 @@ const topExpenses = computed(() => {
         .map((entry, idx) => ({
             key: entry.id,
             label: entry.title,
+            categoryIcon: categoryIconByName.value.get(`${normalizeKey(entry.categoryLabel)}|expense`) ?? fallbackCategoryIcon(entry),
             value: entry.amount,
             color: palette[idx % palette.length],
         }));
@@ -464,7 +483,12 @@ const onTransactionSave = async (payload: TransactionModalPayload) => {
             <div v-if="hasTopExpenses" class="mt-4 space-y-4">
                 <div v-for="item in topExpenses" :key="item.key">
                     <div class="flex items-center justify-between text-sm font-semibold">
-                        <div class="text-slate-900">{{ item.label }}</div>
+                        <div class="flex min-w-0 items-center gap-2 text-slate-900">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+                                <CategoryIcon :icon="item.categoryIcon" class="h-4 w-4" />
+                            </span>
+                            <span class="truncate">{{ item.label }}</span>
+                        </div>
                         <div class="text-slate-900">{{ formatBRL(item.value) }}</div>
                     </div>
                     <div class="mt-2 h-2 w-full rounded-full bg-slate-100">

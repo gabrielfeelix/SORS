@@ -253,6 +253,15 @@ const recurrenceDescription = computed(() => {
     return `Repete a cada ${interval} dias`;
 });
 
+const recurrenceEveryDaysHint = computed(() => {
+    if (periodicidade.value !== 'a_cada_x_dias') return '';
+    const raw = Number(intervalo_dias.value ?? 0);
+    if (!Number.isFinite(raw) || raw < 1) return 'ℹ️ Informe de quantos em quantos dias.';
+    const interval = clampInt(raw, 1, 999);
+    const next = formatBRDate(addDays(baseDate.value, interval));
+    return `ℹ️ Repetirá a cada ${interval} dias (próxima: ${next})`;
+});
+
 const toISODate = (brDate: string) => {
     const match = brDate.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
     if (!match) return '';
@@ -823,29 +832,36 @@ watch(
                                         <option value="quinzenal">Quinzenal</option>
                                         <option value="a_cada_x_dias">A cada X dias</option>
                                     </select>
-                                    <div v-if="periodicidade === 'a_cada_x_dias'" class="mt-2 flex h-11 overflow-hidden rounded-xl bg-white ring-1 ring-slate-200/60">
-                                        <input
-                                            :value="intervalo_dias ?? ''"
-                                            type="text"
-                                            inputmode="numeric"
-                                            pattern="[0-9]*"
-                                            placeholder="Dias"
-                                            class="w-full appearance-none border-0 bg-transparent px-4 text-sm font-semibold text-slate-700 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none"
-                                            @keydown="preventNonDigitKeydown"
-                                            @input="(e) => { intervalo_dias = clampInt((e.target as HTMLInputElement).value, 1, 999) }"
-                                            aria-label="Intervalo em dias"
-                                        />
-                                        <div class="grid w-12 grid-rows-2 border-l border-slate-200/70">
-                                            <button type="button" class="flex items-center justify-center text-slate-500" aria-label="Aumentar" @click="incIntervalDays">
-                                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path d="M6 15l6-6 6 6" />
-                                                </svg>
-                                            </button>
-                                            <button type="button" class="flex items-center justify-center text-slate-500" aria-label="Diminuir" @click="decIntervalDays">
-                                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path d="M6 9l6 6 6-6" />
-                                                </svg>
-                                            </button>
+                                    <div v-if="periodicidade === 'a_cada_x_dias'" class="mt-2">
+                                        <div class="flex h-11 items-center overflow-hidden rounded-xl bg-slate-50 ring-1 ring-slate-200/60">
+                                            <span class="pl-4 text-sm font-semibold text-slate-500">A cada</span>
+                                            <input
+                                                :value="intervalo_dias ?? ''"
+                                                type="text"
+                                                inputmode="numeric"
+                                                pattern="[0-9]*"
+                                                placeholder="4"
+                                                class="w-16 appearance-none border-0 bg-transparent px-2 text-center text-sm font-bold text-slate-700 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none"
+                                                @keydown="preventNonDigitKeydown"
+                                                @input="(e) => { intervalo_dias = clampInt((e.target as HTMLInputElement).value, 1, 999) }"
+                                                aria-label="Intervalo em dias"
+                                            />
+                                            <span class="text-sm font-semibold text-slate-500">dias</span>
+                                            <div class="ml-auto grid h-full w-12 grid-rows-2 border-l border-slate-200/70">
+                                                <button type="button" class="flex items-center justify-center text-slate-500" aria-label="Aumentar" @click="incIntervalDays">
+                                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M6 15l6-6 6 6" />
+                                                    </svg>
+                                                </button>
+                                                <button type="button" class="flex items-center justify-center text-slate-500" aria-label="Diminuir" @click="decIntervalDays">
+                                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M6 9l6 6 6-6" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div v-if="recurrenceEveryDaysHint" class="mt-2 text-xs font-semibold text-slate-500">
+                                            {{ recurrenceEveryDaysHint }}
                                         </div>
                                     </div>
                                 </div>
