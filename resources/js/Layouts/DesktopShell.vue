@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import DesktopNotificationsPopover from '@/Components/DesktopNotificationsPopover.vue';
+import ConfigModal from '@/Components/ConfigModal.vue';
 import { requestJson } from '@/lib/kitamoApi';
 
 const emit = defineEmits<{
@@ -47,10 +48,22 @@ const navItems = computed(() => [
         icon: 'dashboard' as const,
     },
     {
+        label: 'Minhas Contas',
+        href: route('accounts.overview'),
+        active: route().current('accounts.overview'),
+        icon: 'accounts' as const,
+    },
+    {
         label: 'Lançamentos',
         href: route('accounts.index'),
         active: route().current('accounts.*') && !route().current('accounts.overview'),
         icon: 'cards' as const,
+    },
+    {
+        label: 'Cartões de crédito',
+        href: route('credit-cards.my-cards'),
+        active: route().current('credit-cards.*'),
+        icon: 'credit' as const,
     },
     {
         label: 'Metas',
@@ -71,6 +84,7 @@ const unreadCount = ref(0);
 const setUnreadCount = (count: number) => {
     unreadCount.value = count;
 };
+const configModalOpen = ref(false);
 
 const loadUnreadCount = async () => {
     try {
@@ -138,6 +152,15 @@ onUnmounted(() => {
                                 <path d="M12 22v-3" />
                                 <path d="M2 12h3" />
                             </svg>
+                            <svg v-else-if="item.icon === 'accounts'" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+                                <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+                                <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
+                            </svg>
+                            <svg v-else-if="item.icon === 'credit'" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="5" width="20" height="14" rx="3" />
+                                <path d="M2 10h20" />
+                            </svg>
                             <svg v-else class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M4 19V5" />
                                 <path d="M10 19V9" />
@@ -149,6 +172,22 @@ onUnmounted(() => {
 
                         <span v-if="item.active" class="ml-auto h-9 w-1.5 rounded-full bg-[#14B8A6]"></span>
                     </Link>
+
+                    <button
+                        type="button"
+                        class="group flex w-full items-center gap-4 rounded-2xl px-4 py-3.5 text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+                        aria-label="Menu"
+                        @click="configModalOpen = true"
+                    >
+                        <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 6h16" />
+                                <path d="M4 12h16" />
+                                <path d="M4 18h16" />
+                            </svg>
+                        </span>
+                        <span class="text-sm font-semibold">Menu</span>
+                    </button>
                 </nav>
 
                 <div class="px-5 pb-6">
@@ -228,7 +267,7 @@ onUnmounted(() => {
                             <button
                                 v-if="props.showNewAction"
                                 type="button"
-                                class="hidden h-11 w-11 items-center justify-center rounded-full bg-[#14B8A6] text-white shadow-xl shadow-emerald-500/30 ring-1 ring-emerald-400/20 md:inline-flex"
+                                class="h-11 w-11 items-center justify-center rounded-full bg-[#14B8A6] text-white shadow-xl shadow-emerald-500/30 ring-1 ring-emerald-400/20 md:inline-flex"
                                 aria-label="Nova transação"
                                 @click="emit('add')"
                             >
@@ -255,4 +294,6 @@ onUnmounted(() => {
         @close="() => { notificationsOpen = false; loadUnreadCount(); }"
         @unread="setUnreadCount"
     />
+
+    <ConfigModal :open="configModalOpen" @close="configModalOpen = false" />
 </template>

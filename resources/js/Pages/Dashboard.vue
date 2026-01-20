@@ -639,10 +639,8 @@ const transactionLockKind = ref(false);
 const openTransaction = (kind: 'expense' | 'income' | 'transfer') => {
     transactionKind.value = kind;
     transactionInitial.value = null;
-    desktopTransactionInitial.value = null;
     transactionLockKind.value = false;
-    if (isMobile.value) transactionOpen.value = true;
-    else desktopTransactionOpen.value = true;
+    transactionOpen.value = true;
 };
 
 const openAddCardTransaction = (cardName: string) => {
@@ -668,15 +666,11 @@ const openAddCardTransaction = (cardName: string) => {
         transactionOpen.value = true;
         return;
     }
-    desktopTransactionInitial.value = initial;
-    desktopTransactionOpen.value = true;
+    transactionInitial.value = initial;
+    transactionOpen.value = true;
 };
 
-const desktopTransactionOpen = ref(false);
-const desktopTransactionInitial = ref<TransactionModalPayload | null>(null);
-const openDesktopTransaction = () => {
-    openTransaction('expense');
-};
+const openDesktopTransaction = () => openTransaction('expense');
 
 const parseInstallmentCount = (installment?: string | null) => {
     if (!installment) return 3;
@@ -711,8 +705,8 @@ const openEntryEdit = (entry: Entry) => {
         return;
     }
 
-    desktopTransactionInitial.value = initial;
-    desktopTransactionOpen.value = true;
+    transactionInitial.value = initial;
+    transactionOpen.value = true;
 };
 
 const openEntryDetail = (entry: Entry) => {
@@ -722,6 +716,8 @@ const openEntryDetail = (entry: Entry) => {
         return;
     }
 
+    mobileSelectedEntry.value = entry;
+    mobileDetailOpen.value = true;
     desktopSelectedEntry.value = entry;
     desktopDrawerOpen.value = true;
 };

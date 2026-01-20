@@ -7,19 +7,47 @@ import type { BootstrapData, Goal, Entry } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
 import DesktopShell from '@/Layouts/DesktopShell.vue';
 import MobileToast from '@/Components/MobileToast.vue';
-import type { TransactionModalPayload } from '@/Components/TransactionModal.vue';
+import TransactionModal, { type TransactionModalPayload } from '@/Components/TransactionModal.vue';
+import type { CategoryOption } from '@/Components/CategoryPickerSheet.vue';
+import type { AccountOption } from '@/Components/AccountPickerSheet.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
 
 const isMobile = useIsMobile();
 const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
 const shellProps = computed(() =>
-    isMobile.value ? { showNav: true } : { title: 'Metas', showSearch: false, showNewAction: false },
+    isMobile.value ? { showNav: true } : { title: 'Metas', showSearch: false, showNewAction: true },
 );
 
 const page = usePage();
 const bootstrap = computed(
     () => (page.props.bootstrap ?? { entries: [], goals: [], accounts: [], categories: [] }) as BootstrapData,
 );
+
+const pickerCategories = computed<CategoryOption[]>(() => {
+    const unique = new Map<string, CategoryOption>();
+    for (const c of bootstrap.value.categories ?? []) {
+        unique.set(c.name, { key: c.name, label: c.name, icon: 'other', tone: 'slate' });
+    }
+    return Array.from(unique.values());
+});
+
+const pickerAccounts = computed<AccountOption[]>(() => {
+    const tone = (name: string): AccountOption['tone'] => {
+        const n = name.toLowerCase();
+        if (n.includes('nubank')) return 'purple';
+        if (n.includes('inter')) return 'amber';
+        if (n.includes('carteira') || n.includes('dinheiro')) return 'emerald';
+        return 'slate';
+    };
+    return (bootstrap.value.accounts ?? [])
+        .filter((a) => a.type !== 'credit_card')
+        .map((a) => ({
+            key: a.name,
+            label: a.name,
+            subtitle: a.type === 'wallet' ? 'Carteira' : 'Conta',
+            tone: tone(a.name),
+        }));
+});
 
 const goals = ref<Goal[]>(bootstrap.value.goals ?? []);
 
@@ -103,8 +131,15 @@ const editSelectedGoal = () => {
     router.get(route('goals.edit', { goalId: selectedGoalId.value }));
 };
 
-const desktopTransactionOpen = ref(false);
-const desktopTransactionKind = ref<'expense' | 'income' | 'transfer'>('expense');
+const transactionOpen = ref(false);
+const transactionKind = ref<'expense' | 'income' | 'transfer'>('expense');
+const transactionInitial = ref<TransactionModalPayload | null>(null);
+
+const openNewTransaction = () => {
+    transactionKind.value = 'expense';
+    transactionInitial.value = null;
+    transactionOpen.value = true;
+};
 
 const toastOpen = ref(false);
 const toastMessage = ref('');
@@ -113,7 +148,7 @@ const showToast = (message: string) => {
     toastOpen.value = true;
 };
 
-const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
+const onTransactionSave = async (payload: TransactionModalPayload) => {
     if (payload.kind === 'transfer') {
         showToast('Transferência realizada');
         return;
@@ -123,6 +158,7 @@ const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
         method: 'POST',
         body: JSON.stringify(buildTransactionRequest(payload)),
     });
+    transactionOpen.value = false;
     showToast('Movimentação salva');
 };
 </script>
@@ -130,7 +166,7 @@ const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
 <template>
     <Head title="Metas" />
 
-    <component :is="Shell" v-bind="shellProps">
+    <component :is="Shell" v-bind="shellProps" @add="openNewTransaction">
         <header class="flex items-center justify-between pt-2">
             <div v-if="isMobile" class="text-2xl font-semibold tracking-tight text-slate-900">Metas</div>
             <Link
@@ -232,6 +268,16 @@ const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
                 </svg>
             </Link>
         </template>
+
+        <TransactionModal
+            :open="transactionOpen"
+            :kind="transactionKind"
+            :initial="transactionInitial"
+            :categories="pickerCategories"
+            :accounts="pickerAccounts"
+            @close="transactionOpen = false"
+            @save="onTransactionSave"
+        />
     </component>
 
 </template>
