@@ -193,6 +193,7 @@ const buildUpcomingBills = (entries: Entry[]): UpcomingBill[] => {
     return entries
         .filter((entry) => entry.kind === 'expense')
         .filter((entry) => Boolean(entry.transactionDate))
+        .filter((entry) => entry.status !== 'paid') // Excluir contas pagas
         .map((entry) => {
             const date = entry.transactionDate ? new Date(entry.transactionDate) : new Date();
             const month = formatter.format(date).replace('.', '').toLowerCase();
