@@ -4,13 +4,10 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 import { requestJson } from '@/lib/kitamoApi';
 import type { BootstrapData, Entry } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import DesktopShell from '@/Layouts/DesktopShell.vue';
-import DesktopTransactionModal from '@/Components/DesktopTransactionModal.vue';
 import MobileToast from '@/Components/MobileToast.vue';
-import { useIsMobile } from '@/composables/useIsMobile';
 import type { TransactionModalPayload } from '@/Components/TransactionModal.vue';
 
-const isMobile = useIsMobile();
+const isMobile = ref(true);
 const page = usePage();
 const bootstrap = computed(
     () => (page.props.bootstrap ?? { entries: [], goals: [], accounts: [], categories: [] }) as BootstrapData,
@@ -157,7 +154,7 @@ const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
 <template>
     <Head title="Comparativo" />
 
-    <MobileShell v-if="isMobile" :show-nav="false">
+    <MobileShell :show-nav="false">
         <header class="flex items-center gap-3 pt-2">
             <Link
                 :href="route('analysis')"
@@ -339,104 +336,5 @@ const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
         </div>
     </MobileShell>
 
-    <div v-else-if="false"></div>
-
-    <DesktopShell v-else title="Comparativo" subtitle="Domingo, 11 Jan 2026" @new-transaction="desktopTransactionOpen = true">
-        <div class="mx-auto max-w-[980px] space-y-6">
-            <div class="rounded-2xl bg-white px-6 py-5 shadow-sm ring-1 ring-slate-200/60">
-                <div class="flex items-center justify-between">
-                    <button type="button" class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-50" aria-label="Anterior" @click="shiftMonth(-1)">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M15 18l-6-6 6-6" />
-                        </svg>
-                    </button>
-                    <div class="text-sm font-semibold text-slate-900">{{ label }}</div>
-                    <button type="button" class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-50" aria-label="Próximo" @click="shiftMonth(1)">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 18l6-6-6-6" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-6">
-                <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200/60">
-                    <div class="text-xs font-bold uppercase tracking-wide text-slate-400">{{ left.month }}</div>
-                    <div class="mt-4 space-y-3 text-sm font-semibold">
-                        <div class="flex items-center justify-between">
-                            <div class="text-slate-400">Rec.</div>
-                            <div class="text-emerald-600">{{ formatMoney(left.rec).replace('R$', 'R$') }}</div>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <div class="text-slate-400">Desp.</div>
-                            <div class="text-red-500">{{ formatMoney(left.desp).replace('R$', 'R$') }}</div>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <div class="text-slate-400">Total</div>
-                            <div class="text-emerald-600">+{{ formatMoney(left.total).replace('R$', 'R$') }}</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200/60">
-                    <div class="text-xs font-bold uppercase tracking-wide text-slate-400">{{ right.month }}</div>
-                    <div class="mt-4 space-y-3 text-sm font-semibold">
-                        <div class="flex items-center justify-between">
-                            <div class="text-slate-400">Rec.</div>
-                            <div class="text-emerald-600">{{ formatMoney(right.rec).replace('R$', 'R$') }}</div>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <div class="text-slate-400">Desp.</div>
-                            <div class="text-red-500">{{ formatMoney(right.desp).replace('R$', 'R$') }}</div>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <div class="text-slate-400">Total</div>
-                            <div class="text-emerald-600">+{{ formatMoney(right.total).replace('R$', 'R$') }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="rounded-2xl border border-amber-100 bg-amber-50 px-6 py-5">
-                <div class="flex items-start gap-3">
-                    <span class="mt-0.5 flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 9v4" />
-                            <path d="M12 17h.01" />
-                            <circle cx="12" cy="12" r="9" />
-                        </svg>
-                    </span>
-                    <div class="flex-1">
-                        <div class="text-sm font-semibold text-slate-900">Você gastou {{ diffPct }}% a mais em Janeiro</div>
-                        <div class="mt-1 text-sm font-semibold text-amber-700">+{{ formatMoney(diffAbs).replace('R$', 'R$') }} de aumento</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200/60">
-                <div class="text-base font-semibold text-slate-900">Despesas por categoria</div>
-                <div class="mt-5 space-y-6">
-                    <div v-for="c in categories" :key="c.key">
-                        <div class="text-sm font-semibold text-slate-700">{{ c.label }}</div>
-                        <div class="mt-3 space-y-2">
-                            <div class="flex items-center gap-3">
-                                <div class="h-2 flex-1 rounded-full bg-slate-100">
-                                    <div class="h-2 rounded-full bg-slate-300" :style="{ width: `${Math.round((c.b / maxCategory) * 100)}%` }"></div>
-                                </div>
-                                <div class="w-20 text-right text-xs font-semibold text-slate-400">{{ formatMoney(c.b).replace('R$', 'R$') }}</div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <div class="h-2 flex-1 rounded-full bg-slate-100">
-                                    <div class="h-2 rounded-full bg-[#14B8A6]" :style="{ width: `${Math.round((c.a / maxCategory) * 100)}%` }"></div>
-                                </div>
-                                <div class="w-20 text-right text-xs font-semibold text-slate-700">{{ formatMoney(c.a).replace('R$', 'R$') }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <DesktopTransactionModal :open="desktopTransactionOpen" :kind="desktopTransactionKind" @close="desktopTransactionOpen = false" @save="onDesktopTransactionSave" />
-        <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
-    </DesktopShell>
+    
 </template>

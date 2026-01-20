@@ -1,16 +1,15 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import DesktopSettingsShell from '@/Layouts/DesktopSettingsShell.vue';
-import { useIsMobile } from '@/composables/useIsMobile';
 
-const isMobile = useIsMobile();
+const isMobile = ref(true);
 </script>
 
 <template>
     <Head title="Sobre" />
 
-    <MobileShell v-if="isMobile" :show-nav="false">
+    <MobileShell :show-nav="false">
         <header class="flex items-center gap-3 pt-2">
             <Link
                 :href="route('settings')"
@@ -104,10 +103,5 @@ const isMobile = useIsMobile();
         </div>
     </MobileShell>
 
-    <DesktopSettingsShell v-else>
-        <div class="rounded-3xl bg-white px-10 py-9 shadow-sm ring-1 ring-slate-200/60">
-            <div class="text-lg font-semibold text-slate-900">Sobre</div>
-            <div class="mt-6 text-sm font-semibold text-slate-500">Página em construção para desktop.</div>
-        </div>
-    </DesktopSettingsShell>
+    
 </template>

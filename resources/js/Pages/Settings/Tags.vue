@@ -2,13 +2,11 @@
 import { computed, ref } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import DesktopSettingsShell from '@/Layouts/DesktopSettingsShell.vue';
-import { useIsMobile } from '@/composables/useIsMobile';
 import PickerSheet from '@/Components/PickerSheet.vue';
 import MobileToast from '@/Components/MobileToast.vue';
 import { requestJson } from '@/lib/kitamoApi';
 
-const isMobile = useIsMobile();
+const isMobile = ref(true);
 const page = usePage();
 
 interface Tag {
@@ -128,7 +126,7 @@ const closeEditModal = () => {
 <template>
     <Head title="Tags" />
 
-    <MobileShell v-if="isMobile" :show-nav="false">
+    <MobileShell :show-nav="false">
         <header class="flex items-center justify-between pt-2">
             <Link
                 :href="route('dashboard')"
@@ -281,55 +279,5 @@ const closeEditModal = () => {
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
     </MobileShell>
 
-    <DesktopSettingsShell v-else>
-        <div class="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200/60">
-            <div class="px-10 py-9">
-                <div class="flex items-center justify-between">
-                    <div class="text-lg font-semibold text-slate-900">Suas Tags</div>
-                </div>
-
-                <div class="mt-6 flex items-center gap-3">
-                    <div class="relative flex-1">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">#</span>
-                        <input
-                            v-model="newTagNome"
-                            type="text"
-                            placeholder="Criar nova tag..."
-                            class="h-12 w-full rounded-2xl bg-slate-50 pl-10 pr-4 text-sm font-semibold text-slate-900 ring-1 ring-slate-200/60 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#14B8A6]"
-                            @keyup.enter="createTag"
-                        />
-                    </div>
-                    <button
-                        type="button"
-                        class="inline-flex h-12 items-center gap-2 rounded-xl bg-[#14B8A6] px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20"
-                        @click="createTag"
-                    >
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 5v14" />
-                            <path d="M5 12h14" />
-                        </svg>
-                        Criar Tag
-                    </button>
-                </div>
-
-                <div v-if="tags.length > 0" class="mt-6 flex flex-wrap gap-3">
-                    <button
-                        v-for="tag in tags"
-                        :key="tag.id"
-                        type="button"
-                        class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition hover:opacity-80"
-                        :style="{ backgroundColor: tag.cor + '20', color: tag.cor }"
-                        @click="openEditTag(tag)"
-                    >
-                        <span>#</span>
-                        <span>{{ tag.nome }}</span>
-                    </button>
-                </div>
-
-                <div v-else class="mt-8 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-6 py-12 text-center">
-                    <div class="text-sm text-slate-500">Nenhuma tag criada ainda. Crie uma para começar!</div>
-                </div>
-            </div>
-        </div>
-    </DesktopSettingsShell>
+    
 </template>

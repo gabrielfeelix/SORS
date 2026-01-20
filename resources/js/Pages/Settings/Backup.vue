@@ -2,12 +2,10 @@
 import { ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import DesktopSettingsShell from '@/Layouts/DesktopSettingsShell.vue';
 import ToggleSwitch from '@/Components/ToggleSwitch.vue';
 import MobileToast from '@/Components/MobileToast.vue';
-import { useIsMobile } from '@/composables/useIsMobile';
 
-const isMobile = useIsMobile();
+const isMobile = ref(true);
 
 const synced = ref(true);
 const autoBackup = ref(true);
@@ -44,7 +42,7 @@ const restoreBackup = () => {
 <template>
     <Head title="Backup automático" />
 
-    <MobileShell v-if="isMobile" :show-nav="false">
+    <MobileShell :show-nav="false">
         <header class="flex items-center gap-3 pt-2">
             <Link
                 :href="route('settings.security')"
@@ -180,109 +178,5 @@ const restoreBackup = () => {
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
     </MobileShell>
 
-    <DesktopSettingsShell v-else>
-        <div class="rounded-3xl bg-white px-10 py-9 shadow-sm ring-1 ring-slate-200/60">
-            <div class="text-lg font-semibold text-slate-900">Backup automático</div>
-            <div class="mt-8 grid grid-cols-2 gap-8">
-                <div class="rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200/60">
-                    <div class="flex items-center gap-3">
-                        <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
-                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20 17.5A4.5 4.5 0 0 0 18 9h-1.3A7 7 0 0 0 3 11.5" />
-                                <path d="M12 12v7" />
-                                <path d="M8 15l4-3 4 3" />
-                            </svg>
-                        </span>
-                        <div>
-                            <div class="text-base font-semibold text-slate-900">Sincronizado</div>
-                            <div class="mt-1 text-xs font-semibold text-slate-400">Último backup: Hoje às 14:30</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200/60">
-                    <div class="flex items-center justify-between gap-6">
-                        <div>
-                            <div class="text-sm font-semibold text-slate-900">Backup automático</div>
-                            <div class="mt-1 text-xs font-semibold text-slate-400">Salva seus dados diariamente</div>
-                        </div>
-                        <ToggleSwitch v-model="autoBackup" />
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-10 grid grid-cols-2 gap-8">
-                <div>
-                    <div class="text-[11px] font-bold uppercase tracking-wide text-slate-300">Frequência</div>
-                    <div class="mt-4 relative flex h-12 items-center rounded-2xl bg-slate-50 px-4 ring-1 ring-slate-200/60">
-                        <select v-model="frequency" class="select-clean h-full w-full appearance-none bg-transparent text-sm font-semibold text-slate-900 focus:outline-none">
-                            <option>Diário</option>
-                            <option>Semanal</option>
-                            <option>Mensal</option>
-                        </select>
-                        <span class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-300">
-                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M6 9l6 6 6-6" />
-                            </svg>
-                        </span>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="text-[11px] font-bold uppercase tracking-wide text-slate-300">Salvar em</div>
-                    <div class="mt-4 grid grid-cols-2 gap-3">
-                        <button
-                            type="button"
-                            class="flex h-12 items-center justify-center gap-2 rounded-2xl border bg-white text-sm font-semibold"
-                            :class="provider === 'drive' ? 'border-[#14B8A6] text-[#14B8A6]' : 'border-slate-200 text-slate-600'"
-                            @click="provider = 'drive'"
-                        >
-                            Drive
-                        </button>
-                        <button
-                            type="button"
-                            class="flex h-12 items-center justify-center gap-2 rounded-2xl border bg-white text-sm font-semibold"
-                            :class="provider === 'icloud' ? 'border-[#14B8A6] text-[#14B8A6]' : 'border-slate-200 text-slate-600'"
-                            @click="provider = 'icloud'"
-                        >
-                            iCloud
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-10">
-                <div class="text-[11px] font-bold uppercase tracking-wide text-slate-300">Histórico</div>
-                <div class="mt-4 overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-slate-200/60">
-                    <div v-for="(h, idx) in history" :key="h.label" class="flex items-center justify-between px-6 py-5" :class="idx ? 'border-t border-slate-200/70' : ''">
-                        <div class="text-sm font-semibold text-slate-900">{{ h.label }}</div>
-                        <div class="flex items-center gap-3">
-                            <div class="text-xs font-semibold text-slate-400">{{ h.size }}</div>
-                            <span v-if="h.ok" class="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white">
-                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                    <path d="M20 6 9 17l-5-5" />
-                                </svg>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-10 flex justify-end gap-3">
-                <button type="button" class="h-12 rounded-2xl border border-[#14B8A6] bg-white px-8 text-sm font-semibold text-[#14B8A6]" @click="runBackup">Fazer backup</button>
-                <button type="button" class="h-12 rounded-2xl bg-[#14B8A6] px-8 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20" @click="restoreBackup">Restaurar</button>
-            </div>
-        </div>
-
-        <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
-    </DesktopSettingsShell>
+    
 </template>
-
-<style scoped>
-.select-clean {
-    background-image: none !important;
-    -webkit-appearance: none !important;
-    -moz-appearance: none !important;
-    appearance: none !important;
-}
-</style>

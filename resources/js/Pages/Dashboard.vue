@@ -5,10 +5,7 @@ import { requestJson } from '@/lib/kitamoApi';
 import { buildTransactionRequest } from '@/lib/transactions';
 import type { BootstrapData, CreditCard, Entry, Goal } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import DesktopShell from '@/Layouts/DesktopShell.vue';
 import TransactionModal, { type TransactionModalPayload } from '@/Components/TransactionModal.vue';
-import DesktopTransactionModal from '@/Components/DesktopTransactionModal.vue';
-import DesktopTransactionDrawer from '@/Components/DesktopTransactionDrawer.vue';
 import TransactionDetailModal, { type TransactionDetail } from '@/Components/TransactionDetailModal.vue';
 import type { AccountOption } from '@/Components/AccountPickerSheet.vue';
 import type { CategoryOption } from '@/Components/CategoryPickerSheet.vue';
@@ -16,7 +13,6 @@ import MobileToast from '@/Components/MobileToast.vue';
 import CreditCardModal, { type CreditCardModalPayload } from '@/Components/CreditCardModal.vue';
 import CreateAccountFlowModal from '@/Components/CreateAccountFlowModal.vue';
 import CreateCreditCardFlowModal from '@/Components/CreateCreditCardFlowModal.vue';
-import { useIsMobile } from '@/composables/useIsMobile';
 import Modal from '@/Components/Modal.vue';
 import HomeWidgetsManager from '@/Components/HomeWidgetsManager.vue';
 
@@ -37,7 +33,7 @@ const bootstrap = computed(
     () => (page.props.bootstrap ?? { entries: [], goals: [], accounts: [], categories: [] }) as BootstrapData,
 );
 
-const isMobile = useIsMobile();
+const isMobile = ref(true);
 
 type HomeWidgetsState = {
     accounts: boolean;
@@ -811,7 +807,7 @@ onMounted(() => {
 </script>
 
 <template>
-	    <MobileShell v-if="isMobile" @add="openTransaction('expense')">
+	    <MobileShell @add="openTransaction('expense')">
 	        <header class="flex items-center justify-between pt-2">
 	            <button type="button" @click="openProfileSettings" class="flex items-center gap-3" aria-label="Abrir perfil">
 	                <span class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
@@ -1310,312 +1306,5 @@ onMounted(() => {
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
     </MobileShell>
 
-	    <DesktopShell v-else title="Visão Geral" subtitle="Domingo, 11 Jan 2026" @new-transaction="openDesktopTransaction">
-        <div class="grid grid-cols-[1fr_360px] gap-8">
-            <div class="space-y-8">
-                <div class="grid grid-cols-3 gap-6">
-                    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#14B8A6] to-[#10B981] p-7 text-white shadow-lg shadow-emerald-500/20">
-                        <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/15"></div>
-                        <div class="absolute -right-2 top-12 h-10 w-20 rounded-2xl bg-white/10"></div>
-
-                        <div class="text-sm font-semibold opacity-95">Saldo Total</div>
-                        <div class="mt-2 text-4xl font-bold tracking-tight">
-                            R$ {{ saldoAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
-                        </div>
-                        <div class="mt-5 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-xs font-semibold">
-                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 21V7" />
-                                <path d="M7 12l5-5 5 5" />
-                            </svg>
-                            +12% esse mês
-                        </div>
-                    </div>
-
-                    <Link
-                        :href="route('accounts.index', { kind: 'income' })"
-                        class="group relative rounded-2xl bg-white p-7 shadow-sm ring-1 ring-slate-200/60 transition hover:-translate-y-0.5"
-                    >
-                        <span class="absolute right-5 top-5 text-emerald-500 opacity-70 transition group-hover:opacity-100">
-                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 18l6-6-6-6" />
-                            </svg>
-                        </span>
-                        <div class="flex items-start justify-between">
-                            <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
-                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 21V7" />
-                                    <path d="M7 12l5-5 5 5" />
-                                </svg>
-                            </span>
-                            <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">+2.5%</span>
-                        </div>
-                        <div class="mt-4 text-sm font-semibold text-slate-400">Receitas</div>
-                        <div class="mt-1 text-2xl font-bold text-slate-900">
-                            R$ {{ receitas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
-                        </div>
-                    </Link>
-
-                    <Link
-                        :href="route('accounts.index', { kind: 'expense' })"
-                        class="group relative rounded-2xl bg-white p-7 shadow-sm ring-1 ring-slate-200/60 transition hover:-translate-y-0.5"
-                    >
-                        <span class="absolute right-5 top-5 text-red-500 opacity-70 transition group-hover:opacity-100">
-                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 18l6-6-6-6" />
-                            </svg>
-                        </span>
-                        <div class="flex items-start justify-between">
-                            <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-500">
-                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 3v14" />
-                                    <path d="M7 12l5 5 5-5" />
-                                </svg>
-                            </span>
-                            <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">Estável</span>
-                        </div>
-                        <div class="mt-4 text-sm font-semibold text-slate-400">Despesas</div>
-                        <div class="mt-1 text-2xl font-bold text-slate-900">
-                            R$ {{ despesas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
-                        </div>
-                    </Link>
-                </div>
-
-                <div class="rounded-2xl bg-white p-7 shadow-sm ring-1 ring-slate-200/60">
-                    <div class="flex items-center justify-between">
-                        <div class="text-base font-semibold text-slate-900">Fluxo de Caixa</div>
-                        <Link :href="route('analysis')" class="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-500">
-                            Últimos 6 meses
-                            <svg class="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M6 9l6 6 6-6" />
-                            </svg>
-                        </Link>
-                    </div>
-
-                    <div v-if="hasCashflow" class="mt-8 flex items-end justify-between gap-4">
-                        <div v-for="item in cashflowSeries" :key="item.label" class="group flex-1">
-                            <div class="relative mx-auto w-full">
-                                <div class="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold text-white opacity-0 transition group-hover:opacity-100">
-                                    {{ formatBRL(item.amount) }}
-                                </div>
-                                <div class="mx-auto w-full rounded-t-2xl" :class="item.tone" :style="{ height: `${item.height}px` }"></div>
-                            </div>
-                            <div class="mt-3 text-center text-xs font-semibold" :class="item.highlight ? 'text-[#14B8A6]' : 'text-slate-400'">{{ item.label }}</div>
-                        </div>
-                    </div>
-                    <div v-else class="mt-8 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center">
-                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-400">
-                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 19V5" />
-                                <path d="M10 19V9" />
-                                <path d="M16 19v-4" />
-                                <path d="M22 19V7" />
-                            </svg>
-                        </div>
-                        <div class="mt-3 text-sm font-semibold text-slate-900">Sem fluxo registrado</div>
-                        <div class="mt-1 text-xs text-slate-500">Adicione lançamentos para preencher o gráfico.</div>
-                    </div>
-                </div>
-
-                <div class="rounded-2xl bg-white p-7 shadow-sm ring-1 ring-slate-200/60">
-                    <div class="flex items-center justify-between">
-                        <div class="text-base font-semibold text-slate-900">Transações Recentes</div>
-                        <Link :href="route('accounts.index')" class="text-sm font-semibold text-[#14B8A6]">Ver todas</Link>
-                    </div>
-
-                    <div v-if="hasEntries" class="mt-6 overflow-hidden rounded-2xl border border-slate-100">
-                        <div class="grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 bg-slate-50 px-6 py-3 text-xs font-bold uppercase tracking-wide text-slate-400">
-                            <div>Transação</div>
-                            <div>Categoria</div>
-                            <div>Data</div>
-                            <div class="text-right">Valor</div>
-                        </div>
-
-                        <div
-                            v-for="row in desktopEntries.slice(0, 2)"
-                            :key="row.id"
-                            class="grid cursor-pointer grid-cols-[2fr_1fr_1fr_1fr] gap-4 border-t border-slate-100 px-6 py-5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                            role="button"
-                            tabindex="0"
-                            @click="openEntryDetail(row)"
-                            @keydown.enter="openEntryDetail(row)"
-                        >
-                            <div class="flex items-center gap-4">
-                                <span
-                                    class="flex h-10 w-10 items-center justify-center rounded-2xl ring-1 ring-slate-100"
-                                    :class="row.kind === 'income' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'"
-                                >
-                                    <svg v-if="row.kind === 'income'" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M12 21V7" />
-                                        <path d="M7 12l5-5 5 5" />
-                                    </svg>
-                                    <svg v-else class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M6 6h15l-2 7H7L6 6Z" />
-                                        <path d="M6 6l-2-2H2" />
-                                        <circle cx="9" cy="18" r="1.5" />
-                                        <circle cx="17" cy="18" r="1.5" />
-                                    </svg>
-                                </span>
-                                <div class="truncate">{{ row.title }}</div>
-                            </div>
-	                            <div class="flex items-center gap-2">
-	                                <span class="inline-flex rounded-md bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">{{ row.categoryLabel }}</span>
-	                                <span v-if="isRecurringEntry(row)" class="group relative inline-flex items-center">
-	                                    <span class="inline-flex items-center gap-1 rounded bg-[#DBEAFE] px-2 py-0.5 text-[12px] font-semibold text-[#3B82F6]">
-	                                        🔁 Recorrente
-	                                    </span>
-	                                    <span
-	                                        class="absolute bottom-full left-0 mb-2 hidden w-64 rounded-lg bg-slate-800 px-3 py-2 text-xs font-medium text-white shadow-lg group-hover:block"
-	                                    >
-	                                        Despesa recorrente - repete todo mês
-	                                        <span
-	                                            class="absolute top-full left-4 h-0 w-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"
-	                                        ></span>
-	                                    </span>
-	                                </span>
-	                            </div>
-                            <div class="text-slate-500">20 Jan 2026</div>
-                            <div class="text-right" :class="row.kind === 'income' ? 'text-emerald-600' : 'text-red-500'">
-                                {{ row.kind === 'income' ? '+' : '-' }} {{ formatBRL(row.amount).replace('R$', 'R$') }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="space-y-8">
-                <div v-if="hasEntries" class="rounded-2xl border border-amber-100 bg-amber-50 px-7 py-6">
-                    <div class="flex items-start gap-3">
-                        <span class="mt-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-700">
-                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 9v4" />
-                                <path d="M12 17h.01" />
-                                <circle cx="12" cy="12" r="9" />
-                            </svg>
-                        </span>
-                        <div class="flex-1">
-                            <div class="text-sm font-bold text-amber-700">Atenção Necessária</div>
-                            <div class="mt-2 text-sm font-semibold text-amber-700/80">
-                                Faltam <span class="text-red-500">R$ 200</span> para cobrir as contas previstas para os próximos 5 dias.
-                            </div>
-                            <Link :href="route('accounts.index')" class="mt-4 inline-flex h-9 items-center rounded-lg border border-amber-200 bg-white px-4 text-sm font-semibold text-amber-700">
-                                Resolver
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rounded-2xl bg-white p-7 shadow-sm ring-1 ring-slate-200/60">
-                    <div class="text-sm font-semibold text-slate-900">Transferência Rápida</div>
-                    <div class="mt-5 flex items-center gap-4">
-                        <button type="button" class="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-slate-200 text-slate-400" @click="openTransaction('transfer')">
-                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 5v14" />
-                                <path d="M5 12h14" />
-                            </svg>
-                        </button>
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">M</div>
-                            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">A</div>
-                        </div>
-                    </div>
-
-                    <div class="mt-6 flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200/60">
-                        <div class="text-sm font-semibold text-slate-400">R$ 0,00</div>
-                        <button type="button" class="ml-auto inline-flex h-9 items-center justify-center rounded-lg bg-[#14B8A6] px-4 text-sm font-semibold text-white" @click="openTransaction('transfer')">
-                            Enviar
-                        </button>
-                    </div>
-                </div>
-
-	                <div class="rounded-2xl bg-white p-7 shadow-sm ring-1 ring-slate-200/60">
-	                    <div class="flex items-center justify-between">
-	                        <div class="text-sm font-semibold text-slate-900">Contas bancárias</div>
-	                    </div>
-
-	                    <div v-if="bankAccounts.length === 0" class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-center">
-	                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-400">
-	                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                <path d="M3 10h18" />
-	                                <path d="M5 10V8l7-5 7 5v2" />
-	                                <path d="M6 10v9" />
-	                                <path d="M18 10v9" />
-	                            </svg>
-	                        </div>
-	                        <div class="mt-3 text-sm font-semibold text-slate-900">Você ainda não possui contas cadastradas.</div>
-	                        <div class="mt-1 text-xs text-slate-500">Adicione uma conta para começar a planejar seu mês.</div>
-	                        <button type="button" class="mt-4 rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white" @click="createAccountOpen = true">
-	                            Adicionar contas
-	                        </button>
-	                    </div>
-
-	                    <div v-else class="mt-5 space-y-3">
-		                        <Link
-		                            v-for="account in bankAccounts"
-		                            :key="account.id"
-		                            :href="route('accounts.show', { accountKey: account.id })"
-		                            class="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-4"
-		                        >
-		                            <div class="flex items-center gap-3">
-		                                <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white">
-		                                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-		                                        <path d="M3 10h18" />
-		                                        <path d="M5 10V8l7-5 7 5v2" />
-		                                        <path d="M6 10v9" />
-		                                        <path d="M18 10v9" />
-		                                    </svg>
-		                                </span>
-		                                <div>
-		                                    <div class="text-sm font-semibold text-slate-900">{{ account.label }}</div>
-		                                    <div class="text-xs text-slate-500">{{ account.subtitle }}</div>
-		                                </div>
-		                            </div>
-		                            <div class="text-sm font-semibold text-slate-900">R$ {{ account.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
-		                        </Link>
-	                    </div>
-	                </div>
-
-                <div class="rounded-2xl bg-white p-7 shadow-sm ring-1 ring-slate-200/60">
-                    <div class="flex items-center justify-between">
-                        <div class="text-sm font-semibold text-slate-900">Metas Principais</div>
-                        <Link :href="route('goals.index')" class="text-slate-300 hover:text-slate-400" aria-label="Ver metas">
-                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 18l6-6-6-6" />
-                            </svg>
-                        </Link>
-                    </div>
-
-                    <div v-if="hasGoals" class="mt-6 space-y-5">
-                        <Link v-for="g in desktopGoals.slice(0, 2)" :key="g.id" :href="route('goals.show', { goalId: g.id })" class="block">
-                            <div class="flex items-center justify-between text-sm font-semibold text-slate-700 hover:text-slate-900">
-                                <div>{{ g.title }}</div>
-                                <div class="text-slate-400">{{ Math.min(100, Math.round((g.current / g.target) * 100)) }}%</div>
-                            </div>
-                            <div class="mt-3 h-2 w-full rounded-full bg-slate-100">
-                                <div
-                                    class="h-2 rounded-full"
-                                    :class="g.icon === 'plane' ? 'bg-blue-500' : 'bg-[#14B8A6]'"
-                                    :style="{ width: `${Math.min(100, Math.round((g.current / g.target) * 100))}%` }"
-                                ></div>
-                            </div>
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-	        <DesktopTransactionModal :open="desktopTransactionOpen" :kind="transactionKind" :initial="desktopTransactionInitial" :lock-kind="transactionLockKind" @close="desktopTransactionOpen = false" @save="onTransactionSave" />
-	        <CreditCardModal :open="creditCardModalOpen" @close="creditCardModalOpen = false" @save="saveCreditCard" />
-	        <CreateAccountFlowModal :open="createAccountOpen" @close="createAccountOpen = false" @toast="showToast" />
-	        <CreateCreditCardFlowModal :open="createCreditCardFlowOpen" @close="createCreditCardFlowOpen = false" @save="handleCreateCreditCardFlowSave" />
-
-	        <DesktopTransactionDrawer
-	            :open="desktopDrawerOpen"
-	            :entry="desktopSelectedEntry"
-            @close="desktopDrawerOpen = false"
-            @edit="handleDetailEdit"
-            @delete="handleDetailDelete"
-            @mark-paid="handleDetailMarkPaid"
-        />
-        <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
-    </DesktopShell>
+		    
 </template>

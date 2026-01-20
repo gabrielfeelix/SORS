@@ -5,16 +5,10 @@ import { requestJson } from '@/lib/kitamoApi';
 import { buildTransactionRequest } from '@/lib/transactions';
 import type { BootstrapData, Goal, Entry } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import DesktopShell from '@/Layouts/DesktopShell.vue';
-import DesktopTransactionModal from '@/Components/DesktopTransactionModal.vue';
 import MobileToast from '@/Components/MobileToast.vue';
-import { useIsMobile } from '@/composables/useIsMobile';
 import type { TransactionModalPayload } from '@/Components/TransactionModal.vue';
-import DesktopGoalDrawer from '@/Components/DesktopGoalDrawer.vue';
-import DesktopGoalAddMoneyModal from '@/Components/DesktopGoalAddMoneyModal.vue';
-import DesktopGoalCreateModal from '@/Components/DesktopGoalCreateModal.vue';
 
-const isMobile = useIsMobile();
+const isMobile = ref(true);
 
 const page = usePage();
 const bootstrap = computed(
@@ -130,7 +124,7 @@ const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
 <template>
     <Head title="Metas" />
 
-    <MobileShell v-if="isMobile">
+    <MobileShell>
         <header class="flex items-center justify-between pt-2">
             <div class="text-2xl font-semibold tracking-tight text-slate-900">Metas</div>
             <Link
@@ -234,167 +228,5 @@ const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
         </template>
     </MobileShell>
 
-    <DesktopShell
-        v-else
-        title="Minhas Metas"
-        subtitle="Domingo, 11 Jan 2026"
-        search-placeholder="Buscar (ex: Supermercado)..."
-        @new-transaction="desktopTransactionOpen = true"
-    >
-        <div class="space-y-8">
-            <div class="flex items-center justify-between gap-6">
-                <div class="flex items-center gap-3">
-                    <button
-                        type="button"
-                        class="h-10 rounded-full px-5 text-sm font-semibold"
-                        :class="goalFilter === 'all' ? 'bg-[#14B8A6] text-white' : 'bg-white text-slate-500 ring-1 ring-slate-200'"
-                        @click="goalFilter = 'all'"
-                    >
-                        Todas
-                    </button>
-                    <button
-                        type="button"
-                        class="h-10 rounded-full px-5 text-sm font-semibold"
-                        :class="goalFilter === 'short' ? 'bg-[#14B8A6] text-white' : 'bg-white text-slate-500 ring-1 ring-slate-200'"
-                        @click="goalFilter = 'short'"
-                    >
-                        Curto Prazo
-                    </button>
-                    <button
-                        type="button"
-                        class="h-10 rounded-full px-5 text-sm font-semibold"
-                        :class="goalFilter === 'long' ? 'bg-[#14B8A6] text-white' : 'bg-white text-slate-500 ring-1 ring-slate-200'"
-                        @click="goalFilter = 'long'"
-                    >
-                        Longo Prazo
-                    </button>
-                </div>
-                <button
-                    type="button"
-                    class="inline-flex h-11 items-center gap-2 rounded-xl bg-[#14B8A6] px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20"
-                    @click="openCreateGoal"
-                >
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 5v14" />
-                        <path d="M5 12h14" />
-                    </svg>
-                    Nova Meta Financeira
-                </button>
-            </div>
-
-            <div v-if="goals.length === 0" class="flex items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-16">
-                <div class="text-center">
-                    <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-2xl bg-white text-slate-300">
-                        <svg class="h-12 w-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 12h4l3-9 4 18 3-9h4" />
-                        </svg>
-                    </div>
-                    <div class="mt-6 text-lg font-semibold text-slate-900">Ainda não há metas</div>
-                    <div class="mt-2 max-w-md text-sm text-slate-500">
-                        Comece criando sua primeira meta financeira para acompanhar seus objetivos e progresso.
-                    </div>
-                    <button
-                        type="button"
-                        class="mt-6 inline-flex h-11 items-center gap-2 rounded-xl bg-[#14B8A6] px-6 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20"
-                        @click="openCreateGoal"
-                    >
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 5v14" />
-                            <path d="M5 12h14" />
-                        </svg>
-                        Criar primeira meta
-                    </button>
-                </div>
-            </div>
-
-            <div v-else class="grid grid-cols-3 gap-6">
-                <button
-                    v-for="goal in filteredGoals.slice(0, 2)"
-                    :key="goal.id"
-                    type="button"
-                    class="rounded-2xl bg-white p-6 text-left shadow-sm ring-1 ring-slate-200/60 hover:shadow-md"
-                    @click="openGoalDrawer(goal)"
-                >
-                    <div class="flex items-start justify-between gap-4">
-                        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-[#14B8A6] ring-1 ring-emerald-100">
-                            <svg v-if="goal.icon === 'home'" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M3 10.5L12 3l9 7.5" />
-                                <path d="M5 10v10h14V10" />
-                            </svg>
-                            <svg v-else-if="goal.icon === 'plane'" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M2 16l20-8-20-8 6 8-6 8Z" />
-                                <path d="M6 16v6l4-4" />
-                            </svg>
-                            <svg v-else class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M5 16l1-5 1-3h10l1 3 1 5" />
-                                <path d="M7 16h10" />
-                                <circle cx="8" cy="17" r="1.5" />
-                                <circle cx="16" cy="17" r="1.5" />
-                            </svg>
-                        </div>
-
-                        <div class="text-right">
-                            <span class="inline-flex rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide" :class="statusFor(goal.status).cls">
-                                {{ statusFor(goal.status).label }}
-                            </span>
-                            <div class="mt-2 text-[10px] font-bold uppercase tracking-wide text-slate-300">Prazo: {{ goal.due }}</div>
-                        </div>
-                    </div>
-
-                    <div class="mt-6 text-lg font-semibold text-slate-900">{{ goal.title }}</div>
-                    <div class="mt-2 flex items-end gap-2">
-                        <div class="text-2xl font-bold tracking-tight text-slate-900">R$ {{ goal.current.toLocaleString('pt-BR', { maximumFractionDigits: 0 }) }}</div>
-                        <div class="pb-1 text-xs font-semibold text-slate-400">/ {{ formatMoney(goal.target).replace('R$', 'R$') }}</div>
-                        <div class="ml-auto pb-1 text-sm font-bold text-[#14B8A6]">{{ pct(goal) }}%</div>
-                    </div>
-
-                    <div class="mt-4 h-2 w-full rounded-full bg-slate-100">
-                        <div class="h-2 rounded-full" :class="goal.icon === 'plane' ? 'bg-blue-500' : 'bg-[#14B8A6]'" :style="{ width: `${pct(goal)}%` }"></div>
-                    </div>
-
-                    <div class="mt-5 flex flex-wrap gap-2">
-                        <span v-for="t in goal.tags ?? []" :key="t" class="inline-flex rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
-                            {{ t }}
-                        </span>
-                    </div>
-
-                    <button type="button" class="mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-50 text-sm font-semibold text-slate-600" @click.stop="openAddMoney(goal)">
-                        <svg class="h-5 w-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 5v14" />
-                            <path d="M5 12h14" />
-                        </svg>
-                        Adicionar Valor
-                    </button>
-                </button>
-
-                <button
-                    type="button"
-                    class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white p-6 text-center text-slate-400 hover:bg-slate-50"
-                    @click="openCreateGoal"
-                >
-                    <div class="flex h-20 w-20 items-center justify-center rounded-full bg-slate-50">
-                        <svg class="h-10 w-10 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 5v14" />
-                            <path d="M5 12h14" />
-                        </svg>
-                    </div>
-                    <div class="mt-6 text-base font-semibold text-slate-600">Nova Meta</div>
-                    <div class="mt-2 text-sm font-semibold text-slate-400">Crie um objetivo financeiro e acompanhe o progresso.</div>
-                </button>
-            </div>
-        </div>
-
-        <DesktopGoalDrawer
-            :open="goalDrawerOpen"
-            :goal="selectedGoal"
-            @close="goalDrawerOpen = false"
-            @add-money="addMoneyOpen = true"
-            @edit="editSelectedGoal"
-            @delete="deleteSelectedGoal"
-        />
-        <DesktopGoalAddMoneyModal :open="addMoneyOpen" @close="addMoneyOpen = false" @confirm="onAddMoneyConfirm" />
-        <DesktopGoalCreateModal :open="createGoalOpen" @close="createGoalOpen = false" @created="onGoalCreated" />
-        <DesktopTransactionModal :open="desktopTransactionOpen" :kind="desktopTransactionKind" @close="desktopTransactionOpen = false" @save="onDesktopTransactionSave" />
-        <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
-    </DesktopShell>
+    
 </template>

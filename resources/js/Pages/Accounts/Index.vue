@@ -5,16 +5,12 @@
 	import { buildTransactionRequest } from '@/lib/transactions';
 	import type { BootstrapData, Entry } from '@/types/kitamo';
 	import MobileShell from '@/Layouts/MobileShell.vue';
-	import DesktopShell from '@/Layouts/DesktopShell.vue';
 	import TransactionModal, { type TransactionModalPayload } from '@/Components/TransactionModal.vue';
-	import DesktopTransactionModal from '@/Components/DesktopTransactionModal.vue';
 	import MobileToast from '@/Components/MobileToast.vue';
 	import TransactionDetailModal, { type TransactionDetail } from '@/Components/TransactionDetailModal.vue';
 	import TransactionFilterModal, { type TransactionFilterState } from '@/Components/TransactionFilterModal.vue';
 	import ImportInvoiceModal from '@/Components/ImportInvoiceModal.vue';
-	import DesktopImportChooserModal from '@/Components/DesktopImportChooserModal.vue';
-	import DesktopTransactionDrawer from '@/Components/DesktopTransactionDrawer.vue';
-	import { useIsMobile } from '@/composables/useIsMobile';
+	
 import type { AccountOption } from '@/Components/AccountPickerSheet.vue';
 import type { CategoryOption } from '@/Components/CategoryPickerSheet.vue';
 
@@ -23,7 +19,7 @@ const userName = computed(() => page.props.auth?.user?.name ?? 'Gabriel');
 const bootstrap = computed(
     () => (page.props.bootstrap ?? { entries: [], goals: [], accounts: [], categories: [] }) as BootstrapData,
 );
-const isMobile = useIsMobile();
+const isMobile = ref(true);
 
 type FilterKind = 'all' | 'paid' | 'to_pay';
 
@@ -540,7 +536,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <MobileShell v-if="isMobile" @add="openCreate">
+    <MobileShell @add="openCreate">
 	        <header class="flex items-center justify-between pt-2">
 	            <div>
 	                <div class="text-2xl font-semibold tracking-tight text-slate-900">Lançamentos</div>
@@ -807,312 +803,5 @@ onMounted(() => {
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
     </MobileShell>
 
-    <div v-else-if="false">
-        <div class="grid gap-6 xl:grid-cols-2">
-            <Link
-                :href="route('accounts.checking')"
-                class="rounded-[28px] border border-white/70 bg-white p-6 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.4)] transition hover:-translate-y-0.5 hover:shadow-[0_30px_70px_-45px_rgba(15,23,42,0.55)]"
-            >
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-4">
-                        <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
-                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2l7 7-7 7-7-7 7-7Z" />
-                            </svg>
-                        </span>
-                        <div>
-                            <div class="text-base font-semibold text-slate-900">Nubank C/C</div>
-                            <div class="text-sm text-slate-500">Saldo atual</div>
-                        </div>
-                    </div>
-                    <div class="text-base font-semibold text-slate-900">R$ 2345.67</div>
-                </div>
-            </Link>
-
-            <Link
-                :href="route('accounts.card')"
-                class="rounded-[28px] border border-white/70 bg-white p-6 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.4)] transition hover:-translate-y-0.5 hover:shadow-[0_30px_70px_-45px_rgba(15,23,42,0.55)]"
-            >
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-4">
-                        <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white">
-                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="5" width="18" height="14" rx="3" />
-                                <path d="M3 10h18" />
-                            </svg>
-                        </span>
-                        <div>
-                            <div class="text-base font-semibold text-slate-900">Nubank Cartão</div>
-                            <div class="text-sm text-slate-500">Fatura aberta</div>
-                        </div>
-                    </div>
-                    <div class="text-base font-semibold text-slate-900">R$ 1450.00</div>
-                </div>
-            </Link>
-        </div>
-    </div>
-
-    <DesktopShell v-else title="Lançamentos" subtitle="Domingo, 11 Jan 2026" search-placeholder="Buscar (ex: Supermercado)..." @new-transaction="openDesktopCreate">
-        <button v-if="desktopTypeOpen || desktopCategoryOpen || desktopAccountOpen" type="button" class="fixed inset-0 z-[70]" aria-label="Fechar filtros" @click="closeDesktopMenus"></button>
-
-        <div class="space-y-8">
-            <div class="rounded-2xl bg-white px-6 py-5 shadow-sm ring-1 ring-slate-200/60">
-	                <div class="flex items-center justify-between gap-6">
-	                    <div class="flex items-center gap-4">
-                        <div class="flex items-center rounded-2xl border border-slate-200 bg-white px-2 py-1">
-                            <button type="button" class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-50" aria-label="Mês anterior" @click="shiftMonth(-1)">
-                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M15 18l-6-6 6-6" />
-                                </svg>
-                            </button>
-                            <div class="px-4 text-sm font-semibold tracking-wide text-slate-900">{{ monthLabel }}</div>
-                            <button type="button" class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-50" aria-label="Próximo mês" @click="shiftMonth(1)">
-                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M9 18l6-6-6-6" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        <div class="relative">
-                            <button
-                                type="button"
-                                class="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600"
-                                @click="toggleDesktopTypeMenu"
-                            >
-                                {{ desktopTypeLabel }}
-                                <svg class="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M6 9l6 6 6-6" />
-                                </svg>
-                            </button>
-                            <div v-if="desktopTypeOpen" class="absolute left-0 top-full z-[71] mt-2 w-56 overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-slate-200/60">
-                                <button
-                                    type="button"
-                                    class="flex w-full items-center justify-between px-5 py-3 text-left text-sm font-semibold"
-                                    :class="entryKindFilter === 'all' ? 'bg-slate-50 text-slate-900' : 'text-slate-600 hover:bg-slate-50'"
-                                    @click="setEntryKindFilter('all')"
-                                >
-                                    Todos
-                                </button>
-                                <button
-                                    type="button"
-                                    class="flex w-full items-center justify-between px-5 py-3 text-left text-sm font-semibold"
-                                    :class="entryKindFilter === 'income' ? 'bg-slate-50 text-slate-900' : 'text-slate-600 hover:bg-slate-50'"
-                                    @click="setEntryKindFilter('income')"
-                                >
-                                    Receitas
-                                </button>
-                                <button
-                                    type="button"
-                                    class="flex w-full items-center justify-between px-5 py-3 text-left text-sm font-semibold"
-                                    :class="entryKindFilter === 'expense' ? 'bg-slate-50 text-slate-900' : 'text-slate-600 hover:bg-slate-50'"
-                                    @click="setEntryKindFilter('expense')"
-                                >
-                                    Despesas
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="relative">
-                            <button
-                                type="button"
-                                class="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600"
-                                @click="toggleDesktopCategoryMenu"
-                            >
-                                {{ desktopCategoryLabel }}
-                                <svg class="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M6 9l6 6 6-6" />
-                                </svg>
-                            </button>
-                            <div v-if="desktopCategoryOpen" class="absolute left-0 top-full z-[71] mt-2 w-72 overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-slate-200/60">
-                                <div class="px-5 py-3 text-xs font-bold uppercase tracking-wide text-slate-400">Categorias</div>
-                                <button
-                                    v-for="c in filterCategories"
-                                    :key="c.key"
-                                    type="button"
-                                    class="flex w-full items-center justify-between px-5 py-3 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50"
-                                    @click="toggleCategory(c.key)"
-                                >
-                                    <span>{{ c.label }}</span>
-                                    <span v-if="filterState.categories.includes(c.key)" class="text-[#14B8A6]">
-                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M20 6 9 17l-5-5" />
-                                        </svg>
-                                    </span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="relative">
-                            <button
-                                type="button"
-                                class="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600"
-                                @click="toggleDesktopAccountMenu"
-                            >
-                                {{ desktopAccountLabel }}
-                                <svg class="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M6 9l6 6 6-6" />
-                                </svg>
-                            </button>
-                            <div v-if="desktopAccountOpen" class="absolute left-0 top-full z-[71] mt-2 w-64 overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-slate-200/60">
-                                <button
-                                    type="button"
-                                    class="flex w-full items-center justify-between px-5 py-3 text-left text-sm font-semibold"
-                                    :class="accountFilter === 'all' ? 'bg-slate-50 text-slate-900' : 'text-slate-600 hover:bg-slate-50'"
-                                    @click="setAccountFilter('all')"
-                                >
-                                    Todas as contas
-                                </button>
-                                <button
-                                    v-for="account in accountOptions"
-                                    :key="account"
-                                    type="button"
-                                    class="flex w-full items-center justify-between px-5 py-3 text-left text-sm font-semibold"
-                                    :class="accountFilter === account ? 'bg-slate-50 text-slate-900' : 'text-slate-600 hover:bg-slate-50'"
-                                    @click="setAccountFilter(account)"
-                                >
-                                    {{ account }}
-                                </button>
-                                <div v-if="!accountOptions.length" class="px-5 py-4 text-sm text-slate-400">Sem contas disponíveis</div>
-                            </div>
-                        </div>
-	                    </div>
-
-	                    <button
-	                        type="button"
-	                        class="inline-flex h-11 items-center rounded-xl bg-[#14B8A6] px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20"
-	                        @click="filterOpen = true"
-	                    >
-	                        Filtrar
-	                    </button>
-	                </div>
-	            </div>
-
-            <div class="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60">
-                <div class="flex items-center justify-between px-8 py-6">
-                    <div class="text-lg font-semibold text-slate-900">Histórico</div>
-                    <div class="flex items-center gap-3">
-                        <button
-                            type="button"
-                            class="inline-flex h-11 items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-[#14B8A6]"
-                            @click="desktopImportChooserOpen = true"
-                        >
-                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 7h6l2 2h8v10H4V7Z" />
-                                <path d="M12 12v6" />
-                                <path d="M9 15l3 3 3-3" />
-                            </svg>
-                            Importar Dados
-                        </button>
-
-                        <button
-                            type="button"
-                            class="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500"
-                            @click="desktopImportChooserOpen = true"
-                            aria-label="Importar"
-                        >
-                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 3v12" />
-                                <path d="M8 11l4 4 4-4" />
-                                <path d="M4 21h16" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="px-8 pb-8">
-                    <table class="w-full">
-                        <thead class="border-b border-slate-100 text-xs font-bold uppercase tracking-wide text-slate-400">
-                            <tr class="text-left">
-                                <th class="py-4">Descrição</th>
-                                <th class="py-4">Categoria</th>
-                                <th class="py-4">Conta</th>
-                                <th class="py-4">Data</th>
-                                <th class="py-4">Status</th>
-                                <th class="py-4 text-right">Valor</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="row in filteredEntries"
-                                :key="row.id"
-                                class="cursor-pointer border-b border-slate-100 text-sm font-semibold text-slate-700 last:border-b-0 hover:bg-slate-50"
-                                @click="openDesktopDetail(row)"
-                            >
-                                <td class="py-5">
-                                    <div class="flex items-center gap-4">
-                                        <span class="flex h-11 w-11 items-center justify-center rounded-full bg-slate-50 text-slate-500 ring-1 ring-slate-100">
-                                            <svg v-if="row.title.toLowerCase().includes('netflix')" class="h-6 w-6 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-                                                <path d="M9 7v10l9-5-9-5Z" />
-                                            </svg>
-                                            <svg v-else-if="row.categoryKey === 'home'" class="h-6 w-6 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M3 10.5L12 3l9 7.5" />
-                                                <path d="M5 10v10h14V10" />
-                                            </svg>
-                                            <svg v-else class="h-6 w-6 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M6 6h15l-2 7H7L6 6Z" />
-                                                <path d="M6 6l-2-2H2" />
-                                                <circle cx="9" cy="18" r="1.5" />
-                                                <circle cx="17" cy="18" r="1.5" />
-                                            </svg>
-                                        </span>
-                                        <div>{{ row.title }}</div>
-                                    </div>
-                                </td>
-                                <td class="py-5">
-                                    <span class="inline-flex rounded-md bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">{{ row.categoryLabel }}</span>
-                                </td>
-                                <td class="py-5 text-slate-500">{{ row.accountLabel }}</td>
-                                <td class="py-5 text-slate-500">{{ row.kind === 'income' ? 'Hoje, 10:00' : '10 Jan 2026' }}</td>
-                                <td class="py-5">
-                                    <span
-                                        class="inline-flex rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide"
-                                        :class="row.status === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'"
-                                    >
-                                        {{ row.status === 'pending' ? 'Pendente' : 'Pago' }}
-                                    </span>
-                                </td>
-                                <td class="py-5 text-right">
-                                    <div class="flex items-center justify-end gap-3">
-                                        <div class="font-bold" :class="row.kind === 'income' ? 'text-emerald-600' : 'text-slate-700'">
-                                            {{ row.kind === 'income' ? '+' : '-' }} {{ formatMoney(row.amount).replace('R$', 'R$') }}
-                                        </div>
-                                        <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M9 18l6-6-6-6" />
-                                        </svg>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <DesktopImportChooserModal :open="desktopImportChooserOpen" @close="desktopImportChooserOpen = false" @choose="onDesktopImportChoose" />
-        <DesktopTransactionDrawer
-            :open="desktopDrawerOpen"
-            :entry="desktopSelectedEntry"
-            @close="desktopDrawerOpen = false"
-            @edit="handleDesktopEdit"
-            @delete="deleteDesktopSelected"
-        />
-	        <DesktopTransactionModal
-	            :open="desktopTransactionOpen"
-	            :kind="desktopTransactionKind"
-	            :initial="desktopTransactionInitial"
-	            @close="desktopTransactionOpen = false"
-	            @save="handleDesktopSave"
-	        />
-	        <TransactionFilterModal
-	            :open="filterOpen"
-	            :categories="filterCategories"
-	            :initial="filterState"
-            :results-count="filteredEntries.length"
-            @close="filterOpen = false"
-            @clear="clearFilters"
-            @apply="applyFilters"
-        />
-        <ImportInvoiceModal :open="importOpen" @close="importOpen = false" @imported="onInvoiceImported" />
-        <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
-    </DesktopShell>
+    
 </template>

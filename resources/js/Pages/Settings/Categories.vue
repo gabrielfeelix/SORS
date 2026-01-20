@@ -2,13 +2,11 @@
 import { computed, ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import DesktopSettingsShell from '@/Layouts/DesktopSettingsShell.vue';
-import { useIsMobile } from '@/composables/useIsMobile';
 import PickerSheet from '@/Components/PickerSheet.vue';
 import MobileToast from '@/Components/MobileToast.vue';
 import { requestJson } from '@/lib/kitamoApi';
 
-const isMobile = useIsMobile();
+const isMobile = ref(true);
 
 type CategoryType = 'expense' | 'income';
 type IconKey = 'home' | 'food' | 'car' | 'game' | 'heart' | 'money' | 'trend';
@@ -164,7 +162,7 @@ const closeEditModal = () => {
 <template>
     <Head title="Categorias" />
 
-    <MobileShell v-if="isMobile" :show-nav="false">
+    <MobileShell :show-nav="false">
         <header class="flex items-center justify-between pt-2">
             <Link
                 :href="route('dashboard')"
@@ -464,55 +462,5 @@ const closeEditModal = () => {
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
     </MobileShell>
 
-    <DesktopSettingsShell v-else>
-        <div class="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200/60">
-            <div class="px-10 py-9">
-                <div class="flex items-center justify-between">
-                    <div class="text-lg font-semibold text-slate-900">Suas Categorias</div>
-                    <button
-                        type="button"
-                        class="inline-flex h-11 items-center gap-2 rounded-xl bg-[#14B8A6] px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20"
-                        @click="openCreateCategory"
-                    >
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 5v14" />
-                            <path d="M5 12h14" />
-                        </svg>
-                        Nova Categoria
-                    </button>
-                </div>
-
-                <div v-if="filteredCategories.length > 0" class="mt-8 grid grid-cols-2 gap-6">
-                    <div
-                        v-for="category in filteredCategories"
-                        :key="category.id"
-                        class="flex items-center gap-4 rounded-2xl bg-slate-50 px-6 py-5 ring-1 ring-slate-200/60 transition hover:bg-slate-100 cursor-pointer"
-                        @click="openEditCategory(category)"
-                    >
-                        <div
-                            class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl text-white"
-                            :style="{ backgroundColor: category.color }"
-                        >
-                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path :d="renderIcon(category.icon)" />
-                            </svg>
-                        </div>
-                        <div class="flex-1">
-                            <div class="text-sm font-semibold text-slate-900">{{ category.name }}</div>
-                            <div class="mt-1 text-xs font-semibold text-slate-400">
-                                {{ category.type === 'expense' ? 'Despesa' : 'Receita' }}
-                            </div>
-                        </div>
-                        <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 18l6-6-6-6" />
-                        </svg>
-                    </div>
-                </div>
-
-                <div v-else class="mt-8 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-6 py-12 text-center">
-                    <div class="text-sm text-slate-500">Nenhuma categoria criada ainda. Crie uma para começar!</div>
-                </div>
-            </div>
-        </div>
-    </DesktopSettingsShell>
+    
 </template>
