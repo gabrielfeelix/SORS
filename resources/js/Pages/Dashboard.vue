@@ -548,34 +548,59 @@ const pickerCategories = computed<CategoryOption[]>(() => {
         return 'slate';
     };
 
-    const unique = new Map<string, { label: string; icon: 'food' | 'home' | 'car' | 'other'; tone: any }>();
+    const unique = new Map<string, { label: string; icon: string; customColor?: string; tone?: any }>();
     for (const c of bootstrap.value.categories ?? []) {
         const label = c.name;
-        const iconKey = toCategoryIcon({ categoryKey: c.name, icon: c.icon ?? '' } as any);
-        const icon = iconKey === 'home' ? 'home' : iconKey === 'car' ? 'car' : iconKey === 'food' || iconKey === 'cart' ? 'food' : 'other';
-        unique.set(label, { label, icon, tone: mapTone(label) });
+        const icon = c.icon ?? 'other';
+        unique.set(label, { 
+            label, 
+            icon,
+            customColor: c.color || undefined,
+            tone: !c.icon || /^[a-z]+$/.test(c.icon) ? mapTone(label) : undefined 
+        });
     }
     if (!unique.size) return [];
-    return Array.from(unique.values()).map((meta) => ({ key: meta.label, ...meta }));
+    return Array.from(unique.values()).map((meta) => ({ 
+        key: meta.label, 
+        label: meta.label,
+        icon: meta.icon,
+        customColor: meta.customColor,
+        tone: meta.tone
+    }));
 });
 
 const pickerAccounts = computed<AccountOption[]>(() => {
-    const tone = (name: string): AccountOption['tone'] => {
-        const n = name.toLowerCase();
-        if (n.includes('nubank')) return 'purple';
-        if (n.includes('inter')) return 'amber';
-        if (n.includes('carteira') || n.includes('dinheiro')) return 'emerald';
-        return 'slate';
-    };
+    const accounts: AccountOption[] = [];
 
-    return (bootstrap.value.accounts ?? [])
-        .filter((a) => a.type !== 'credit_card')
-        .map((a) => ({
+    // Add bank accounts and wallets
+    for (const a of bootstrap.value.accounts ?? []) {
+        if (a.type === 'credit_card') continue;
+
+        accounts.push({
             key: a.name,
             label: a.name,
-            subtitle: a.type === 'wallet' ? 'Carteira' : a.type === 'bank' ? 'Conta' : 'Conta',
-            tone: tone(a.name),
-        }));
+            subtitle: a.type === 'wallet' ? 'Dinheiro físico' : a.type === 'bank' ? 'Corrente' : 'Conta',
+            icon: a.icon ?? undefined,
+            customColor: (a as any).color,
+            type: a.type as 'bank' | 'wallet',
+        });
+    }
+
+    // Add credit cards
+    for (const a of bootstrap.value.accounts ?? []) {
+        if (a.type !== 'credit_card') continue;
+
+        accounts.push({
+            key: a.name,
+            label: a.name,
+            subtitle: 'Cartão de Crédito',
+            icon: a.icon ?? undefined,
+            customColor: (a as any).color,
+            type: 'credit_card',
+        });
+    }
+
+    return accounts;
 });
 
 const mobileTransactionDetail = computed<TransactionDetail | null>(() => {

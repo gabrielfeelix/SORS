@@ -4,8 +4,9 @@ import PickerSheet from '@/Components/PickerSheet.vue';
 export type CategoryOption = {
     key: string;
     label: string;
-    icon: 'food' | 'home' | 'car' | 'other';
-    tone: 'amber' | 'blue' | 'slate' | 'purple' | 'red' | 'green';
+    icon: string | 'food' | 'home' | 'car' | 'other';
+    tone?: 'amber' | 'blue' | 'slate' | 'purple' | 'red' | 'green';
+    customColor?: string;
 };
 
 const props = defineProps<{
@@ -18,13 +19,18 @@ const emit = defineEmits<{
     (e: 'select', key: string): void;
 }>();
 
-const toneClass = (tone: CategoryOption['tone']) => {
+const toneClass = (tone?: CategoryOption['tone']) => {
     if (tone === 'amber') return 'bg-amber-100 text-amber-600';
     if (tone === 'blue') return 'bg-blue-100 text-blue-600';
     if (tone === 'purple') return 'bg-purple-100 text-purple-600';
     if (tone === 'red') return 'bg-red-100 text-red-600';
     if (tone === 'green') return 'bg-emerald-100 text-emerald-600';
     return 'bg-slate-200 text-slate-600';
+};
+
+const isEmojiIcon = (icon: string) => {
+    // Check if it's an emoji (typically multiple bytes)
+    return /^[\p{Emoji}]+$/u.test(icon) || icon.length > 2;
 };
 </script>
 
@@ -38,8 +44,15 @@ const toneClass = (tone: CategoryOption['tone']) => {
                 class="flex flex-col items-center gap-2 rounded-2xl px-2 py-2"
                 @click="emit('select', opt.key)"
             >
-                <span class="flex h-14 w-14 items-center justify-center rounded-full" :class="toneClass(opt.tone)">
-                    <svg v-if="opt.icon === 'food'" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <span 
+                    class="flex h-14 w-14 items-center justify-center rounded-full text-lg font-semibold"
+                    :class="opt.customColor ? '' : toneClass(opt.tone)"
+                    :style="opt.customColor ? { backgroundColor: opt.customColor, color: 'white' } : {}"
+                >
+                    <template v-if="isEmojiIcon(opt.icon)">
+                        {{ opt.icon }}
+                    </template>
+                    <svg v-else-if="opt.icon === 'food'" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M4 3v7" />
                         <path d="M8 3v7" />
                         <path d="M6 3v7" />
