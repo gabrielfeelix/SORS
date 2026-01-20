@@ -406,6 +406,23 @@ const formatDDMon = (isoDate: string) => {
     return `${dd}/${month}`;
 };
 
+const monthNameFromDDMM = (ddmm: string) => {
+    const match = String(ddmm ?? '').trim().match(/^(\d{2})\/(\d{2})$/);
+    if (!match) return '';
+    const [, dd, mm] = match;
+    const monthIndex = Number(mm) - 1;
+    if (!Number.isFinite(monthIndex) || monthIndex < 0 || monthIndex > 11) return '';
+    const date = new Date(new Date().getFullYear(), monthIndex, Number(dd) || 1);
+    const long = new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(date);
+    return long ? long.charAt(0).toUpperCase() + long.slice(1) : '';
+};
+
+const negativeMonthLabel = computed(() => {
+    const ddmm = projecao.value?.primeiro_dia_negativo;
+    if (!ddmm) return '';
+    return monthNameFromDDMM(ddmm);
+});
+
 const projectionSeries = computed(() => {
     if (!projecao.value) return null;
     const data = projecao.value.projecao_diaria ?? [];
@@ -432,9 +449,8 @@ const projectionSeries = computed(() => {
     const bars: ProjectionBar[] = sampled.map((row) => {
         const label = formatDDMM(row.data);
         const isCritical = Boolean(criticalDDMM && label === criticalDDMM);
-        const tone = isCritical ? 'bg-[#EF4444]' : 'bg-[#14B8A6]';
-
         const saldo = row.saldo;
+        const tone = saldo < 0 ? 'bg-[#EF4444]' : 'bg-[#14B8A6]';
         const barHeightPx = saldo >= 0 ? Math.round(saldo * posScale) : Math.round(Math.abs(saldo) * negScale);
         const topPx = saldo >= 0 ? Math.max(0, baselinePx - barHeightPx) : baselinePx;
 
@@ -945,7 +961,7 @@ onMounted(() => {
 	                    v-if="projecao?.primeiro_dia_negativo"
 	                    class="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-500"
 	                >
-	                    ⚠️ {{ projecao.primeiro_dia_negativo }}
+	                    ⚠️ {{ negativeMonthLabel || projecao.primeiro_dia_negativo }}
 	                </div>
 	                <div
 	                    v-else-if="projecao && projecao.saldo_dia_30 > 0"
@@ -961,10 +977,11 @@ onMounted(() => {
 	            >
 	                <div class="text-xl text-red-500">⚠️</div>
 	                <div class="flex-1">
-	                    <h3 class="mb-1 font-semibold text-red-900">Atenção ao saldo!</h3>
+	                    <h3 class="mb-1 font-semibold text-red-900">
+                            Atenção: Seu saldo pode ficar negativo em {{ negativeMonthLabel || 'breve' }}
+                        </h3>
 	                    <p class="text-sm text-red-700">
-	                        No ritmo atual, seu saldo ficará negativo dia
-	                        {{ projecao.primeiro_dia_negativo }}
+	                        No ritmo atual, seu saldo pode ficar negativo a partir do dia {{ projecao.primeiro_dia_negativo }}.
 	                    </p>
 	                    <Link :href="route('analysis')" class="mt-2 inline-flex text-sm font-medium text-red-600 hover:underline">
 	                        Ver análise detalhada →
