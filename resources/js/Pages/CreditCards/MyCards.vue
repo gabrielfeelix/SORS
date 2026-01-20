@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import type { BootstrapData } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
 import KitamoLayout from '@/Layouts/KitamoLayout.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
-import { requestJson } from '@/lib/kitamoApi';
 import CreateCreditCardFlowModal from '@/Components/CreateCreditCardFlowModal.vue';
 
 const isMobile = useIsMobile();
@@ -15,43 +14,6 @@ const bootstrap = computed(
     () => (page.props.bootstrap ?? { entries: [], goals: [], accounts: [], categories: [] }) as BootstrapData,
 );
 
-const activeMonth = ref(new Date());
-const monthItems = computed(() => {
-    const base = new Date(activeMonth.value.getFullYear(), activeMonth.value.getMonth(), 1);
-    const items: Array<{ key: string; label: string; date: Date }> = [];
-    for (let i = -2; i <= 2; i += 1) {
-        const d = new Date(base.getFullYear(), base.getMonth() + i, 1);
-        const label = new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(d).replace('.', '').toUpperCase();
-        items.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label, date: d });
-    }
-    return items;
-});
-const selectedMonthKey = ref(monthItems.value[2]?.key ?? monthItems.value[0]?.key ?? '');
-const cardsDataByMonth = ref<Map<string, any[]>>(new Map());
-
-const loadCardsForMonth = async (monthKey: string) => {
-    if (cardsDataByMonth.value.has(monthKey)) {
-        return;
-    }
-
-    try {
-        const [year, month] = monthKey.split('-').map(Number);
-        const response = await requestJson<{ cartoes: any[] }>(`/api/cartoes-by-month?year=${year}&month=${month}`, {
-            method: 'GET',
-        });
-        cardsDataByMonth.value.set(monthKey, response.cartoes);
-    } catch (error) {
-        console.error('Failed to load cards for month', error);
-    }
-};
-
-const selectMonth = (monthKey: string) => {
-    selectedMonthKey.value = monthKey;
-    const item = monthItems.value.find(m => m.key === monthKey);
-    if (item) {
-        activeMonth.value = item.date;
-    }
-};
 
 const formatBRL = (value: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 }).format(value);
@@ -61,33 +23,7 @@ const formatPercentage = (value: number) => {
 };
 
 const creditCards = computed(() => {
-    const monthKey = selectedMonthKey.value;
-    const monthData = cardsDataByMonth.value.get(monthKey);
-
-    if (monthData) {
-        return monthData.map((card: any) => {
-            const limite = Number(card.limite ?? 0);
-            const usado = Math.max(0, Number(card.limite_usado ?? 0));
-            const percentualUsado = limite > 0 ? (usado / limite) * 100 : 0;
-            const disponivel = limite - usado;
-
-            let status = 'PAGA';
-            if (usado >= limite) status = 'ATRASADA';
-            else if (usado > 0) status = 'ABERTA';
-
-            return {
-                id: card.id,
-                nome: card.nome,
-                cor: card.cor ?? '#8B5CF6',
-                limite,
-                usado,
-                disponivel: Math.max(0, disponivel),
-                percentualUsado,
-                status,
-            };
-        });
-    }
-
+    // Always use real data from bootstrap (current month data)
     return (bootstrap.value.accounts ?? [])
         .filter((a) => a.type === 'credit_card')
         .map((a) => {
@@ -136,19 +72,6 @@ const getStatusBadgeClasses = (status: string) => {
     return 'bg-amber-50 text-amber-600';
 };
 
-// Watch for month changes and load data
-watch(
-    () => selectedMonthKey.value,
-    (newMonthKey) => {
-        loadCardsForMonth(newMonthKey);
-    }
-);
-
-// Load initial month data
-onMounted(() => {
-    loadCardsForMonth(selectedMonthKey.value);
-});
-
 const createCreditCardFlowOpen = ref(false);
 
 const handleCreateCreditCardFlowSave = () => {
@@ -162,7 +85,7 @@ const handleCreateCreditCardFlowSave = () => {
 
     <MobileShell v-if="isMobile" :show-nav="false">
         <!-- Header -->
-        <header class="flex items-center justify-between px-6 pt-4 pb-6">
+        <header class="flex items-center justify-between px-6 pt-4 pb-8">
             <Link
                 :href="route('dashboard')"
                 class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200/60"
@@ -189,23 +112,6 @@ const handleCreateCreditCardFlowSave = () => {
                 </svg>
             </button>
         </header>
-
-        <!-- Month Navigation -->
-        <div class="px-6 pb-6">
-            <div class="flex gap-4 overflow-x-auto pb-2 text-xs font-bold text-slate-300">
-                <button
-                    v-for="m in monthItems"
-                    :key="m.key"
-                    type="button"
-                    class="relative shrink-0 px-2 py-1"
-                    :class="m.key === selectedMonthKey ? 'text-[#14B8A6]' : ''"
-                    @click="selectMonth(m.key)"
-                >
-                    {{ m.label }}
-                    <span v-if="m.key === selectedMonthKey" class="absolute inset-x-0 -bottom-1 mx-auto h-1 w-4 rounded-full bg-[#14B8A6]"></span>
-                </button>
-            </div>
-        </div>
 
         <!-- Dívida Consolidada Card -->
         <div class="px-6">
@@ -272,56 +178,51 @@ const handleCreateCreditCardFlowSave = () => {
             </div>
 
             <!-- Cards -->
-            <div v-if="creditCards.length" class="mt-5 space-y-4 pb-8">
+            <div v-if="creditCards.length" class="mt-4 space-y-3 pb-8">
                 <Link
                     v-for="card in creditCards"
                     :key="card.id"
                     :href="route('credit-cards.show', { account: card.id })"
-                    class="block overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200"
+                    class="block overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60"
                 >
-                    <!-- Card Header with Icon -->
-                    <div class="flex items-start gap-4 p-5">
-                        <div
-                            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl"
-                            :style="{ backgroundColor: card.cor }"
-                        >
-                            <svg class="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="2" y="5" width="20" height="14" rx="2" />
-                                <line x1="2" y1="10" x2="22" y2="10" />
-                            </svg>
-                        </div>
-
-                        <div class="flex-1">
-                            <div class="text-base font-bold text-slate-900">{{ card.nome }}</div>
-                            <div class="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                {{ card.nome.toUpperCase() }}
-                            </div>
-                        </div>
-
-                        <div class="text-right">
-                            <div class="text-base font-bold text-slate-900">{{ formatBRL(card.usado) }}</div>
+                    <!-- Card Content -->
+                    <div class="p-4">
+                        <div class="flex items-start gap-3">
+                            <!-- Icon -->
                             <div
-                                class="mt-1.5 inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide"
-                                :class="getStatusBadgeClasses(card.status)"
+                                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
+                                :style="{ backgroundColor: card.cor }"
                             >
-                                {{ card.status }}
+                                <svg class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="5" width="20" height="14" rx="2" />
+                                    <line x1="2" y1="10" x2="22" y2="10" />
+                                </svg>
+                            </div>
+
+                            <!-- Card Info -->
+                            <div class="flex-1 min-w-0">
+                                <div class="text-base font-bold text-slate-900">{{ card.nome }}</div>
+                                <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                                    {{ card.nome.toUpperCase() }}
+                                </div>
+                            </div>
+
+                            <!-- Amount and Status -->
+                            <div class="text-right">
+                                <div class="text-base font-bold text-slate-900">{{ formatBRL(card.usado) }}</div>
+                                <div
+                                    class="mt-1 inline-block rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                                    :class="getStatusBadgeClasses(card.status)"
+                                >
+                                    {{ card.status }}
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Card Stats -->
-                    <div class="bg-slate-50 px-5 pb-5 pt-3">
-                        <div class="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                            <span>Limite Usado: {{ Math.round(card.percentualUsado) }}%</span>
-                            <span>Disp: {{ formatBRL(card.disponivel) }}</span>
-                        </div>
-
-                        <!-- Progress Bar -->
-                        <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
-                            <div
-                                class="h-full"
-                                :style="{ width: `${Math.min(100, card.percentualUsado)}%`, backgroundColor: card.cor }"
-                            ></div>
+                        <!-- Stats - Single Line -->
+                        <div class="mt-3 flex items-center justify-between text-[11px] font-medium text-slate-500">
+                            <span>LIMITE USADO: {{ Math.round(card.percentualUsado) }}%</span>
+                            <span>DISP: {{ formatBRL(card.disponivel) }}</span>
                         </div>
                     </div>
                 </Link>

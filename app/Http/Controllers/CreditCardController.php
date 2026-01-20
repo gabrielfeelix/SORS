@@ -128,27 +128,15 @@ class CreditCardController extends Controller
             ->get();
 
         $result = $creditCards->map(function (Account $account) use ($startOfMonth, $endOfMonth, $user) {
-            // Calculate balance used at end of month
-            $balanceUsed = 0;
-
-            // Get all expense transactions for this card in this month
-            $transactions = $account->transactions()
-                ->where('user_id', $user->id)
-                ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
-                ->where('kind', 'expense')
-                ->where('status', 'completed')
-                ->get();
-
-            foreach ($transactions as $transaction) {
-                $balanceUsed += $transaction->amount;
-            }
+            // Use current_balance which already has the correct used amount
+            $balanceUsed = max(0, (float) $account->current_balance);
 
             return [
                 'id' => (string) $account->id,
                 'nome' => $account->name,
                 'bandeira' => $account->card_brand ?: 'visa',
                 'limite' => (float) ($account->credit_limit ?? 0),
-                'limite_usado' => (float) $balanceUsed,
+                'limite_usado' => $balanceUsed,
                 'dia_fechamento' => (int) ($account->closing_day ?? 10),
                 'dia_vencimento' => (int) ($account->due_day ?? 17),
                 'cor' => $account->color ?: '#8B5CF6',
