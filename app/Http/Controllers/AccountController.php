@@ -128,12 +128,18 @@ class AccountController extends Controller
         // Get the first and last day of the month
         $startOfMonth = Carbon::create($year, $month + 1, 1)->startOfDay();
         $endOfMonth = $startOfMonth->copy()->endOfMonth();
+        $now = Carbon::now();
+
+        $currentMonthStart = $now->copy()->startOfMonth();
+        $mode = $startOfMonth->isSameMonth($now)
+            ? 'current'
+            : ($startOfMonth->lessThan($currentMonthStart) ? 'past' : 'future');
 
         $accounts = Account::where('user_id', $user->id)
             ->where('type', '!=', 'credit_card')
             ->get();
 
-        $result = $accounts->map(function (Account $account) use ($startOfMonth, $endOfMonth, $user) {
+        $result = $accounts->map(function (Account $account) use ($startOfMonth, $endOfMonth, $user, $mode, $now) {
             $accountCreatedAt = $account->created_at ? Carbon::parse($account->created_at) : null;
             if ($accountCreatedAt && $accountCreatedAt->greaterThan($endOfMonth)) {
                 return [
@@ -148,41 +154,80 @@ class AccountController extends Controller
                     'closing_day' => $account->closing_day,
                     'due_day' => $account->due_day,
                     'subtitle' => $account->type === 'wallet' ? 'Dinheiro físico' : ($account->type === 'bank' ? 'Corrente' : 'Conta'),
+                    'has_data' => false,
+                    'balance_kind' => 'none',
+                ];
+            }
+
+            if ($mode === 'current') {
+                return [
+                    'id' => $account->id,
+                    'name' => $account->name,
+                    'type' => $account->type,
+                    'icon' => $account->icon,
+                    'color' => $account->color,
+                    'current_balance' => (float) ($account->current_balance ?? 0),
+                    'initial_balance' => (float) $account->initial_balance,
+                    'credit_limit' => $account->credit_limit,
+                    'closing_day' => $account->closing_day,
+                    'due_day' => $account->due_day,
+                    'subtitle' => $account->type === 'wallet' ? 'Dinheiro físico' : ($account->type === 'bank' ? 'Saldo atual' : 'Conta'),
+                    'has_data' => true,
+                    'balance_kind' => 'real',
                 ];
             }
 
             // Get all transactions for this account in this month
-            $transactions = $account->transactions()
-                ->where('user_id', $user->id)
-                ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
-                ->whereIn('status', ['paid', 'received'])
-                ->get();
+            if ($mode === 'past') {
+                $transactions = $account->transactions()
+                    ->where('user_id', $user->id)
+                    ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
+                    ->whereIn('status', ['paid', 'received'])
+                    ->get();
 
-            // Calculate balance at end of month
-            $balanceAtMonth = $account->initial_balance;
-            
-            // Get all transactions before the start of the month
-            $transactionsBefore = $account->transactions()
-                ->where('user_id', $user->id)
-                ->where('transaction_date', '<', $startOfMonth)
-                ->whereIn('status', ['paid', 'received'])
-                ->get();
+                $balanceAtMonth = (float) $account->initial_balance;
 
-            foreach ($transactionsBefore as $transaction) {
-                if ($transaction->kind === 'income') {
-                    $balanceAtMonth += $transaction->amount;
-                } else {
-                    $balanceAtMonth -= $transaction->amount;
+                $transactionsBefore = $account->transactions()
+                    ->where('user_id', $user->id)
+                    ->where('transaction_date', '<', $startOfMonth)
+                    ->whereIn('status', ['paid', 'received'])
+                    ->get();
+
+                foreach ($transactionsBefore as $transaction) {
+                    $balanceAtMonth += $transaction->kind === 'income' ? (float) $transaction->amount : -(float) $transaction->amount;
                 }
+
+                foreach ($transactions as $transaction) {
+                    $balanceAtMonth += $transaction->kind === 'income' ? (float) $transaction->amount : -(float) $transaction->amount;
+                }
+
+                return [
+                    'id' => $account->id,
+                    'name' => $account->name,
+                    'type' => $account->type,
+                    'icon' => $account->icon,
+                    'color' => $account->color,
+                    'current_balance' => (float) $balanceAtMonth,
+                    'initial_balance' => (float) $account->initial_balance,
+                    'credit_limit' => $account->credit_limit,
+                    'closing_day' => $account->closing_day,
+                    'due_day' => $account->due_day,
+                    'subtitle' => $account->type === 'wallet' ? 'Fechamento do mês' : 'Fechamento do mês',
+                    'has_data' => true,
+                    'balance_kind' => 'closing',
+                ];
             }
 
-            // Apply transactions for this month
-            foreach ($transactions as $transaction) {
-                if ($transaction->kind === 'income') {
-                    $balanceAtMonth += $transaction->amount;
-                } else {
-                    $balanceAtMonth -= $transaction->amount;
-                }
+            $projectionBase = (float) ($account->current_balance ?? 0);
+            $futureTransactions = $account->transactions()
+                ->where('user_id', $user->id)
+                ->where('transaction_date', '>', $now->toDateString())
+                ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
+                ->whereIn('status', ['pending', 'paid', 'received'])
+                ->get();
+
+            foreach ($futureTransactions as $transaction) {
+                $projectionBase += $transaction->kind === 'income' ? (float) $transaction->amount : -(float) $transaction->amount;
             }
 
             return [
@@ -191,16 +236,19 @@ class AccountController extends Controller
                 'type' => $account->type,
                 'icon' => $account->icon,
                 'color' => $account->color,
-                'current_balance' => (float) $balanceAtMonth,
+                'current_balance' => (float) $projectionBase,
                 'initial_balance' => (float) $account->initial_balance,
                 'credit_limit' => $account->credit_limit,
                 'closing_day' => $account->closing_day,
                 'due_day' => $account->due_day,
-                'subtitle' => $account->type === 'wallet' ? 'Dinheiro físico' : ($account->type === 'bank' ? 'Corrente' : 'Conta'),
+                'subtitle' => $account->type === 'wallet' ? 'Projeção' : 'Projeção',
+                'has_data' => true,
+                'balance_kind' => 'projection',
             ];
         });
 
         return response()->json([
+            'mode' => $mode,
             'accounts' => $result->values(),
         ]);
     }

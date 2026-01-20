@@ -34,6 +34,7 @@ const monthItems = computed(() => {
 });
 const selectedMonthKey = ref('');
 const accountsDataByMonth = ref<Map<string, any[]>>(new Map());
+const accountsModeByMonth = ref<Map<string, string>>(new Map());
 
 // Initialize selectedMonthKey after monthItems is computed
 onMounted(() => {
@@ -59,11 +60,13 @@ const loadAccountsForMonth = async (monthKey: string) => {
 
         // Load bank accounts and wallets
         if (!accountsDataByMonth.value.has(accountsKey)) {
-            const accountsResponse = await requestJson<{ accounts: any[] }>(`/api/contas-by-month?year=${year}&month=${month}`, {
+            const accountsResponse = await requestJson<{ accounts: any[]; mode?: string }>(`/api/contas-by-month?year=${year}&month=${month}`, {
                 method: 'GET',
             });
             const accounts = (accountsResponse as any)?.accounts ?? (accountsResponse as any)?.contas ?? [];
             accountsDataByMonth.value.set(accountsKey, Array.isArray(accounts) ? accounts : []);
+            const mode = String((accountsResponse as any)?.mode ?? '');
+            if (mode) accountsModeByMonth.value.set(accountsKey, mode);
         }
 
         // Load credit cards
@@ -97,6 +100,8 @@ const bankAccounts = computed(() => {
                     balance: Number(a.current_balance ?? a.saldo_atual ?? a.saldo ?? 0),
                     color: a.color ?? a.cor ?? '#14B8A6',
                     icon: a.icon ?? a.icone ?? (type === 'wallet' ? 'wallet' : 'bank'),
+                    hasData: Boolean(a.has_data ?? true),
+                    balanceKind: String(a.balance_kind ?? ''),
                 };
             });
     }
@@ -112,6 +117,8 @@ const bankAccounts = computed(() => {
             balance: Number(a.current_balance ?? 0),
             color: (a as any).color ?? '#14B8A6',
             icon: a.icon ?? (a.type === 'wallet' ? 'wallet' : 'bank'),
+            hasData: true,
+            balanceKind: '',
         }));
 });
 
@@ -151,6 +158,12 @@ const creditCards = computed(() => {
 const totalBankBalance = computed(() => bankAccounts.value.reduce((sum, a) => sum + a.balance, 0));
 const totalCardsBalance = computed(() => creditCards.value.reduce((sum, c) => sum + c.balance, 0));
 const netWorth = computed(() => totalBankBalance.value - totalCardsBalance.value);
+
+const selectedMonthMode = computed(() => {
+    const key = selectedMonthKey.value;
+    if (!key) return '';
+    return String(accountsModeByMonth.value.get(key) ?? '');
+});
 
 const toastOpen = ref(false);
 const toastMessage = ref('');
@@ -384,7 +397,11 @@ watch(
                         </span>
                         <div>
                             <div class="text-sm font-semibold text-slate-900">{{ account.name }}</div>
-                            <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{{ account.subtitle }}</div>
+                            <div class="flex flex-wrap items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                                <span>{{ account.subtitle }}</span>
+                                <span v-if="selectedMonthMode === 'past' && account.hasData === false">(SEM DADOS)</span>
+                                <span v-if="selectedMonthMode === 'future'">(PROJEÇÃO)</span>
+                            </div>
                         </div>
                     </div>
                     <div class="text-sm font-semibold text-slate-900">{{ formatBRL(account.balance) }}</div>
