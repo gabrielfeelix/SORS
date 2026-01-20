@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class CreditCardController extends Controller
@@ -104,5 +105,59 @@ class CreditCardController extends Controller
         $cartao->delete();
 
         return response()->json(['ok' => true]);
+    }
+
+    public function getByMonth(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'year' => ['required', 'integer', 'min:2020', 'max:2099'],
+            'month' => ['required', 'integer', 'min:0', 'max:11'],
+        ]);
+
+        $year = (int) $data['year'];
+        $month = (int) $data['month'];
+
+        // Get the first and last day of the month
+        $startOfMonth = Carbon::create($year, $month + 1, 1)->startOfDay();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth();
+
+        $creditCards = Account::where('user_id', $user->id)
+            ->where('type', 'credit_card')
+            ->get();
+
+        $result = $creditCards->map(function (Account $account) use ($startOfMonth, $endOfMonth, $user) {
+            // Calculate balance used at end of month
+            $balanceUsed = 0;
+
+            // Get all expense transactions for this card in this month
+            $transactions = $account->transactions()
+                ->where('user_id', $user->id)
+                ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
+                ->where('kind', 'expense')
+                ->where('status', 'completed')
+                ->get();
+
+            foreach ($transactions as $transaction) {
+                $balanceUsed += $transaction->amount;
+            }
+
+            return [
+                'id' => (string) $account->id,
+                'nome' => $account->name,
+                'bandeira' => $account->card_brand ?: 'visa',
+                'limite' => (float) ($account->credit_limit ?? 0),
+                'limite_usado' => (float) $balanceUsed,
+                'dia_fechamento' => (int) ($account->closing_day ?? 10),
+                'dia_vencimento' => (int) ($account->due_day ?? 17),
+                'cor' => $account->color ?: '#8B5CF6',
+                'is_primary' => (bool) $account->is_primary,
+            ];
+        });
+
+        return response()->json([
+            'cartoes' => $result->values(),
+        ]);
     }
 }

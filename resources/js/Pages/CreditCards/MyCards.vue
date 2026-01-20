@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch, onMounted } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import type { BootstrapData } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
 import KitamoLayout from '@/Layouts/KitamoLayout.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
+import { requestJson } from '@/lib/kitamoApi';
 
 const isMobile = useIsMobile();
 const page = usePage();
@@ -25,6 +26,23 @@ const monthItems = computed(() => {
     return items;
 });
 const selectedMonthKey = ref(monthItems.value[2]?.key ?? monthItems.value[0]?.key ?? '');
+const cardsDataByMonth = ref<Map<string, any[]>>(new Map());
+
+const loadCardsForMonth = async (monthKey: string) => {
+    if (cardsDataByMonth.value.has(monthKey)) {
+        return;
+    }
+
+    try {
+        const [year, month] = monthKey.split('-').map(Number);
+        const response = await requestJson<{ cartoes: any[] }>(`/api/cartoes-by-month?year=${year}&month=${month}`, {
+            method: 'GET',
+        });
+        cardsDataByMonth.value.set(monthKey, response.cartoes);
+    } catch (error) {
+        console.error('Failed to load cards for month', error);
+    }
+};
 
 const selectMonth = (monthKey: string) => {
     selectedMonthKey.value = monthKey;
@@ -41,8 +59,35 @@ const formatPercentage = (value: number) => {
     return value.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 };
 
-const creditCards = computed(() =>
-    (bootstrap.value.accounts ?? [])
+const creditCards = computed(() => {
+    const monthKey = selectedMonthKey.value;
+    const monthData = cardsDataByMonth.value.get(monthKey);
+
+    if (monthData) {
+        return monthData.map((card: any) => {
+            const limite = Number(card.limite ?? 0);
+            const usado = Math.max(0, Number(card.limite_usado ?? 0));
+            const percentualUsado = limite > 0 ? (usado / limite) * 100 : 0;
+            const disponivel = limite - usado;
+
+            let status = 'PAGA';
+            if (usado >= limite) status = 'ATRASADA';
+            else if (usado > 0) status = 'ABERTA';
+
+            return {
+                id: card.id,
+                nome: card.nome,
+                cor: card.cor ?? '#8B5CF6',
+                limite,
+                usado,
+                disponivel: Math.max(0, disponivel),
+                percentualUsado,
+                status,
+            };
+        });
+    }
+
+    return (bootstrap.value.accounts ?? [])
         .filter((a) => a.type === 'credit_card')
         .map((a) => {
             const limite = Number(a.credit_limit ?? 0);
@@ -64,8 +109,8 @@ const creditCards = computed(() =>
                 percentualUsado,
                 status,
             };
-        }),
-);
+        });
+});
 
 const devedaConsolidada = computed(() => {
     return creditCards.value.reduce((sum, card) => sum + card.usado, 0);
@@ -89,6 +134,19 @@ const getStatusBadgeClasses = (status: string) => {
     if (status === 'ATRASADA') return 'bg-red-50 text-red-500';
     return 'bg-amber-50 text-amber-600';
 };
+
+// Watch for month changes and load data
+watch(
+    () => selectedMonthKey.value,
+    (newMonthKey) => {
+        loadCardsForMonth(newMonthKey);
+    }
+);
+
+// Load initial month data
+onMounted(() => {
+    loadCardsForMonth(selectedMonthKey.value);
+});
 </script>
 
 <template>
@@ -163,31 +221,31 @@ const getStatusBadgeClasses = (status: string) => {
                 <div class="mt-5 grid grid-cols-2 gap-4">
                     <!-- Uso de Crédito -->
                     <div>
-                        <div class="flex items-center gap-2">
-                            <div class="text-2xl font-bold text-[#14B8A6]">
-                                {{ formatPercentage(percentualUsoConsolidado) }}
-                            </div>
-                            <div class="text-[9px] font-semibold uppercase tracking-wide text-[#64748B] leading-tight">
-                                Uso de<br>Crédito
-                            </div>
+                        <div class="text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">
+                            Uso de Crédito
                         </div>
-                        <!-- Progress bar -->
-                        <div class="mt-3 h-1 w-full overflow-hidden rounded-full bg-[#334155]">
-                            <div
-                                class="h-full bg-[#14B8A6]"
-                                :style="{ width: `${Math.min(100, percentualUsoConsolidado)}%` }"
-                            ></div>
+                        <div class="mt-1 text-2xl font-bold text-[#14B8A6]">
+                            {{ formatPercentage(percentualUsoConsolidado) }}
                         </div>
                     </div>
 
-                    <!-- Disponível Consolidado -->
-                    <div>
-                        <div class="text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">
-                            Disp. Consolidado
+                    <!-- Progress bar vertical -->
+                    <div class="flex items-end justify-end">
+                        <div class="h-16 w-2 overflow-hidden rounded-full bg-[#334155]">
+                            <div
+                                class="w-full bg-[#14B8A6] transition-all"
+                                :style="{ height: `${Math.min(100, percentualUsoConsolidado)}%` }"
+                            ></div>
                         </div>
-                        <div class="mt-2 text-xl font-bold text-white">
-                            {{ formatBRL(disponivelConsolidado) }}
-                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <div class="text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">
+                        Disp. Consolidado
+                    </div>
+                    <div class="mt-1 text-xl font-bold text-white">
+                        {{ formatBRL(disponivelConsolidado) }}
                     </div>
                 </div>
             </div>

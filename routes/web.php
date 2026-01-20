@@ -200,6 +200,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/api/contas-by-month', [AccountController::class, 'getByMonth'])->name('api.contas.by-month');
 
     Route::get('/api/cartoes', [CreditCardController::class, 'index'])->name('api.cartoes.index');
+    Route::get('/api/cartoes-by-month', [CreditCardController::class, 'getByMonth'])->name('api.cartoes.by-month');
     Route::post('/api/cartoes', [CreditCardController::class, 'store'])->name('api.cartoes.store');
     Route::patch('/api/cartoes/{cartao}', [CreditCardController::class, 'update'])->name('api.cartoes.update');
     Route::delete('/api/cartoes/{cartao}', [CreditCardController::class, 'destroy'])->name('api.cartoes.destroy');
