@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import type { BootstrapData, Entry } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import KitamoLayout from '@/Layouts/KitamoLayout.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
 
 const page = usePage();
@@ -95,7 +95,7 @@ const formatMoney = (value: number) =>
         </div>
     </MobileShell>
 
-    <KitamoLayout v-else title="Visão Geral" :subtitle="`Bem-vindo de volta, ${userName}.`">
+    <DesktopShell v-else :title="accountName" subtitle="Extrato" :show-search="false" :show-new-action="false">
         <div class="space-y-6">
             <div class="flex items-center gap-4">
                 <Link
@@ -146,5 +146,5 @@ const formatMoney = (value: number) =>
                 </div>
             </div>
         </div>
-    </KitamoLayout>
+    </DesktopShell>
 </template>

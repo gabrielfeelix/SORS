@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
+import DesktopNotificationsPopover from '@/Components/DesktopNotificationsPopover.vue';
+import { requestJson } from '@/lib/kitamoApi';
 
 const emit = defineEmits<{
     (e: 'add'): void;
@@ -47,7 +49,7 @@ const navItems = computed(() => [
     {
         label: 'Lançamentos',
         href: route('accounts.index'),
-        active: route().current('accounts.*'),
+        active: route().current('accounts.*') && !route().current('accounts.overview'),
         icon: 'cards' as const,
     },
     {
@@ -63,6 +65,30 @@ const navItems = computed(() => [
         icon: 'chart' as const,
     },
 ]);
+
+const notificationsOpen = ref(false);
+const unreadCount = ref(0);
+const setUnreadCount = (count: number) => {
+    unreadCount.value = count;
+};
+
+const loadUnreadCount = async () => {
+    try {
+        const response = await requestJson<{ count: number }>(route('api.notifications.count-unread'));
+        unreadCount.value = Number(response.count ?? 0);
+    } catch {
+        // ignore
+    }
+};
+
+let unreadInterval: number | null = null;
+onMounted(() => {
+    loadUnreadCount();
+    unreadInterval = window.setInterval(loadUnreadCount, 60_000);
+});
+onUnmounted(() => {
+    if (unreadInterval) window.clearInterval(unreadInterval);
+});
 </script>
 
 <template>
@@ -176,34 +202,40 @@ const navItems = computed(() => [
                                 />
                             </div>
 
-                            <Link
-                                :href="route('notifications.index')"
+                            <button
+                                type="button"
                                 class="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-600 ring-1 ring-slate-200/60"
                                 aria-label="Notificações"
+                                :aria-expanded="notificationsOpen ? 'true' : 'false'"
+                                @click="notificationsOpen = !notificationsOpen"
                             >
                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M6 8a6 6 0 0 1 12 0c0 7 3 7 3 7H3s3 0 3-7" />
                                     <path d="M10 21a2 2 0 0 0 4 0" />
                                 </svg>
-                                <span class="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-red-500"></span>
-                            </Link>
+                                <span v-if="unreadCount > 0" class="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-red-500"></span>
+                            </button>
 
-                            <div class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-slate-200 text-sm font-bold text-slate-700 ring-1 ring-slate-200/60">
+                            <Link
+                                :href="route('settings')"
+                                class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-slate-200 text-sm font-bold text-slate-700 ring-1 ring-slate-200/60"
+                                aria-label="Perfil"
+                            >
                                 <img v-if="avatarUrl" :src="avatarUrl" alt="" class="h-full w-full object-cover" />
                                 <span v-else>{{ initials }}</span>
-                            </div>
+                            </Link>
 
                             <button
                                 v-if="props.showNewAction"
                                 type="button"
-                                class="hidden h-11 items-center gap-2 rounded-2xl bg-[#14B8A6] px-5 text-sm font-semibold text-white shadow-sm shadow-emerald-500/20 md:inline-flex"
+                                class="hidden h-11 w-11 items-center justify-center rounded-full bg-[#14B8A6] text-white shadow-xl shadow-emerald-500/30 ring-1 ring-emerald-400/20 md:inline-flex"
+                                aria-label="Nova transação"
                                 @click="emit('add')"
                             >
                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M12 5v14" />
                                     <path d="M5 12h14" />
                                 </svg>
-                                {{ props.newActionLabel }}
                             </button>
                         </div>
                     </div>
@@ -217,5 +249,10 @@ const navItems = computed(() => [
             </div>
         </div>
     </div>
-</template>
 
+    <DesktopNotificationsPopover
+        :open="notificationsOpen"
+        @close="() => { notificationsOpen = false; loadUnreadCount(); }"
+        @unread="setUnreadCount"
+    />
+</template>

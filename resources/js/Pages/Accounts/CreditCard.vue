@@ -7,7 +7,7 @@
 	import { requestJson } from '@/lib/kitamoApi';
 	import type { BootstrapData, Entry } from '@/types/kitamo';
 	import MobileShell from '@/Layouts/MobileShell.vue';
-	import KitamoLayout from '@/Layouts/KitamoLayout.vue';
+	import DesktopShell from '@/Layouts/DesktopShell.vue';
 	import { useIsMobile } from '@/composables/useIsMobile';
 
 const page = usePage();
@@ -216,7 +216,7 @@ const formatMoney = (value: number) =>
 	        <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
 	    </MobileShell>
 
-	    <KitamoLayout v-else title="Visão Geral" :subtitle="`Bem-vindo de volta, ${userName}.`">
+	    <DesktopShell v-else :title="accountName" subtitle="Cartão de crédito" :show-search="false" :show-new-action="false">
 	        <div class="space-y-6">
 	            <div class="flex items-center justify-between gap-4">
 	                <Link
@@ -321,5 +321,5 @@ const formatMoney = (value: number) =>
 	            @confirm="confirmDelete"
 	        />
 	        <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
-	    </KitamoLayout>
+	    </DesktopShell>
 </template>

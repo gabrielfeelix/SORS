@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import KitamoLayout from '@/Layouts/KitamoLayout.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
 import type { BootstrapData, Entry } from '@/types/kitamo';
 import TransactionModal, { type TransactionModalPayload } from '@/Components/TransactionModal.vue';
@@ -20,6 +20,7 @@ const props = defineProps<{
 }>();
 
 const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
 const page = usePage();
 const bootstrap = computed(
     () => (page.props.bootstrap ?? { entries: [], goals: [], accounts: [], categories: [] }) as BootstrapData,
@@ -27,6 +28,9 @@ const bootstrap = computed(
 
 const account = computed(() => bootstrap.value.accounts.find((a) => a.id === props.accountId) ?? null);
 const accountName = computed(() => account.value?.name ?? 'Cartão de crédito');
+const shellProps = computed(() =>
+    isMobile.value ? { showNav: false } : { title: 'Cartão de crédito', subtitle: accountName.value, showSearch: false, showNewAction: false },
+);
 const brand = computed(() => String((account.value as any)?.card_brand ?? 'visa'));
 const brandLabel = computed(() => (brand.value === 'mastercard' ? 'Mastercard' : brand.value === 'elo' ? 'Elo' : brand.value === 'amex' ? 'Amex' : 'Visa'));
 const cardColor = computed(() => String((account.value as any)?.color ?? '#8B5CF6'));
@@ -245,7 +249,7 @@ const accountOptions = computed<AccountOption[]>(() => {
 <template>
     <Head :title="accountName" />
 
-    <MobileShell v-if="isMobile" :show-nav="false">
+    <component :is="Shell" v-bind="shellProps">
         <header class="flex items-center justify-between pt-2">
             <Link
                 :href="route('dashboard')"
@@ -442,11 +446,5 @@ const accountOptions = computed<AccountOption[]>(() => {
         />
 
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
-    </MobileShell>
-
-    <KitamoLayout v-else title="Cartão de crédito" :subtitle="accountName">
-        <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200/60">
-            <div class="text-sm font-semibold text-slate-900">Abra no mobile para ver o layout completo.</div>
-        </div>
-    </KitamoLayout>
+    </component>
 </template>

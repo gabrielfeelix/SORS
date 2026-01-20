@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import KitamoLayout from '@/Layouts/KitamoLayout.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 import { requestJson } from '@/lib/kitamoApi';
 import { useIsMobile } from '@/composables/useIsMobile';
 
@@ -15,6 +15,12 @@ type NotificationItem = {
 };
 
 const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+  isMobile.value
+    ? { showNav: false }
+    : { title: 'Notificações', subtitle: 'Central de alertas', showSearch: false, showNewAction: false },
+);
 const loading = ref(false);
 const items = ref<NotificationItem[]>([]);
 
@@ -36,8 +42,8 @@ onMounted(load);
 <template>
   <Head title="Notificações" />
 
-  <MobileShell v-if="isMobile" :show-nav="false">
-    <header class="flex items-center gap-3 pt-2">
+  <component :is="Shell" v-bind="shellProps">
+    <header v-if="isMobile" class="flex items-center gap-3 pt-2">
       <Link
         :href="route('dashboard')"
         class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200/60"
@@ -56,7 +62,14 @@ onMounted(load);
       </button>
     </header>
 
-    <div v-if="!items.length && !loading" class="mt-8 rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-5 py-10 text-center">
+    <div v-if="!isMobile" class="flex items-center justify-between">
+      <div class="text-sm font-semibold text-slate-500">{{ unreadCount }} não lidas</div>
+      <button type="button" class="rounded-2xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600" @click="load" :disabled="loading">
+        Atualizar
+      </button>
+    </div>
+
+    <div v-if="!items.length && !loading" class="mt-8 rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-5 py-10 text-center md:mx-auto md:max-w-2xl">
       <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-400">
         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14V11a6 6 0 1 0-12 0v3a2 2 0 0 1-.6 1.6L4 17h5" />
@@ -67,7 +80,7 @@ onMounted(load);
       <div class="mt-1 text-xs text-slate-500">Quando algo importante acontecer, avisamos por aqui.</div>
     </div>
 
-    <div v-else class="mt-6 space-y-3">
+    <div v-else class="mt-6 space-y-3 md:mx-auto md:max-w-2xl">
       <div v-for="n in items" :key="n.id" class="rounded-3xl bg-white px-5 py-4 shadow-sm ring-1 ring-slate-200/60">
         <div class="flex items-start justify-between gap-4">
           <div class="min-w-0">
@@ -78,27 +91,5 @@ onMounted(load);
         </div>
       </div>
     </div>
-  </MobileShell>
-
-  <KitamoLayout v-else title="Notificações" subtitle="Central de alertas">
-    <div class="rounded-2xl bg-white p-7 shadow-sm ring-1 ring-slate-200/60">
-      <div class="flex items-center justify-between">
-        <div class="text-sm font-semibold text-slate-700">{{ unreadCount }} não lidas</div>
-        <button type="button" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50" @click="load">
-          Atualizar
-        </button>
-      </div>
-
-      <div v-if="!items.length && !loading" class="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center">
-        <div class="text-sm font-semibold text-slate-900">Sem notificações</div>
-      </div>
-
-      <div v-else class="mt-6 divide-y divide-slate-100">
-        <div v-for="n in items" :key="n.id" class="py-4">
-          <div class="text-sm font-semibold" :class="n.read_at ? 'text-slate-700' : 'text-slate-900'">{{ n.title }}</div>
-          <div class="mt-1 text-sm text-slate-500">{{ n.body }}</div>
-        </div>
-      </div>
-    </div>
-  </KitamoLayout>
+  </component>
 </template>

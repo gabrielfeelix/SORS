@@ -3,12 +3,16 @@ import { computed, ref, watch, onMounted } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import type { BootstrapData } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import KitamoLayout from '@/Layouts/KitamoLayout.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
 import CreateCreditCardFlowModal from '@/Components/CreateCreditCardFlowModal.vue';
 import { requestJson } from '@/lib/kitamoApi';
 
 const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value ? { showNav: false } : { title: 'Meus Cartões', subtitle: 'Cartões de crédito', showSearch: false, showNewAction: false },
+);
 const page = usePage();
 
 const bootstrap = computed(
@@ -134,7 +138,7 @@ const handleCreateCreditCardFlowSave = () => {
 <template>
     <Head title="Meus Cartões" />
 
-    <MobileShell v-if="isMobile" :show-nav="false">
+    <component :is="Shell" v-bind="shellProps">
         <!-- Header -->
         <header class="flex items-center justify-between px-6 pt-4 pb-8">
             <Link
@@ -310,11 +314,5 @@ const handleCreateCreditCardFlowSave = () => {
         </div>
 
         <CreateCreditCardFlowModal :open="createCreditCardFlowOpen" @close="createCreditCardFlowOpen = false" @save="handleCreateCreditCardFlowSave" />
-    </MobileShell>
-
-    <KitamoLayout v-else title="Meus Cartões" subtitle="Gerencie seus cartões de crédito">
-        <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200/60">
-            <div class="text-sm font-semibold text-slate-900">Abra no mobile para ver o layout completo.</div>
-        </div>
-    </KitamoLayout>
+    </component>
 </template>

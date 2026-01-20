@@ -70,7 +70,7 @@ const navItems = computed(() => [
     {
         label: 'Lançamentos',
         href: route('accounts.index'),
-        active: route().current('accounts.*'),
+        active: route().current('accounts.*') && !route().current('accounts.overview'),
         icon: 'cards' as const,
     },
     {

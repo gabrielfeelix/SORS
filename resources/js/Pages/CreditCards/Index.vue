@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import type { CreditCard } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import KitamoLayout from '@/Layouts/KitamoLayout.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 import CreditCardModal, { type CreditCardModalPayload } from '@/Components/CreditCardModal.vue';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
@@ -187,7 +187,7 @@ const corProgresso = (card: CreditCard) => {
     </div>
   </MobileShell>
 
-  <KitamoLayout v-else title="Cartões de Crédito" subtitle="Gerencie seus cartões de crédito">
+  <DesktopShell v-else title="Cartões de Crédito" subtitle="Gerencie seus cartões de crédito" :show-search="false" :show-new-action="false">
     <div class="mx-auto max-w-4xl">
       <header class="flex items-center justify-between py-6">
         <h1 class="text-2xl font-bold text-slate-900">Cartões de Crédito</h1>
@@ -260,7 +260,7 @@ const corProgresso = (card: CreditCard) => {
         <div class="mt-2 text-slate-600">Adicione seu primeiro cartão de crédito para começar</div>
       </div>
     </div>
-  </KitamoLayout>
+  </DesktopShell>
 
   <!-- Modals -->
   <CreditCardModal

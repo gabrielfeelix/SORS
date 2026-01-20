@@ -3,7 +3,7 @@
 	import { Head, Link, router, usePage } from '@inertiajs/vue3';
 	import type { BootstrapData, Entry } from '@/types/kitamo';
 	import MobileShell from '@/Layouts/MobileShell.vue';
-	import KitamoLayout from '@/Layouts/KitamoLayout.vue';
+	import DesktopShell from '@/Layouts/DesktopShell.vue';
 import MobileToast from '@/Components/MobileToast.vue';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import NewAccountModal from '@/Components/NewAccountModal.vue';
@@ -447,7 +447,7 @@ const toastOpen = ref(false);
 		        />
 		    </MobileShell>
 
-	    <KitamoLayout v-else :title="accountName" subtitle="Detalhes da conta">
+	    <DesktopShell v-else :title="accountName" subtitle="Detalhes da conta" :show-search="false" :show-new-action="false">
 	        <div class="space-y-8">
 	            <div class="flex items-center justify-between">
 	                <Link
@@ -539,5 +539,5 @@ const toastOpen = ref(false);
 	            @confirm="confirmDelete"
 	        />
 	        <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
-	    </KitamoLayout>
+	    </DesktopShell>
 </template>

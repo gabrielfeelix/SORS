@@ -3,7 +3,7 @@ import { computed, ref, watch, onMounted } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import type { BootstrapData } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import KitamoLayout from '@/Layouts/KitamoLayout.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
 import CreateAccountFlowModal from '@/Components/CreateAccountFlowModal.vue';
 import CreateCreditCardFlowModal from '@/Components/CreateCreditCardFlowModal.vue';
@@ -12,6 +12,10 @@ import MobileToast from '@/Components/MobileToast.vue';
 import { requestJson } from '@/lib/kitamoApi';
 
 const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value ? { showNav: false } : { title: 'Minhas Contas', subtitle: 'Resumo', showSearch: false, showNewAction: false },
+);
 const page = usePage();
 const bootstrap = computed(
     () => (page.props.bootstrap ?? { entries: [], goals: [], accounts: [], categories: [] }) as BootstrapData,
@@ -206,7 +210,7 @@ watch(
 <template>
     <Head title="Minhas Contas" />
 
-    <MobileShell v-if="isMobile">
+    <component :is="Shell" v-bind="shellProps">
         <header class="flex items-center justify-between pt-2">
             <Link
                 :href="route('dashboard')"
@@ -371,12 +375,5 @@ watch(
         <CreateAccountFlowModal :open="createAccountOpen" :start-with-wallet="createAccountWithWallet" @close="() => { createAccountOpen = false; createAccountWithWallet = false; }" @toast="showToast" />
         <CreateCreditCardFlowModal :open="createCreditCardFlowOpen" @close="createCreditCardFlowOpen = false" @save="handleCreateCreditCardFlowSave" />
         <CreditCardModal :open="creditCardModalOpen" @close="creditCardModalOpen = false" @save="saveCreditCard" />
-    </MobileShell>
-
-    <KitamoLayout v-else title="Minhas Contas" subtitle="Resumo">
-        <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200/60">
-            <div class="text-sm font-semibold text-slate-900">Abra no mobile para ver o layout completo.</div>
-        </div>
-    </KitamoLayout>
+    </component>
 </template>
-
