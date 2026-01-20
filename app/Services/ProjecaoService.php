@@ -20,7 +20,10 @@ class ProjecaoService
         $today = CarbonImmutable::today();
         $end = $today->addDays(30);
 
-        $saldoAtual = (float) Account::where('user_id', $userId)->sum('current_balance');
+        $saldoAtual = (float) Account::query()
+            ->where('user_id', $userId)
+            ->includedInNetWorth()
+            ->sum('current_balance');
 
         $transacoes = Transaction::query()
             ->where('user_id', $userId)
@@ -112,7 +115,10 @@ class ProjecaoService
             ->whereBetween('transaction_date', [$today->toDateString(), $fimMes->toDateString()])
             ->sum('amount');
 
-        $saldoAtual = (float) Account::where('user_id', $userId)->sum('current_balance');
+        $saldoAtual = (float) Account::query()
+            ->where('user_id', $userId)
+            ->includedInNetWorth()
+            ->sum('current_balance');
 
         $extrasRecorrenciasMes = $this->simularRecorrenciasNaoCriadas($userId, $today, $fimMes);
         $despesasRecorrenciasMes = array_sum(array_map(

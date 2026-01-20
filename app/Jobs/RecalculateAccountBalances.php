@@ -15,7 +15,9 @@ class RecalculateAccountBalances implements ShouldQueue
 
     public function handle(): void
     {
-        Account::query()->chunkById(100, function ($accounts) {
+        Account::query()
+            ->cashLike()
+            ->chunkById(100, function ($accounts) {
             foreach ($accounts as $account) {
                 $income = $account->transactions()
                     ->where('kind', 'income')

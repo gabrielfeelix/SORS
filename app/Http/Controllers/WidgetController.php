@@ -16,7 +16,10 @@ class WidgetController extends Controller
         $today = CarbonImmutable::today();
         $startMonth = $today->startOfMonth();
 
-        $saldoAtual = (float) Account::where('user_id', $user->id)->sum('current_balance');
+        $saldoAtual = (float) Account::query()
+            ->where('user_id', $user->id)
+            ->includedInNetWorth()
+            ->sum('current_balance');
 
         $proximasContas = Transaction::query()
             ->with('category')
@@ -67,4 +70,3 @@ class WidgetController extends Controller
         ]);
     }
 }
-
