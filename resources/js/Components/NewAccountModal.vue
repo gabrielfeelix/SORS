@@ -1,69 +1,135 @@
 <script setup lang="ts">
-	import { computed, ref, watch } from 'vue';
-import { formatMoneyInputCentsShift } from '@/lib/moneyInput';
+import { computed, ref, watch } from 'vue';
+import PickerSheet from '@/Components/PickerSheet.vue';
+import { formatMoneyInputCentsShift, moneyInputToNumber, numberToMoneyInput } from '@/lib/moneyInput';
 import { preventNonDigitKeydown } from '@/lib/inputGuards';
 
-	type AccountType = 'wallet' | 'bank' | 'card';
+type BankAccountType = 'corrente' | 'poupanca' | 'salario';
 
-	const props = defineProps<{
-	    open: boolean;
-	    initial?: { id: string; name: string; type: AccountType; icon: string } | null;
-	}>();
+const props = defineProps<{
+    open: boolean;
+    initial?: {
+        id: string;
+        name: string;
+        icon?: string | null;
+        current_balance: number;
+        color?: string | null;
+        incluir_soma?: boolean;
+        institution?: string | null;
+        bank_account_type?: BankAccountType | string | null;
+    } | null;
+}>();
 
-	const emit = defineEmits<{
-	    (event: 'close'): void;
-	    (event: 'save', payload: { id?: string; name: string; type: AccountType; initialBalance: string; icon: string }): void;
-	}>();
+const emit = defineEmits<{
+    (event: 'close'): void;
+    (event: 'save', payload: {
+        id: string;
+        name: string;
+        icon: string;
+        current_balance: number;
+        color: string;
+        incluir_soma: boolean;
+        institution: string | null;
+        bank_account_type: BankAccountType;
+    }): void;
+}>();
 
-const name = ref('');
-const type = ref<AccountType>('wallet');
-const initialBalance = ref('');
-	const icon = ref<'wallet' | 'bank' | 'card' | 'phone'>('wallet');
+const institutions = [
+    { nome: 'Nubank', logo: '🟣', cor: '#8B10AE' },
+    { nome: 'Banco Inter', logo: '🟢', cor: '#FF7A00' },
+    { nome: 'Itaú', logo: '🟠', cor: '#EC7000' },
+    { nome: 'Bradesco', logo: '🔴', cor: '#CC092F' },
+    { nome: 'Banco do Brasil', logo: '🟡', cor: '#FFDD00' },
+    { nome: 'Caixa', logo: '🔵', cor: '#0066B3' },
+    { nome: 'Santander', logo: '🔴', cor: '#EC0000' },
+    { nome: 'C6 Bank', logo: '⚫', cor: '#000000' },
+    { nome: 'PicPay', logo: '🟢', cor: '#21C25E' },
+    { nome: 'Neon', logo: '🔵', cor: '#00D9E1' },
+    { nome: 'Outro', logo: '⚪', cor: '#64748B' },
+] as const;
 
-	const isEdit = computed(() => Boolean(props.initial?.id));
+const colors = ['#14B8A6', '#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444'];
+const icons = ['bank', 'phone', 'home'] as const;
 
-	const isWalletEdit = computed(() => {
-	    return isEdit.value && props.initial?.type === 'wallet';
-	});
+const institutionSheetOpen = ref(false);
+const institutionSearch = ref('');
 
-	const initialBalanceChanged = computed(() => {
-	    if (!isEdit.value) return false;
-	    // Para edição, o saldo inicial não é mostrado, então nunca muda
-	    return false;
-	});
+const selectedInstitution = ref<string | null>(null);
+const nickname = ref('');
+const currentBalanceInput = ref('');
+const bankAccountType = ref<BankAccountType>('corrente');
+const color = ref('#14B8A6');
+const incluirSoma = ref(true);
+const icon = ref<(typeof icons)[number]>('bank');
 
-const onInitialBalanceInput = (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    initialBalance.value = formatMoneyInputCentsShift(target.value);
-};
-
-const headerIcon = computed(() => {
-    switch (icon.value) {
-        case 'bank':
-            return 'bank';
-        case 'card':
-            return 'card';
-        case 'phone':
-            return 'phone';
-        default:
-            return 'wallet';
-    }
+const filteredInstitutions = computed(() => {
+    const term = institutionSearch.value.trim().toLowerCase();
+    if (!term) return institutions;
+    return institutions.filter((b) => b.nome.toLowerCase().includes(term));
 });
 
-const close = () => emit('close');
-	const save = () =>
-	    emit('save', { id: props.initial?.id, name: name.value, type: type.value, initialBalance: initialBalance.value, icon: icon.value });
+const displayInstitution = computed(() => selectedInstitution.value || 'Selecione');
 
-	watch(
-	    () => props.open,
-	    (isOpen) => {
-	        if (!isOpen) return;
-	        name.value = props.initial?.name ?? '';
-	        type.value = props.initial?.type ?? 'wallet';
-	        initialBalance.value = '';
-	        icon.value = (props.initial?.icon as any) ?? 'wallet';
-	    },
-	);
+const parseName = (value: string) => {
+    const raw = value ?? '';
+    const parts = raw.split(' - ').map((p) => p.trim()).filter(Boolean);
+    if (parts.length >= 2) {
+        return { institution: parts[0] ?? null, nickname: parts.slice(1).join(' - ') };
+    }
+    return { institution: null, nickname: raw.trim() };
+};
+
+const onBalanceInput = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    currentBalanceInput.value = formatMoneyInputCentsShift(target.value);
+};
+
+const currentBalanceNumber = computed(() => moneyInputToNumber(currentBalanceInput.value));
+
+const close = () => emit('close');
+
+const save = () => {
+    if (!props.initial?.id) return;
+    const inst = selectedInstitution.value && selectedInstitution.value !== 'Outro' ? selectedInstitution.value : null;
+    const nick = nickname.value.trim();
+    const composedName = inst ? `${inst}${nick ? ` - ${nick}` : ''}`.trim() : nick;
+    if (!composedName) return;
+
+    emit('save', {
+        id: props.initial.id,
+        name: composedName,
+        icon: icon.value,
+        current_balance: currentBalanceNumber.value,
+        color: color.value,
+        incluir_soma: incluirSoma.value,
+        institution: inst,
+        bank_account_type: bankAccountType.value,
+    });
+};
+
+watch(
+    () => props.open,
+    (isOpen) => {
+        if (!isOpen) return;
+        const initial = props.initial ?? null;
+        institutionSearch.value = '';
+        if (!initial) return;
+
+        const parsed = parseName(initial.name);
+        selectedInstitution.value = initial.institution ?? parsed.institution ?? 'Outro';
+        nickname.value = parsed.nickname;
+
+        currentBalanceInput.value = numberToMoneyInput(Number(initial.current_balance ?? 0));
+        color.value = initial.color ?? '#14B8A6';
+        incluirSoma.value = initial.incluir_soma ?? true;
+
+        const bt = String(initial.bank_account_type ?? 'corrente');
+        bankAccountType.value = bt === 'poupanca' ? 'poupanca' : bt === 'salario' ? 'salario' : 'corrente';
+
+        const iconValue = String(initial.icon ?? 'bank');
+        icon.value = (icons as readonly string[]).includes(iconValue) ? (iconValue as any) : 'bank';
+    },
+);
 </script>
 
 <template>
@@ -79,54 +145,68 @@ const close = () => emit('close');
                     <path d="M15 18l-6-6 6-6" />
                 </svg>
             </button>
-	            <div class="text-xl font-semibold tracking-tight text-slate-900">{{ isEdit ? 'Editar conta' : 'Nova conta' }}</div>
-	        </header>
+            <div class="text-xl font-semibold tracking-tight text-slate-900">Editar conta</div>
+        </header>
 
         <main class="mx-auto w-full max-w-md px-5 pb-[calc(6rem+env(safe-area-inset-bottom))]">
-            <!-- Ícone de carteira quando editando carteira -->
-            <div v-if="isWalletEdit" class="flex justify-center pt-4 pb-2">
-                <div class="flex h-20 w-20 items-center justify-center rounded-3xl bg-teal-50 text-teal-600">
-                    <svg class="h-10 w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="5" width="20" height="14" rx="3"/>
-                        <path d="M2 10h20"/>
-                        <circle cx="16" cy="14" r="2"/>
-                    </svg>
-                </div>
-            </div>
-
-            <!-- Ícone padrão (criação ou edição de outro tipo) -->
-            <div v-else class="flex justify-center pt-2">
-                <div class="flex h-16 w-16 items-center justify-center rounded-full bg-amber-400 text-white shadow-lg shadow-black/10">
-                    <svg v-if="headerIcon === 'wallet'" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 7h16v12H4z" />
-                        <path d="M4 7V5h12v2" />
-                        <path d="M16 12h4" />
-                    </svg>
-                    <svg v-else-if="headerIcon === 'bank'" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="flex justify-center pt-2">
+                <div class="flex h-16 w-16 items-center justify-center rounded-3xl text-white shadow-lg shadow-black/10" :style="{ backgroundColor: color }">
+                    <svg v-if="icon === 'bank'" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 10h18" />
                         <path d="M5 10V8l7-5 7 5v2" />
                         <path d="M6 10v9" />
                         <path d="M18 10v9" />
                     </svg>
-                    <svg v-else-if="headerIcon === 'card'" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="5" width="18" height="14" rx="3" />
-                        <path d="M3 10h18" />
-                    </svg>
-                    <svg v-else class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg v-else-if="icon === 'phone'" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="7" y="2" width="10" height="20" rx="2" />
                         <path d="M11 19h2" />
+                    </svg>
+                    <svg v-else class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 10h18" />
+                        <path d="M5 10V8l7-5 7 5v2" />
+                        <path d="M6 10v9" />
+                        <path d="M18 10v9" />
                     </svg>
                 </div>
             </div>
 
             <div class="mt-6 space-y-5">
                 <div>
+                    <div class="mb-2 text-sm font-semibold text-slate-700">Instituição financeira</div>
+                    <button
+                        type="button"
+                        class="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left text-sm font-semibold text-slate-700"
+                        @click="institutionSheetOpen = true"
+                    >
+                        <span class="truncate">{{ displayInstitution }}</span>
+                        <svg class="h-5 w-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div>
                     <div class="mb-2 text-sm font-semibold text-slate-700">Nome da conta</div>
                     <input
-                        v-model="name"
+                        v-model="nickname"
                         type="text"
-                        placeholder="Ex: Banco Inter, Carteira..."
+                        placeholder="Ex: Conta pessoal"
                         class="w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-700 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-0 focus-visible:outline-none"
+                    />
+                </div>
+
+                <div>
+                    <div class="mb-2 text-sm font-semibold text-slate-700">Saldo atual</div>
+                    <input
+                        :value="currentBalanceInput"
+                        type="text"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="0,00"
+                        class="w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-700 focus:border-teal-400 focus:outline-none focus:ring-0 focus-visible:outline-none"
+                        @input="onBalanceInput"
+                        @keydown="preventNonDigitKeydown"
+                        aria-label="Saldo atual"
                     />
                 </div>
 
@@ -136,110 +216,88 @@ const close = () => emit('close');
                         <button
                             type="button"
                             class="rounded-2xl px-4 py-3 text-sm font-semibold"
-                            :class="type === 'wallet' ? 'bg-teal-500 text-white' : 'bg-white text-slate-500 ring-1 ring-slate-200'"
-                            @click="type = 'wallet'"
+                            :class="bankAccountType === 'corrente' ? 'bg-teal-500 text-white' : 'bg-white text-slate-500 ring-1 ring-slate-200'"
+                            @click="bankAccountType = 'corrente'"
                         >
-                            Carteira
+                            Corrente
                         </button>
                         <button
                             type="button"
                             class="rounded-2xl px-4 py-3 text-sm font-semibold"
-                            :class="type === 'bank' ? 'bg-teal-500 text-white' : 'bg-white text-slate-500 ring-1 ring-slate-200'"
-                            @click="type = 'bank'"
+                            :class="bankAccountType === 'poupanca' ? 'bg-teal-500 text-white' : 'bg-white text-slate-500 ring-1 ring-slate-200'"
+                            @click="bankAccountType = 'poupanca'"
                         >
-                            Banco
+                            Poupança
                         </button>
                         <button
                             type="button"
                             class="rounded-2xl px-4 py-3 text-sm font-semibold"
-                            :class="type === 'card' ? 'bg-teal-500 text-white' : 'bg-white text-slate-500 ring-1 ring-slate-200'"
-                            @click="type = 'card'"
+                            :class="bankAccountType === 'salario' ? 'bg-teal-500 text-white' : 'bg-white text-slate-500 ring-1 ring-slate-200'"
+                            @click="bankAccountType = 'salario'"
                         >
-                            Cartão
+                            Salário
                         </button>
                     </div>
                 </div>
 
-                <!-- Aviso para edição de carteira -->
-                <div v-if="isWalletEdit" class="rounded-lg border-l-4 border-amber-500 bg-amber-50 p-4">
-                    <div class="flex items-start gap-3">
-                        <div class="text-xl">⚠️</div>
-                        <div class="flex-1">
-                            <h3 class="mb-1 font-semibold text-amber-900">Atenção!</h3>
-                            <p class="text-sm text-amber-700">
-                                Alterar a carteira pode afetar o cálculo do saldo total. Recomendamos apenas atualizar o apelido e a cor.
-                            </p>
-                        </div>
+                <div>
+                    <div class="mb-2 text-sm font-semibold text-slate-700">Cor da conta</div>
+                    <div class="flex gap-3">
+                        <button
+                            v-for="c in colors"
+                            :key="c"
+                            type="button"
+                            class="h-12 w-12 rounded-2xl border-2 transition"
+                            :style="{ backgroundColor: c }"
+                            :class="color === c ? 'border-slate-900 ring-2 ring-white ring-offset-2 ring-offset-slate-900' : 'border-transparent hover:border-slate-200'"
+                            @click="color = c"
+                            :aria-label="`Cor ${c}`"
+                        />
                     </div>
                 </div>
 
-	                <div v-if="!isEdit">
-	                    <div class="mb-2 text-sm font-semibold text-slate-700">Saldo inicial</div>
-	                    <input
-	                        :value="initialBalance"
-	                        @input="onInitialBalanceInput"
-	                        type="text"
-	                        inputmode="numeric"
-	                        pattern="[0-9]*"
-	                        placeholder="0,00"
-	                        class="w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-700 focus:border-teal-400 focus:outline-none focus:ring-0 focus-visible:outline-none"
-	                        @keydown="preventNonDigitKeydown"
-	                        aria-label="Saldo inicial"
-	                    />
-	                </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm font-semibold text-slate-700">Incluir na soma da tela inicial</div>
+                        <button
+                            type="button"
+                            class="relative inline-flex h-6 w-11 items-center rounded-full transition"
+                            :class="incluirSoma ? 'bg-teal-500' : 'bg-slate-300'"
+                            @click="incluirSoma = !incluirSoma"
+                            aria-label="Incluir na soma"
+                        >
+                            <span class="inline-block h-5 w-5 transform rounded-full bg-white transition" :class="incluirSoma ? 'translate-x-5' : 'translate-x-0.5'"></span>
+                        </button>
+                    </div>
+                </div>
 
                 <div>
                     <div class="mb-2 text-sm font-semibold text-slate-700">Ícone</div>
-                    <div class="grid grid-cols-4 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
                         <button
+                            v-for="i in icons"
+                            :key="i"
                             type="button"
                             class="flex h-14 w-full items-center justify-center rounded-2xl bg-slate-50 ring-1 ring-slate-200"
-                            :class="icon === 'wallet' ? 'ring-2 ring-teal-400' : ''"
-                            @click="icon = 'wallet'"
-                            aria-label="Carteira"
+                            :class="icon === i ? 'ring-2 ring-teal-400' : ''"
+                            @click="icon = i"
+                            :aria-label="`Ícone ${i}`"
                         >
-                            <svg class="h-6 w-6 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 7h16v12H4z" />
-                                <path d="M4 7V5h12v2" />
-                                <path d="M16 12h4" />
-                            </svg>
-                        </button>
-                        <button
-                            type="button"
-                            class="flex h-14 w-full items-center justify-center rounded-2xl bg-slate-50 ring-1 ring-slate-200"
-                            :class="icon === 'bank' ? 'ring-2 ring-teal-400' : ''"
-                            @click="icon = 'bank'"
-                            aria-label="Banco"
-                        >
-                            <svg class="h-6 w-6 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg v-if="i === 'bank'" class="h-6 w-6 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M3 10h18" />
                                 <path d="M5 10V8l7-5 7 5v2" />
                                 <path d="M6 10v9" />
                                 <path d="M18 10v9" />
                             </svg>
-                        </button>
-                        <button
-                            type="button"
-                            class="flex h-14 w-full items-center justify-center rounded-2xl bg-slate-50 ring-1 ring-slate-200"
-                            :class="icon === 'card' ? 'ring-2 ring-teal-400' : ''"
-                            @click="icon = 'card'"
-                            aria-label="Cartão"
-                        >
-                            <svg class="h-6 w-6 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="5" width="18" height="14" rx="3" />
-                                <path d="M3 10h18" />
-                            </svg>
-                        </button>
-                        <button
-                            type="button"
-                            class="flex h-14 w-full items-center justify-center rounded-2xl bg-slate-50 ring-1 ring-slate-200"
-                            :class="icon === 'phone' ? 'ring-2 ring-teal-400' : ''"
-                            @click="icon = 'phone'"
-                            aria-label="Celular"
-                        >
-                            <svg class="h-6 w-6 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg v-else-if="i === 'phone'" class="h-6 w-6 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="7" y="2" width="10" height="20" rx="2" />
                                 <path d="M11 19h2" />
+                            </svg>
+                            <svg v-else class="h-6 w-6 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 19V5" />
+                                <path d="M10 19V9" />
+                                <path d="M16 19v-4" />
+                                <path d="M22 19V7" />
                             </svg>
                         </button>
                     </div>
@@ -251,12 +309,39 @@ const close = () => emit('close');
             <div class="mx-auto w-full max-w-md">
                 <button
                     type="button"
-                    class="w-full rounded-2xl bg-teal-500 py-4 text-base font-semibold text-white shadow-lg shadow-teal-500/25"
+                    class="w-full rounded-2xl bg-teal-500 py-4 text-base font-semibold text-white shadow-lg shadow-teal-500/25 disabled:opacity-60"
+                    :disabled="!nickname.trim()"
                     @click="save"
                 >
-                    Salvar conta
+                    Salvar alterações
                 </button>
             </div>
         </footer>
     </div>
+
+    <PickerSheet :open="institutionSheetOpen" title="Instituição financeira" @close="institutionSheetOpen = false">
+        <div class="space-y-4">
+            <input
+                v-model="institutionSearch"
+                type="text"
+                placeholder="Buscar por nome"
+                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-0"
+            />
+            <div class="grid grid-cols-2 gap-3">
+                <button
+                    v-for="banco in filteredInstitutions"
+                    :key="banco.nome"
+                    type="button"
+                    class="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-4 text-left ring-1 ring-slate-200/70"
+                    @click="() => { selectedInstitution = banco.nome; institutionSheetOpen = false; }"
+                >
+                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl text-lg" :style="{ backgroundColor: `${banco.cor}22`, color: banco.cor }">{{ banco.logo }}</span>
+                    <div class="min-w-0 flex-1">
+                        <div class="truncate text-sm font-semibold text-slate-900">{{ banco.nome }}</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </PickerSheet>
 </template>
+

@@ -265,7 +265,7 @@ const bankAccounts = computed(() =>
             amount: account.current_balance,
             color:
                 account.color ??
-                (account.type === 'wallet' ? '#14B8A6' : account.icon === 'bank' ? '#3B82F6' : '#14B8A6'),
+                (account.type === 'wallet' ? '#14B8A6' : '#3B82F6'),
         })),
 );
 

@@ -10,6 +10,7 @@ import CreditCardModal, { type CreditCardModalPayload } from '@/Components/Credi
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import MobileToast from '@/Components/MobileToast.vue';
 import InstallmentInvoiceSheet from '@/Components/InstallmentInvoiceSheet.vue';
+import PickerSheet from '@/Components/PickerSheet.vue';
 import { requestJson } from '@/lib/kitamoApi';
 import { buildTransactionRequest } from '@/lib/transactions';
 import type { CategoryOption } from '@/Components/CategoryPickerSheet.vue';
@@ -77,6 +78,7 @@ const entriesForMonth = computed(() => {
 const currentInvoiceTotal = computed(() =>
     entriesForMonth.value
         .filter((e) => e.kind === 'expense')
+        .filter((e) => e.status === 'pending')
         .reduce((sum, e) => sum + (Number(e.amount) || 0), 0),
 );
 
@@ -129,6 +131,65 @@ const toastMessage = ref('');
 const showToast = (message: string) => {
     toastMessage.value = message;
     toastOpen.value = true;
+};
+
+const payInvoiceOpen = ref(false);
+const payInvoiceAccount = ref<string>('');
+const payInvoiceBusy = ref(false);
+
+const monthLabelForInvoice = computed(() => {
+    const m = selectedMonth.value?.date;
+    if (!m) return '';
+    const label = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(m);
+    return label.charAt(0).toUpperCase() + label.slice(1);
+});
+
+const paymentAccounts = computed(() => {
+    return (bootstrap.value.accounts ?? [])
+        .filter((a) => a.type !== 'credit_card')
+        .map((a) => ({
+            key: a.name,
+            label: a.name,
+            balance: Number(a.current_balance ?? 0),
+        }));
+});
+
+const isPaymentAccountDisabled = (balance: number) => balance < currentInvoiceTotal.value;
+
+const openPayInvoice = () => {
+    if (!currentInvoiceTotal.value) {
+        showToast('Fatura já está zerada');
+        return;
+    }
+    const firstValid = paymentAccounts.value.find((a) => !isPaymentAccountDisabled(a.balance));
+    payInvoiceAccount.value = firstValid?.key ?? '';
+    payInvoiceOpen.value = true;
+};
+
+const confirmPayInvoice = async () => {
+    if (!account.value) return;
+    const selected = paymentAccounts.value.find((a) => a.key === payInvoiceAccount.value) ?? null;
+    if (!selected || isPaymentAccountDisabled(selected.balance)) return;
+
+    const [year, month] = selectedMonthKey.value.split('-').map(Number);
+    payInvoiceBusy.value = true;
+    try {
+        await requestJson(route('api.cartoes.pay-invoice', { cartao: account.value.id }), {
+            method: 'POST',
+            body: JSON.stringify({
+                year,
+                month,
+                pay_account: payInvoiceAccount.value,
+            }),
+        });
+        payInvoiceOpen.value = false;
+        showToast('Fatura paga');
+        router.reload({ only: ['bootstrap'] });
+    } catch {
+        showToast('Não foi possível pagar a fatura');
+    } finally {
+        payInvoiceBusy.value = false;
+    }
 };
 
 const openAddTransaction = () => {
@@ -417,7 +478,13 @@ const accountOptions = computed<AccountOption[]>(() => {
                 <button type="button" class="h-[52px] flex-1 rounded-2xl bg-slate-100 text-sm font-semibold text-slate-500" @click="openInstallments">
                     Parcelar
                 </button>
-                <button type="button" class="h-[52px] flex-[1.2] rounded-2xl text-sm font-semibold text-white" :style="{ backgroundColor: cardColor }">
+                <button
+                    type="button"
+                    class="h-[52px] flex-[1.2] rounded-2xl text-sm font-semibold text-white disabled:opacity-60"
+                    :style="{ backgroundColor: cardColor }"
+                    :disabled="!currentInvoiceTotal"
+                    @click="openPayInvoice"
+                >
                     Pagar fatura
                 </button>
             </div>
@@ -453,6 +520,65 @@ const accountOptions = computed<AccountOption[]>(() => {
             @close="installmentOpen = false"
             @confirm="confirmInstallments"
         />
+
+        <PickerSheet :open="payInvoiceOpen" title="Pagar fatura" @close="payInvoiceOpen = false">
+            <div class="space-y-4">
+                <div class="rounded-2xl bg-slate-50 px-4 py-4 ring-1 ring-slate-200/60">
+                    <div class="text-xs font-semibold text-slate-500">{{ accountName }} • {{ monthLabelForInvoice }}</div>
+                    <div class="mt-2 text-2xl font-bold text-slate-900">{{ formatBRL(currentInvoiceTotal) }}</div>
+                    <div class="mt-1 text-xs font-semibold text-slate-400">Valor da fatura</div>
+                </div>
+
+                <div class="text-xs font-bold uppercase tracking-wide text-slate-400">De qual conta pagar?</div>
+
+                <div class="space-y-3">
+                    <button
+                        v-for="opt in paymentAccounts"
+                        :key="opt.key"
+                        type="button"
+                        class="flex w-full items-start justify-between gap-4 rounded-2xl bg-slate-50 px-4 py-4 text-left ring-1 ring-slate-200/70 disabled:opacity-60"
+                        :disabled="isPaymentAccountDisabled(opt.balance)"
+                        @click="payInvoiceAccount = opt.key"
+                    >
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-3">
+                                <span
+                                    class="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2"
+                                    :class="payInvoiceAccount === opt.key ? 'border-emerald-500 bg-emerald-500' : 'border-slate-300 bg-white'"
+                                    aria-hidden="true"
+                                >
+                                    <svg v-if="payInvoiceAccount === opt.key" class="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <path d="M20 6 9 17l-5-5" />
+                                    </svg>
+                                </span>
+                                <div class="truncate text-sm font-semibold text-slate-900">{{ opt.label }}</div>
+                            </div>
+                            <div class="mt-2 text-xs font-semibold text-slate-500">Saldo: {{ formatBRL(opt.balance) }}</div>
+                            <div v-if="isPaymentAccountDisabled(opt.balance)" class="mt-1 text-xs font-semibold text-amber-600">⚠️ Saldo insuficiente</div>
+                            <div v-else class="mt-1 text-xs font-semibold text-emerald-600">✓ Saldo disponível</div>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="mt-2 flex gap-3">
+                    <button
+                        type="button"
+                        class="flex-1 rounded-2xl bg-slate-100 py-3 text-sm font-semibold text-slate-600"
+                        @click="payInvoiceOpen = false"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        type="button"
+                        class="flex-1 rounded-2xl bg-emerald-500 py-3 text-sm font-semibold text-white disabled:opacity-60"
+                        :disabled="payInvoiceBusy || !payInvoiceAccount || isPaymentAccountDisabled((paymentAccounts.find((a) => a.key === payInvoiceAccount)?.balance ?? 0))"
+                        @click="confirmPayInvoice"
+                    >
+                        {{ payInvoiceBusy ? 'Pagando…' : `Pagar ${formatBRL(currentInvoiceTotal)}` }}
+                    </button>
+                </div>
+            </div>
+        </PickerSheet>
 
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
     </component>

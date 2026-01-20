@@ -18,6 +18,8 @@ class AccountController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:wallet,bank,card,credit_card'],
             'icon' => ['nullable', 'string', 'max:64'],
+            'institution' => ['nullable', 'string', 'max:255'],
+            'bank_account_type' => ['nullable', 'in:corrente,poupanca,salario'],
             'color' => ['nullable', 'string', 'max:20'],
             'initial_balance' => ['nullable', 'numeric', 'min:0'],
             'credit_limit' => ['nullable', 'numeric', 'min:0'],
@@ -35,6 +37,8 @@ class AccountController extends Controller
             'name' => $data['name'],
             'type' => $type,
             'icon' => $data['icon'] ?? null,
+            'institution' => $data['institution'] ?? null,
+            'bank_account_type' => $data['bank_account_type'] ?? null,
             'color' => $data['color'] ?? null,
             'initial_balance' => $initialBalance,
             'current_balance' => $initialBalance,
@@ -59,8 +63,11 @@ class AccountController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:wallet,bank,card,credit_card'],
             'icon' => ['nullable', 'string', 'max:64'],
+            'institution' => ['nullable', 'string', 'max:255'],
+            'bank_account_type' => ['nullable', 'in:corrente,poupanca,salario'],
             'color' => ['nullable', 'string', 'max:20'],
             'initial_balance' => ['nullable', 'numeric', 'min:0'],
+            'current_balance' => ['nullable', 'numeric'],
             'credit_limit' => ['nullable', 'numeric', 'min:0'],
             'closing_day' => ['nullable', 'integer', 'min:1', 'max:31'],
             'due_day' => ['nullable', 'integer', 'min:1', 'max:31'],
@@ -74,6 +81,8 @@ class AccountController extends Controller
             'name' => $data['name'],
             'type' => $type,
             'icon' => $data['icon'] ?? null,
+            'institution' => array_key_exists('institution', $data) ? ($data['institution'] ?: null) : $account->institution,
+            'bank_account_type' => array_key_exists('bank_account_type', $data) ? ($data['bank_account_type'] ?: null) : $account->bank_account_type,
             'color' => $data['color'] ?? $account->color,
             'credit_limit' => $data['credit_limit'] ?? $account->credit_limit,
             'closing_day' => $data['closing_day'] ?? $account->closing_day,
@@ -83,6 +92,9 @@ class AccountController extends Controller
         ]);
         if (array_key_exists('initial_balance', $data)) {
             $account->initial_balance = $data['initial_balance'];
+        }
+        if (array_key_exists('current_balance', $data)) {
+            $account->current_balance = $data['current_balance'];
         }
         $account->save();
 

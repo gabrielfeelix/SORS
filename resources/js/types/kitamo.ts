@@ -54,6 +54,8 @@ export type Account = {
     due_day?: number | null;
     incluir_soma?: boolean;
     is_primary?: boolean;
+    institution?: string | null;
+    bank_account_type?: 'corrente' | 'poupanca' | 'salario' | string | null;
 };
 
 export type CreditCard = {

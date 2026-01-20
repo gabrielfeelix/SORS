@@ -201,6 +201,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/api/cartoes', [CreditCardController::class, 'index'])->name('api.cartoes.index');
     Route::get('/api/cartoes-by-month', [CreditCardController::class, 'getByMonth'])->name('api.cartoes.by-month');
+    Route::post('/api/cartoes/{cartao}/pagar-fatura', [CreditCardController::class, 'payInvoice'])->name('api.cartoes.pay-invoice');
     Route::post('/api/cartoes', [CreditCardController::class, 'store'])->name('api.cartoes.store');
     Route::patch('/api/cartoes/{cartao}', [CreditCardController::class, 'update'])->name('api.cartoes.update');
     Route::delete('/api/cartoes/{cartao}', [CreditCardController::class, 'destroy'])->name('api.cartoes.destroy');

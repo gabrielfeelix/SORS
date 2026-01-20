@@ -165,27 +165,45 @@ const toastOpen = ref(false);
 
 	const editInitial = computed(() => {
 	    if (!account.value) return null;
-	    const mappedType: AccountType = account.value.type === 'bank' ? 'bank' : account.value.type === 'wallet' ? 'wallet' : 'card';
+        if (account.value.type !== 'bank') return null;
 	    return {
 	        id: String(account.value.id),
 	        name: account.value.name,
-	        type: mappedType,
-	        icon: account.value.icon ?? 'wallet',
+	        icon: account.value.icon ?? 'bank',
+            current_balance: Number(account.value.current_balance ?? 0),
+            color: account.value.color ?? '#14B8A6',
+            incluir_soma: account.value.incluir_soma ?? true,
+            institution: (account.value as any).institution ?? null,
+            bank_account_type: (account.value as any).bank_account_type ?? null,
 	    };
 	});
 
 	const deleteMessage = computed(() => `Tem certeza que deseja excluir a conta "${accountName.value}"?`);
 	const deleteWarningText = 'Isso irá excluir também todas as transações vinculadas a esta conta. Esta ação não pode ser desfeita.';
 
-	const saveAccountEdit = async (payload: { id?: string; name: string; type: 'wallet' | 'bank' | 'card'; initialBalance: string; icon: string }) => {
+	const saveAccountEdit = async (payload: {
+        id: string;
+        name: string;
+        icon: string;
+        current_balance: number;
+        color: string;
+        incluir_soma: boolean;
+        institution: string | null;
+        bank_account_type: string;
+    }) => {
 	    if (!payload.id) return;
 	    try {
 	        await requestJson(`/api/contas/${payload.id}`, {
 	            method: 'PATCH',
 	            body: JSON.stringify({
 	                name: payload.name,
-	                type: payload.type,
 	                icon: payload.icon,
+                    type: 'bank',
+                    current_balance: payload.current_balance,
+                    color: payload.color,
+                    incluir_soma: payload.incluir_soma,
+                    institution: payload.institution,
+                    bank_account_type: payload.bank_account_type,
 	            }),
 	        });
 	        showToast('Conta atualizada');

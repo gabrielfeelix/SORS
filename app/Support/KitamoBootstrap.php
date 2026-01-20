@@ -137,6 +137,8 @@ class KitamoBootstrap
             'closing_day' => $account->closing_day,
             'due_day' => $account->due_day,
             'incluir_soma' => (bool) $account->incluir_soma,
+            'institution' => $account->institution,
+            'bank_account_type' => $account->bank_account_type,
         ];
     }
 

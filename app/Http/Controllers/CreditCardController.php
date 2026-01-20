@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\Category;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -139,7 +140,7 @@ class CreditCardController extends Controller
                     ->where('account_id', $account->id)
                     ->where('kind', 'expense')
                     ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
-                    ->whereIn('status', ['pending', 'paid'])
+                    ->where('status', 'pending')
                     ->sum('amount');
 
                 $incomeSum = (float) Transaction::query()
@@ -168,6 +169,99 @@ class CreditCardController extends Controller
 
         return response()->json([
             'cartoes' => $result->values(),
+        ]);
+    }
+
+    public function payInvoice(Request $request, Account $cartao): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless((int) $cartao->user_id === (int) $user->id, 404);
+        abort_unless($cartao->type === 'credit_card', 404);
+
+        $data = $request->validate([
+            'year' => ['required', 'integer', 'min:2020', 'max:2099'],
+            'month' => ['required', 'integer', 'min:0', 'max:11'],
+            'pay_account' => ['required', 'string', 'max:255'],
+        ]);
+
+        $year = (int) $data['year'];
+        $month = (int) $data['month'];
+        $payAccountName = trim((string) $data['pay_account']);
+
+        $payAccount = Account::query()
+            ->where('user_id', $user->id)
+            ->where('type', '!=', 'credit_card')
+            ->where('name', $payAccountName)
+            ->first();
+
+        if (!$payAccount) {
+            return response()->json(['message' => 'Conta para pagamento inválida.'], 422);
+        }
+
+        $startOfMonth = Carbon::create($year, $month + 1, 1)->startOfDay();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth();
+
+        $invoiceQuery = Transaction::query()
+            ->where('user_id', $user->id)
+            ->where('account_id', $cartao->id)
+            ->where('kind', 'expense')
+            ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
+            ->where('status', 'pending');
+
+        $invoiceTotal = (float) $invoiceQuery->sum('amount');
+
+        if ($invoiceTotal <= 0) {
+            return response()->json([
+                'paid' => true,
+                'amount' => 0,
+            ]);
+        }
+
+        if ((float) ($payAccount->current_balance ?? 0) < $invoiceTotal) {
+            return response()->json(['message' => 'Saldo insuficiente.'], 422);
+        }
+
+        $category = Category::query()->firstOrCreate(
+            [
+                'user_id' => $user->id,
+                'name' => 'Fatura do cartão',
+                'type' => 'expense',
+            ],
+            [
+                'is_default' => false,
+                'color' => '#EF4444',
+                'icon' => 'card',
+            ],
+        );
+
+        Transaction::create([
+            'user_id' => $user->id,
+            'account_id' => $payAccount->id,
+            'category_id' => $category->id,
+            'kind' => 'expense',
+            'status' => 'paid',
+            'amount' => $invoiceTotal,
+            'moeda' => $payAccount->moeda ?? 'BRL',
+            'description' => sprintf('Pagamento de fatura - %s', $cartao->name),
+            'transaction_date' => now()->toDateString(),
+            'priority' => false,
+            'is_recurring' => false,
+            'is_parcelado' => false,
+            'data_pagamento' => now(),
+            'tags' => [],
+        ]);
+
+        $payAccount->current_balance = (float) ($payAccount->current_balance ?? 0) - $invoiceTotal;
+        $payAccount->save();
+
+        $invoiceQuery->update([
+            'status' => 'paid',
+            'data_pagamento' => now(),
+        ]);
+
+        return response()->json([
+            'paid' => true,
+            'amount' => $invoiceTotal,
         ]);
     }
 }

@@ -16,6 +16,8 @@ class Account extends Model
         'name',
         'type',
         'moeda',
+        'institution',
+        'bank_account_type',
         'icon',
         'color',
         'card_brand',
