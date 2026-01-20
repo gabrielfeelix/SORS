@@ -137,20 +137,23 @@ const handleCreateCreditCardFlowSave = () => {
 
                 <!-- Grid de 2 colunas -->
                 <div class="mt-6 grid grid-cols-2 gap-6">
-                    <!-- Coluna esquerda: Uso de crédito + barra -->
+                    <!-- Coluna esquerda: Uso de crédito -->
                     <div>
                         <div class="text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">
                             Uso de Crédito
                         </div>
-                        <div class="mt-1 text-xl font-bold text-[#14B8A6]">
-                            {{ formatPercentage(percentualUsoConsolidado) }}
-                        </div>
-                        <!-- Barra horizontal -->
-                        <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#334155]">
-                            <div
-                                class="h-full bg-[#14B8A6] transition-all"
-                                :style="{ width: `${Math.min(100, percentualUsoConsolidado)}%` }"
-                            ></div>
+                        <!-- Percentual e barra na mesma linha -->
+                        <div class="mt-1 flex items-center gap-2">
+                            <div class="text-xl font-bold text-[#14B8A6] whitespace-nowrap">
+                                {{ formatPercentage(percentualUsoConsolidado) }}
+                            </div>
+                            <!-- Barra horizontal (pequena, ao lado) -->
+                            <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-[#334155]">
+                                <div
+                                    class="h-full bg-[#14B8A6] transition-all"
+                                    :style="{ width: `${Math.min(100, percentualUsoConsolidado)}%` }"
+                                ></div>
+                            </div>
                         </div>
                     </div>
 
