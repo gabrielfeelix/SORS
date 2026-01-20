@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted } from 'vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
-import type { BootstrapData } from '@/types/kitamo';
+import { Head, Link } from '@inertiajs/vue3';
 import MobileShell from '@/Layouts/MobileShell.vue';
 import DesktopShell from '@/Layouts/DesktopShell.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
@@ -12,11 +11,6 @@ const isMobile = useIsMobile();
 const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
 const shellProps = computed(() =>
     isMobile.value ? { showNav: false } : { title: 'Meus Cartões', subtitle: 'Cartões de crédito', showSearch: false, showNewAction: false },
-);
-const page = usePage();
-
-const bootstrap = computed(
-    () => (page.props.bootstrap ?? { entries: [], goals: [], accounts: [], categories: [] }) as BootstrapData,
 );
 
 const formatBRL = (value: number) =>
@@ -40,6 +34,7 @@ const monthItems = computed(() => {
 
 const selectedMonthKey = ref('');
 const cardsDataByMonth = ref<Map<string, any[]>>(new Map());
+const loadingMonthKeys = ref<Set<string>>(new Set());
 
 onMounted(() => {
     selectedMonthKey.value = monthItems.value[2]?.key ?? monthItems.value[0]?.key ?? '';
@@ -53,26 +48,33 @@ const loadCardsForMonth = async (monthKey: string) => {
     if (cardsDataByMonth.value.has(cacheKey)) {
         return;
     }
+    if (loadingMonthKeys.value.has(cacheKey)) {
+        return;
+    }
+    loadingMonthKeys.value.add(cacheKey);
 
     try {
         const [year, month] = monthKey.split('-').map(Number);
         const response = await requestJson<{ cartoes: any[] }>(`/api/cartoes-by-month?year=${year}&month=${month}`, {
             method: 'GET',
         });
-        cardsDataByMonth.value.set(cacheKey, response.cartoes);
+        cardsDataByMonth.value.set(cacheKey, Array.isArray((response as any)?.cartoes) ? (response as any).cartoes : []);
     } catch {
         console.error('Failed to load credit cards for month');
+        cardsDataByMonth.value.set(cacheKey, []);
+    } finally {
+        loadingMonthKeys.value.delete(cacheKey);
     }
 };
 
 const creditCards = computed(() => {
     const monthKey = selectedMonthKey.value;
+    if (!monthKey) return [];
     const cacheKey = `cards-${monthKey}`;
-    const monthData = cardsDataByMonth.value.get(cacheKey);
+    const monthData = cardsDataByMonth.value.get(cacheKey) ?? [];
+    if (!cardsDataByMonth.value.has(cacheKey)) return [];
 
-    let cardsData = monthData || (bootstrap.value.accounts ?? []).filter((a) => a.type === 'credit_card');
-
-    return cardsData.map((a) => {
+    return monthData.map((a) => {
         const limite = Number(a.credit_limit ?? a.limite ?? 0);
         const usado = Math.max(0, Number(a.current_balance ?? a.limite_usado ?? 0));
         const percentualUsado = limite > 0 ? (usado / limite) * 100 : 0;
