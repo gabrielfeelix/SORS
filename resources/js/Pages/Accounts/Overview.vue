@@ -211,7 +211,53 @@ watch(
     <Head title="Minhas Contas" />
 
     <component :is="Shell" v-bind="shellProps">
-        <header class="flex items-center justify-between pt-2">
+        <template v-if="!isMobile" #headerActions>
+            <div class="relative">
+                <button
+                    type="button"
+                    class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-600 ring-1 ring-slate-200/60"
+                    aria-label="Menu"
+                    @click="accountMenuOpen = !accountMenuOpen"
+                >
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="5" r="2" />
+                        <circle cx="12" cy="12" r="2" />
+                        <circle cx="12" cy="19" r="2" />
+                    </svg>
+                </button>
+
+                <div v-if="accountMenuOpen" class="fixed inset-0 z-[65]" @click="accountMenuOpen = false">
+                    <div
+                        class="absolute right-5 top-16 w-56 overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200/70"
+                        @click.stop
+                    >
+                        <button
+                            type="button"
+                            class="w-full rounded-t-2xl border-b border-slate-100 px-4 py-3 text-left text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                            @click="openAccountMenuOption('bank')"
+                        >
+                            Adicionar Conta Bancária
+                        </button>
+                        <button
+                            type="button"
+                            class="w-full border-b border-slate-100 px-4 py-3 text-left text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                            @click="openAccountMenuOption('wallet')"
+                        >
+                            Criar Carteira
+                        </button>
+                        <button
+                            type="button"
+                            class="w-full rounded-b-2xl px-4 py-3 text-left text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                            @click="openAccountMenuOption('card')"
+                        >
+                            Adicionar Cartão de Crédito
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <header v-if="isMobile" class="flex items-center justify-between pt-2">
             <Link
                 :href="route('dashboard')"
                 class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200/60"
