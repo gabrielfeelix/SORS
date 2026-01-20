@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch, onMounted } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import type { BootstrapData } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
 import KitamoLayout from '@/Layouts/KitamoLayout.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
 import CreateCreditCardFlowModal from '@/Components/CreateCreditCardFlowModal.vue';
+import { requestJson } from '@/lib/kitamoApi';
 
 const isMobile = useIsMobile();
 const page = usePage();
@@ -14,7 +15,6 @@ const bootstrap = computed(
     () => (page.props.bootstrap ?? { entries: [], goals: [], accounts: [], categories: [] }) as BootstrapData,
 );
 
-
 const formatBRL = (value: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 }).format(value);
 
@@ -22,32 +22,83 @@ const formatPercentage = (value: number) => {
     return value.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 };
 
-const creditCards = computed(() => {
-    // Always use real data from bootstrap (current month data)
-    return (bootstrap.value.accounts ?? [])
-        .filter((a) => a.type === 'credit_card')
-        .map((a) => {
-            const limite = Number(a.credit_limit ?? 0);
-            const usado = Math.max(0, Number(a.current_balance ?? 0));
-            const percentualUsado = limite > 0 ? (usado / limite) * 100 : 0;
-            const disponivel = limite - usado;
-
-            let status = 'PAGA';
-            if (usado >= limite) status = 'ATRASADA';
-            else if (usado > 0) status = 'ABERTA';
-
-            return {
-                id: a.id,
-                nome: a.name,
-                cor: (a as any).color ?? '#8B5CF6',
-                limite,
-                usado,
-                disponivel: Math.max(0, disponivel),
-                percentualUsado,
-                status,
-            };
-        });
+// Month selection logic
+const monthItems = computed(() => {
+    const base = new Date();
+    const items: Array<{ key: string; label: string; date: Date }> = [];
+    for (let i = -2; i <= 2; i += 1) {
+        const d = new Date(base.getFullYear(), base.getMonth() + i, 1);
+        const label = new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(d).replace('.', '').toUpperCase();
+        items.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label, date: d });
+    }
+    return items;
 });
+
+const selectedMonthKey = ref('');
+const cardsDataByMonth = ref<Map<string, any[]>>(new Map());
+
+onMounted(() => {
+    selectedMonthKey.value = monthItems.value[2]?.key ?? monthItems.value[0]?.key ?? '';
+    if (selectedMonthKey.value) {
+        loadCardsForMonth(selectedMonthKey.value);
+    }
+});
+
+const loadCardsForMonth = async (monthKey: string) => {
+    const cacheKey = `cards-${monthKey}`;
+    if (cardsDataByMonth.value.has(cacheKey)) {
+        return;
+    }
+
+    try {
+        const [year, month] = monthKey.split('-').map(Number);
+        const response = await requestJson<{ cartoes: any[] }>(`/api/cartoes-by-month?year=${year}&month=${month}`, {
+            method: 'GET',
+        });
+        cardsDataByMonth.value.set(cacheKey, response.cartoes);
+    } catch {
+        console.error('Failed to load credit cards for month');
+    }
+};
+
+const creditCards = computed(() => {
+    const monthKey = selectedMonthKey.value;
+    const cacheKey = `cards-${monthKey}`;
+    const monthData = cardsDataByMonth.value.get(cacheKey);
+
+    let cardsData = monthData || (bootstrap.value.accounts ?? []).filter((a) => a.type === 'credit_card');
+
+    return cardsData.map((a) => {
+        const limite = Number(a.credit_limit ?? a.limite ?? 0);
+        const usado = Math.max(0, Number(a.current_balance ?? a.limite_usado ?? 0));
+        const percentualUsado = limite > 0 ? (usado / limite) * 100 : 0;
+        const disponivel = limite - usado;
+
+        let status = 'PAGA';
+        if (usado >= limite) status = 'ATRASADA';
+        else if (usado > 0) status = 'ABERTA';
+
+        return {
+            id: a.id,
+            nome: a.name || a.nome,
+            cor: ((a as any).color || a.cor) ?? '#8B5CF6',
+            limite,
+            usado,
+            disponivel: Math.max(0, disponivel),
+            percentualUsado,
+            status,
+        };
+    });
+});
+
+watch(
+    () => selectedMonthKey.value,
+    (newMonthKey) => {
+        if (newMonthKey) {
+            loadCardsForMonth(newMonthKey);
+        }
+    }
+);
 
 const devedaConsolidada = computed(() => {
     return creditCards.value.reduce((sum, card) => sum + card.usado, 0);
@@ -112,6 +163,23 @@ const handleCreateCreditCardFlowSave = () => {
                 </svg>
             </button>
         </header>
+
+        <!-- Month Selector -->
+        <div class="px-6 pb-6">
+            <div class="flex gap-4 overflow-x-auto pb-2 text-xs font-bold text-slate-300">
+                <button
+                    v-for="m in monthItems"
+                    :key="m.key"
+                    type="button"
+                    class="relative shrink-0 px-2 py-1"
+                    :class="m.key === selectedMonthKey ? 'text-[#14B8A6]' : ''"
+                    @click="selectedMonthKey = m.key"
+                >
+                    {{ m.label }}
+                    <span v-if="m.key === selectedMonthKey" class="absolute inset-x-0 -bottom-1 mx-auto h-1 w-4 rounded-full bg-[#14B8A6]"></span>
+                </button>
+            </div>
+        </div>
 
         <!-- Dívida Consolidada Card -->
         <div class="px-6">
