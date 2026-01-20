@@ -11,12 +11,13 @@ use App\Models\Transaction;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class KitamoBootstrap
 {
     private function normalizeCategoryName(string $name): string
     {
-        return mb_strtolower(trim($name));
+        return (string) Str::of($name)->trim()->lower()->ascii()->replaceMatches('/\s+/', ' ');
     }
 
     private function categoriesForUser(User $user): array

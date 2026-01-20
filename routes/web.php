@@ -98,7 +98,7 @@ Route::get('/settings/categories', function () {
         ->orderBy('name')
         ->get();
 
-    $normalize = static fn (string $name): string => mb_strtolower(trim($name));
+    $normalize = static fn (string $name): string => (string) \Illuminate\Support\Str::of($name)->trim()->lower()->ascii()->replaceMatches('/\s+/', ' ');
     $grouped = $categoryModels->groupBy(fn (\App\Models\Category $c) => $normalize($c->name) . '|' . $c->type);
 
     $categories = $grouped
