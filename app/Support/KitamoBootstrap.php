@@ -136,6 +136,7 @@ class KitamoBootstrap
             'credit_limit' => $account->credit_limit ? (float) $account->credit_limit : null,
             'closing_day' => $account->closing_day,
             'due_day' => $account->due_day,
+            'incluir_soma' => (bool) $account->incluir_soma,
         ];
     }
 

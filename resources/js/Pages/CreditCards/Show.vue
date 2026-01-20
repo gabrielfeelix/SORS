@@ -235,14 +235,23 @@ const categoryOptions = computed<CategoryOption[]>(() => {
 });
 
 const accountOptions = computed<AccountOption[]>(() => {
-    return (bootstrap.value.accounts ?? []).map((acc) => ({
-        key: acc.name,
-        label: acc.name,
-        subtitle: acc.type === 'wallet' ? 'Carteira' : acc.type === 'bank' ? 'Conta' : 'Cartão de Crédito',
-        type: acc.type as 'bank' | 'wallet' | 'credit_card',
-        customColor: (acc as any).color ?? undefined,
-        icon: acc.icon ?? undefined,
-    }));
+    return (bootstrap.value.accounts ?? []).map((acc) => {
+        const type = acc.type as 'bank' | 'wallet' | 'credit_card';
+        const limit = Number(acc.credit_limit ?? 0);
+        const used = Math.max(0, Number(acc.current_balance ?? 0));
+        return {
+            key: acc.name,
+            label: acc.name,
+            subtitle: acc.type === 'wallet' ? 'Carteira' : acc.type === 'bank' ? 'Conta' : 'Cartão de Crédito',
+            type,
+            balance: acc.type === 'credit_card' ? undefined : Number(acc.current_balance ?? 0),
+            limit: acc.type === 'credit_card' ? limit : undefined,
+            used: acc.type === 'credit_card' ? used : undefined,
+            available: acc.type === 'credit_card' ? limit - used : undefined,
+            customColor: (acc as any).color ?? undefined,
+            icon: acc.icon ?? undefined,
+        };
+    });
 });
 </script>
 

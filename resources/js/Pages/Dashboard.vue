@@ -120,9 +120,16 @@ const hideValues = ref(false);
 const homeWidgetsModalOpen = ref(false);
 const accountMenuOpen = ref(false);
 
+const computeSaldoTotal = () => {
+    return (bootstrap.value.accounts ?? [])
+        .filter((a) => a.type !== 'credit_card')
+        .filter((a) => a.incluir_soma ?? true)
+        .reduce((sum, a) => sum + Number(a.current_balance ?? 0), 0);
+};
+
 const syncTotals = () => {
     const totals = computeTotals(desktopEntries.value);
-    saldoAtual.value = totals.balance;
+    saldoAtual.value = computeSaldoTotal();
     receitas.value = totals.income;
     despesas.value = totals.expense;
 };
@@ -591,6 +598,7 @@ const pickerAccounts = computed<AccountOption[]>(() => {
             key: a.name,
             label: a.name,
             subtitle: a.type === 'wallet' ? 'Dinheiro físico' : a.type === 'bank' ? 'Corrente' : 'Conta',
+            balance: Number(a.current_balance ?? 0),
             icon: a.icon ?? undefined,
             customColor: (a as any).color,
             type: a.type as 'bank' | 'wallet',
@@ -600,11 +608,16 @@ const pickerAccounts = computed<AccountOption[]>(() => {
     // Add credit cards
     for (const a of bootstrap.value.accounts ?? []) {
         if (a.type !== 'credit_card') continue;
+        const limit = Number(a.credit_limit ?? 0);
+        const used = Math.max(0, Number(a.current_balance ?? 0));
 
         accounts.push({
             key: a.name,
             label: a.name,
             subtitle: 'Cartão de Crédito',
+            limit,
+            used,
+            available: limit - used,
             icon: a.icon ?? undefined,
             customColor: (a as any).color,
             type: 'credit_card',

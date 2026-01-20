@@ -33,9 +33,41 @@ const pickerAccounts = computed<AccountOption[]>(() => {
         if (n.includes('carteira') || n.includes('dinheiro')) return 'emerald';
         return 'slate';
     };
-    return (bootstrap.value.accounts ?? [])
-        .filter((a) => a.type !== 'credit_card')
-        .map((a) => ({ key: a.name, label: a.name, subtitle: a.type === 'wallet' ? 'Carteira' : 'Conta', tone: tone(a.name) }));
+    const accounts: AccountOption[] = [];
+
+    for (const a of bootstrap.value.accounts ?? []) {
+        if (a.type === 'credit_card') continue;
+        accounts.push({
+            key: a.name,
+            label: a.name,
+            subtitle: a.type === 'wallet' ? 'Carteira' : 'Conta',
+            tone: tone(a.name),
+            type: a.type as 'bank' | 'wallet',
+            balance: Number(a.current_balance ?? 0),
+            customColor: (a as any).color ?? undefined,
+            icon: a.icon ?? undefined,
+        });
+    }
+
+    for (const a of bootstrap.value.accounts ?? []) {
+        if (a.type !== 'credit_card') continue;
+        const limit = Number(a.credit_limit ?? 0);
+        const used = Math.max(0, Number(a.current_balance ?? 0));
+        accounts.push({
+            key: a.name,
+            label: a.name,
+            subtitle: 'Cartão de Crédito',
+            tone: tone(a.name),
+            type: 'credit_card',
+            limit,
+            used,
+            available: limit - used,
+            customColor: (a as any).color ?? undefined,
+            icon: a.icon ?? undefined,
+        });
+    }
+
+    return accounts;
 });
 
 const monthKey = (date: Date) => `${date.getFullYear()}-${date.getMonth()}`;
