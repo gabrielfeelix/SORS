@@ -139,8 +139,22 @@ const handleCreateCreditCardFlowSave = () => {
     <Head title="Meus Cartões" />
 
     <component :is="Shell" v-bind="shellProps">
+        <template v-if="!isMobile" #headerActions>
+            <button
+                type="button"
+                class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-600 ring-1 ring-slate-200/60"
+                aria-label="Adicionar cartão"
+                @click="createCreditCardFlowOpen = true"
+            >
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+            </button>
+        </template>
+
         <!-- Header -->
-        <header class="flex items-center justify-between px-6 pt-4 pb-8">
+        <header v-if="isMobile" class="flex items-center justify-between px-6 pt-4 pb-8">
             <Link
                 :href="route('dashboard')"
                 class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200/60"
@@ -151,9 +165,9 @@ const handleCreateCreditCardFlowSave = () => {
                 </svg>
             </Link>
 
-            <div class="text-center">
-                <div class="text-lg font-semibold text-slate-900">Meus Cartões</div>
-            </div>
+                <div class="text-center">
+                    <div class="text-lg font-semibold text-slate-900">Meus Cartões</div>
+                </div>
 
             <button
                 type="button"
@@ -169,7 +183,7 @@ const handleCreateCreditCardFlowSave = () => {
         </header>
 
         <!-- Month Selector -->
-        <div class="px-6 pb-6">
+        <div :class="isMobile ? 'px-6 pb-6' : 'pb-6'">
             <div class="flex gap-4 overflow-x-auto pb-2 text-xs font-bold text-slate-300">
                 <button
                     v-for="m in monthItems"
@@ -186,7 +200,7 @@ const handleCreateCreditCardFlowSave = () => {
         </div>
 
         <!-- Dívida Consolidada Card -->
-        <div class="px-6">
+        <div :class="isMobile ? 'px-6' : ''">
             <div class="rounded-3xl bg-[#1E293B] p-6 shadow-xl">
                 <!-- Header -->
                 <div class="flex items-start justify-between">
@@ -243,7 +257,7 @@ const handleCreateCreditCardFlowSave = () => {
         </div>
 
         <!-- Cartões List -->
-        <div class="mt-8 px-6">
+        <div :class="isMobile ? 'mt-8 px-6' : 'mt-10'">
             <div class="flex items-center justify-between">
                 <div class="text-xs font-bold uppercase tracking-wide text-slate-900">
                     Cartões
@@ -254,7 +268,10 @@ const handleCreateCreditCardFlowSave = () => {
             </div>
 
             <!-- Cards -->
-            <div v-if="creditCards.length" class="mt-4 space-y-3 pb-8">
+            <div
+                v-if="creditCards.length"
+                :class="isMobile ? 'mt-4 space-y-3 pb-8' : 'mt-5 grid grid-cols-2 gap-4 pb-10 xl:grid-cols-3'"
+            >
                 <Link
                     v-for="card in creditCards"
                     :key="card.id"

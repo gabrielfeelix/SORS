@@ -241,6 +241,8 @@ onUnmounted(() => {
                                 />
                             </div>
 
+                            <slot name="headerActions" />
+
                             <button
                                 type="button"
                                 class="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-600 ring-1 ring-slate-200/60"
