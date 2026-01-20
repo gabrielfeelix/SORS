@@ -177,6 +177,10 @@ Route::get('/accounts/nubank-card', function () {
     return Inertia::render('Accounts/CreditCard');
 })->middleware(['auth', 'verified'])->name('accounts.card');
 
+Route::get('/meus-cartoes', function () {
+    return Inertia::render('CreditCards/MyCards');
+})->middleware(['auth', 'verified'])->name('credit-cards.my-cards');
+
 Route::get('/cartoes/{account}', [CreditCardPageController::class, 'show'])
     ->middleware(['auth', 'verified'])
     ->name('credit-cards.show');
