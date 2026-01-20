@@ -135,9 +135,119 @@ const formatBRL2 = (value: number) =>
         maximumFractionDigits: 2,
     }).format(value);
 
+const formatBRDate = (date: Date) => {
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yyyy = String(date.getFullYear());
+    return `${dd}/${mm}/${yyyy}`;
+};
+
+const parseBRDate = (brDate: string) => {
+    const match = String(brDate ?? '')
+        .trim()
+        .match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!match) return null;
+    const [, dd, mm, yyyy] = match;
+    const date = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    if (Number.isNaN(date.getTime())) return null;
+    return date;
+};
+
+const daysInMonth = (year: number, monthIndex: number) => new Date(year, monthIndex + 1, 0).getDate();
+
+const addMonthsClamp = (date: Date, months: number) => {
+    const baseDay = date.getDate();
+    const baseMonth = date.getMonth();
+    const baseYear = date.getFullYear();
+
+    const rawTarget = baseMonth + months;
+    const targetYear = baseYear + Math.floor(rawTarget / 12);
+    const targetMonth = ((rawTarget % 12) + 12) % 12;
+    const maxDay = daysInMonth(targetYear, targetMonth);
+    return new Date(targetYear, targetMonth, Math.min(baseDay, maxDay));
+};
+
+const addDays = (date: Date, days: number) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+
 const installmentEach = computed(() => {
     const count = Math.max(1, Math.floor(installmentCount.value || 1));
     return amountNumber.value / count;
+});
+
+const baseDate = computed(() => {
+    if (dateKind.value === 'other') {
+        const parsed = parseBRDate(dateOther.value);
+        if (parsed) return parsed;
+    }
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+});
+
+const installmentPreview = computed(() => {
+    const count = Math.max(1, Math.floor(installmentCount.value || 1));
+    const limit = 5;
+    const rowsCount = Math.min(count, limit);
+    const rows = Array.from({ length: rowsCount }, (_, index) => ({
+        date: formatBRDate(addMonthsClamp(baseDate.value, index)),
+        amount: formatBRL2(installmentEach.value),
+    }));
+
+    return {
+        count,
+        total: formatBRL2(amountNumber.value),
+        rows,
+        hasMore: count > limit,
+        remainingCount: Math.max(0, count - limit),
+    };
+});
+
+const recurrenceEndDate = computed(() => {
+    if (fimMode.value !== 'ate') return null;
+    return parseBRDate(data_fim.value) ?? null;
+});
+
+const recurrenceIntervalDays = computed(() => {
+    if (periodicidade.value === 'quinzenal') return 15;
+    if (periodicidade.value === 'a_cada_x_dias') return clampInt(intervalo_dias.value ?? '', 1, 999);
+    return null;
+});
+
+const recurrencePreview = computed(() => {
+    const maxUntilEnd = 5;
+    const base = baseDate.value;
+    const end = recurrenceEndDate.value;
+    const amountText = formatBRL2(amountNumber.value);
+
+    const nextDate = (date: Date) => {
+        if (periodicidade.value === 'mensal') return addMonthsClamp(date, 1);
+        const stepDays = recurrenceIntervalDays.value ?? 1;
+        return addDays(date, stepDays);
+    };
+
+    const rows: Array<{ date: string; amount: string }> = [];
+    let cursor = base;
+
+    if (fimMode.value === 'ate' && end) {
+        while (cursor.getTime() <= end.getTime() && rows.length < maxUntilEnd) {
+            rows.push({ date: formatBRDate(cursor), amount: amountText });
+            cursor = nextDate(cursor);
+        }
+        return { rows, hasMore: cursor.getTime() <= end.getTime(), amountText };
+    }
+
+    const limit = 3;
+    for (let i = 0; i < limit; i += 1) {
+        rows.push({ date: formatBRDate(cursor), amount: amountText });
+        cursor = nextDate(cursor);
+    }
+    return { rows, hasMore: true, amountText };
+});
+
+const recurrenceDescription = computed(() => {
+    if (periodicidade.value === 'mensal') return `Repete todo dia ${baseDate.value.getDate()}, mensalmente`;
+    if (periodicidade.value === 'quinzenal') return 'Repete a cada 15 dias';
+    const interval = recurrenceIntervalDays.value ?? 1;
+    return `Repete a cada ${interval} dias`;
 });
 
 const toISODate = (brDate: string) => {
@@ -542,6 +652,28 @@ watch(
                                     </div>
                                 </div>
                             </div>
+
+                            <div v-if="isInstallment" class="mt-4 rounded-xl bg-slate-50 p-3 text-slate-600 ring-1 ring-slate-200/60">
+                                <div class="flex items-center gap-2 text-xs font-semibold">
+                                    <span aria-hidden="true">📋</span>
+                                    <span>Serão criadas {{ installmentPreview.count }} parcelas:</span>
+                                </div>
+                                <div class="mt-3 space-y-2 text-sm">
+                                    <div v-for="row in installmentPreview.rows" :key="row.date" class="flex items-center justify-between gap-3 font-semibold">
+                                        <span class="tabular-nums">{{ row.date }}</span>
+                                        <span class="tabular-nums">{{ row.amount }}</span>
+                                    </div>
+                                    <div v-if="installmentPreview.hasMore" class="text-xs font-semibold text-slate-400">
+                                        … +{{ installmentPreview.remainingCount }} parcelas
+                                    </div>
+                                    <div class="mt-2 border-t border-slate-200/70 pt-2">
+                                        <div class="flex items-center justify-between gap-3 font-bold text-slate-700">
+                                            <span>Total</span>
+                                            <span class="tabular-nums">{{ installmentPreview.total }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200/60">
@@ -621,6 +753,24 @@ watch(
                                             <path d="M6 9l6 6 6-6" />
                                         </svg>
                                     </button>
+                                </div>
+                            </div>
+
+                            <div v-if="isRecorrente" class="mt-4 rounded-xl bg-slate-50 p-3 text-slate-600 ring-1 ring-slate-200/60">
+                                <div class="flex items-center gap-2 text-xs font-semibold">
+                                    <span aria-hidden="true">📋</span>
+                                    <span>Próximas ocorrências:</span>
+                                </div>
+                                <div class="mt-3 space-y-2 text-sm">
+                                    <div v-if="recurrencePreview.rows.length === 0" class="text-xs font-semibold text-slate-400">Nenhuma ocorrência no período.</div>
+                                    <div v-for="row in recurrencePreview.rows" :key="row.date" class="flex items-center justify-between gap-3 font-semibold">
+                                        <span class="tabular-nums">{{ row.date }}</span>
+                                        <span class="tabular-nums">{{ row.amount }}</span>
+                                    </div>
+                                    <div v-if="fimMode === 'sempre' && recurrencePreview.hasMore" class="text-xs font-semibold text-slate-400">…</div>
+                                </div>
+                                <div class="mt-3 text-xs font-semibold text-slate-500">
+                                    ℹ️ {{ recurrenceDescription }}
                                 </div>
                             </div>
                             <div v-if="recurrenceError" class="mt-3 text-xs font-semibold text-red-500">
