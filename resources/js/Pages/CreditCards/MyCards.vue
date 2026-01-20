@@ -14,16 +14,24 @@ const bootstrap = computed(
 );
 
 const activeMonth = ref(new Date());
-const monthLabel = computed(() => {
-    return new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' })
-        .format(activeMonth.value)
-        .toUpperCase();
+const monthItems = computed(() => {
+    const base = new Date(activeMonth.value.getFullYear(), activeMonth.value.getMonth(), 1);
+    const items: Array<{ key: string; label: string; date: Date }> = [];
+    for (let i = -2; i <= 2; i += 1) {
+        const d = new Date(base.getFullYear(), base.getMonth() + i, 1);
+        const label = new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(d).replace('.', '').toUpperCase();
+        items.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label, date: d });
+    }
+    return items;
 });
+const selectedMonthKey = ref(monthItems.value[2]?.key ?? monthItems.value[0]?.key ?? '');
 
-const shiftMonth = (delta: number) => {
-    const d = new Date(activeMonth.value);
-    d.setMonth(d.getMonth() + delta);
-    activeMonth.value = d;
+const selectMonth = (monthKey: string) => {
+    selectedMonthKey.value = monthKey;
+    const item = monthItems.value.find(m => m.key === monthKey);
+    if (item) {
+        activeMonth.value = item.date;
+    }
 };
 
 const formatBRL = (value: number) =>
@@ -76,10 +84,10 @@ const disponivelConsolidado = computed(() => {
     return Math.max(0, limiteConsolidado.value - devedaConsolidada.value);
 });
 
-const getStatusColor = (status: string) => {
-    if (status === 'PAGA') return 'text-emerald-600';
-    if (status === 'ATRASADA') return 'text-red-500';
-    return 'text-amber-500';
+const getStatusBadgeClasses = (status: string) => {
+    if (status === 'PAGA') return 'bg-emerald-50 text-emerald-600';
+    if (status === 'ATRASADA') return 'bg-red-50 text-red-500';
+    return 'bg-amber-50 text-amber-600';
 };
 </script>
 
@@ -88,25 +96,27 @@ const getStatusColor = (status: string) => {
 
     <MobileShell v-if="isMobile" :show-nav="false">
         <!-- Header -->
-        <header class="flex items-center justify-between px-4 pt-2 pb-4">
+        <header class="flex items-center justify-between px-6 pt-4 pb-6">
             <Link
                 :href="route('dashboard')"
-                class="text-slate-900"
+                class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200/60"
                 aria-label="Voltar"
             >
-                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15 18l-6-6 6-6" />
                 </svg>
             </Link>
 
-            <div class="text-sm font-bold tracking-wider text-slate-900">MEUS CARTÕES</div>
+            <div class="text-center">
+                <div class="text-lg font-semibold text-slate-900">Meus Cartões</div>
+            </div>
 
             <Link
                 :href="route('dashboard')"
-                class="text-slate-900"
+                class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200/60"
                 aria-label="Adicionar cartão"
             >
-                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
@@ -114,69 +124,55 @@ const getStatusColor = (status: string) => {
         </header>
 
         <!-- Month Navigation -->
-        <div class="px-4 pb-4">
-            <div class="flex items-center justify-between">
+        <div class="px-6 pb-6">
+            <div class="flex gap-4 overflow-x-auto pb-2 text-xs font-bold text-slate-300">
                 <button
+                    v-for="m in monthItems"
+                    :key="m.key"
                     type="button"
-                    class="text-slate-400 hover:text-slate-600"
-                    @click="shiftMonth(-1)"
-                    aria-label="Mês anterior"
+                    class="relative shrink-0 px-2 py-1"
+                    :class="m.key === selectedMonthKey ? 'text-[#14B8A6]' : ''"
+                    @click="selectMonth(m.key)"
                 >
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M15 19l-7-7 7-7" />
-                    </svg>
-                </button>
-                <div class="text-xs font-semibold tracking-wider text-slate-900">
-                    {{ monthLabel }}
-                </div>
-                <button
-                    type="button"
-                    class="text-slate-400 hover:text-slate-600"
-                    @click="shiftMonth(1)"
-                    aria-label="Próximo mês"
-                >
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 5l7 7-7 7" />
-                    </svg>
+                    {{ m.label }}
+                    <span v-if="m.key === selectedMonthKey" class="absolute inset-x-0 -bottom-1 mx-auto h-1 w-4 rounded-full bg-[#14B8A6]"></span>
                 </button>
             </div>
         </div>
 
         <!-- Dívida Consolidada Card -->
-        <div class="px-4">
-            <div class="rounded-3xl bg-[#1E293B] p-5 shadow-xl">
+        <div class="px-6">
+            <div class="rounded-3xl bg-[#1E293B] p-6 shadow-xl">
                 <div class="flex items-start justify-between">
                     <div class="text-[10px] font-semibold uppercase tracking-wider text-[#64748B]">
                         Dívida Consolidada
                     </div>
-                    <button
-                        type="button"
-                        class="flex h-8 w-8 items-center justify-center rounded-full bg-white/10"
-                        aria-label="Opções"
-                    >
-                        <svg class="h-4 w-4 text-white/60" viewBox="0 0 24 24" fill="currentColor">
-                            <circle cx="12" cy="5" r="1.5" />
-                            <circle cx="12" cy="12" r="1.5" />
-                            <circle cx="12" cy="19" r="1.5" />
+                    <div class="flex h-8 w-8 items-center justify-center">
+                        <svg class="h-4 w-4 text-white/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <line x1="3" y1="12" x2="21" y2="12" />
+                            <line x1="3" y1="18" x2="21" y2="18" />
                         </svg>
-                    </button>
+                    </div>
                 </div>
 
-                <div class="mt-2 text-[32px] font-bold leading-none text-white">
+                <div class="mt-3 text-[32px] font-bold leading-none text-white">
                     {{ formatBRL(devedaConsolidada) }}
                 </div>
 
-                <div class="mt-4 grid grid-cols-2 gap-3">
+                <div class="mt-5 grid grid-cols-2 gap-4">
                     <!-- Uso de Crédito -->
                     <div>
-                        <div class="text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">
-                            Uso de Crédito
-                        </div>
-                        <div class="mt-1 text-lg font-bold text-[#14B8A6]">
-                            {{ formatPercentage(percentualUsoConsolidado) }}
+                        <div class="flex items-center gap-2">
+                            <div class="text-2xl font-bold text-[#14B8A6]">
+                                {{ formatPercentage(percentualUsoConsolidado) }}
+                            </div>
+                            <div class="text-[9px] font-semibold uppercase tracking-wide text-[#64748B] leading-tight">
+                                Uso de<br>Crédito
+                            </div>
                         </div>
                         <!-- Progress bar -->
-                        <div class="mt-2 h-1 w-full overflow-hidden rounded-full bg-[#334155]">
+                        <div class="mt-3 h-1 w-full overflow-hidden rounded-full bg-[#334155]">
                             <div
                                 class="h-full bg-[#14B8A6]"
                                 :style="{ width: `${Math.min(100, percentualUsoConsolidado)}%` }"
@@ -189,7 +185,7 @@ const getStatusColor = (status: string) => {
                         <div class="text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">
                             Disp. Consolidado
                         </div>
-                        <div class="mt-1 text-lg font-bold text-white">
+                        <div class="mt-2 text-xl font-bold text-white">
                             {{ formatBRL(disponivelConsolidado) }}
                         </div>
                     </div>
@@ -198,7 +194,7 @@ const getStatusColor = (status: string) => {
         </div>
 
         <!-- Cartões List -->
-        <div class="mt-6 px-4">
+        <div class="mt-8 px-6">
             <div class="flex items-center justify-between">
                 <div class="text-xs font-bold uppercase tracking-wide text-slate-900">
                     Cartões
@@ -209,7 +205,7 @@ const getStatusColor = (status: string) => {
             </div>
 
             <!-- Cards -->
-            <div v-if="creditCards.length" class="mt-4 space-y-4 pb-8">
+            <div v-if="creditCards.length" class="mt-5 space-y-4 pb-8">
                 <Link
                     v-for="card in creditCards"
                     :key="card.id"
@@ -217,12 +213,12 @@ const getStatusColor = (status: string) => {
                     class="block overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200"
                 >
                     <!-- Card Header with Icon -->
-                    <div class="flex items-start gap-3 p-4">
+                    <div class="flex items-start gap-4 p-5">
                         <div
-                            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
+                            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl"
                             :style="{ backgroundColor: card.cor }"
                         >
-                            <svg class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="2" y="5" width="20" height="14" rx="2" />
                                 <line x1="2" y1="10" x2="22" y2="10" />
                             </svg>
@@ -230,7 +226,7 @@ const getStatusColor = (status: string) => {
 
                         <div class="flex-1">
                             <div class="text-base font-bold text-slate-900">{{ card.nome }}</div>
-                            <div class="mt-0.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                            <div class="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
                                 {{ card.nome.toUpperCase() }}
                             </div>
                         </div>
@@ -238,8 +234,8 @@ const getStatusColor = (status: string) => {
                         <div class="text-right">
                             <div class="text-base font-bold text-slate-900">{{ formatBRL(card.usado) }}</div>
                             <div
-                                class="mt-1 text-xs font-bold uppercase tracking-wide"
-                                :class="getStatusColor(card.status)"
+                                class="mt-1.5 inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                                :class="getStatusBadgeClasses(card.status)"
                             >
                                 {{ card.status }}
                             </div>
@@ -247,22 +243,18 @@ const getStatusColor = (status: string) => {
                     </div>
 
                     <!-- Card Stats -->
-                    <div class="bg-slate-50 px-4 pb-4 pt-2">
-                        <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                            Limite Usado: {{ Math.round(card.percentualUsado) }}%
+                    <div class="bg-slate-50 px-5 pb-5 pt-3">
+                        <div class="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                            <span>Limite Usado: {{ Math.round(card.percentualUsado) }}%</span>
+                            <span>Disp: {{ formatBRL(card.disponivel) }}</span>
                         </div>
 
                         <!-- Progress Bar -->
-                        <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
+                        <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
                             <div
                                 class="h-full"
-                                :class="card.percentualUsado >= 80 ? 'bg-red-500' : card.percentualUsado >= 50 ? 'bg-amber-500' : 'bg-emerald-500'"
-                                :style="{ width: `${Math.min(100, card.percentualUsado)}%` }"
+                                :style="{ width: `${Math.min(100, card.percentualUsado)}%`, backgroundColor: card.cor }"
                             ></div>
-                        </div>
-
-                        <div class="mt-2 flex items-center justify-between text-xs">
-                            <span class="font-medium text-slate-600">Disp: {{ formatBRL(card.disponivel) }}</span>
                         </div>
                     </div>
                 </Link>
