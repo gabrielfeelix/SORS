@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { useIsMobile } from '@/composables/useIsMobile';
 import MobileShell from '@/Layouts/MobileShell.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 import ToggleSwitch from '@/Components/ToggleSwitch.vue';
 import { useMediaQuery } from '@/composables/useMediaQuery';
 import { computed, ref, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 
-const isMobile = ref(true);
+const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value ? { showNav: false } : { title: 'Aparência', showSearch: false, showNewAction: false },
+);
 const page = usePage<any>();
 const darkMode = ref(false);
 const brl = ref(true);
@@ -45,12 +51,12 @@ watch(darkMode, async (enabled, old) => {
 <template>
     <Head title="Aparência & Moeda" />
 
-    <MobileShell :show-nav="false">
+    <component :is="Shell" v-bind="shellProps">
         <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200/60">
             <div class="text-sm font-semibold text-slate-900">Aparência & Moeda</div>
             <div class="mt-2 text-sm text-slate-500">Ainda vamos definir essa tela no mobile.</div>
         </div>
-    </MobileShell>
+    </component>
 
     
 </template>

@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { useIsMobile } from '@/composables/useIsMobile';
 import MobileShell from '@/Layouts/MobileShell.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 import ToggleSwitch from '@/Components/ToggleSwitch.vue';
 
-const isMobile = ref(true);
-
+const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value ? { showNav: false } : { title: 'Notificações', showSearch: false, showNewAction: false },
+);
 const remindDue = ref(true);
 const warnNegative = ref(true);
 const confirmPaid = ref(false);
@@ -19,7 +24,7 @@ const goalProgress = ref(false);
 <template>
     <Head title="Notificações" />
 
-    <MobileShell :show-nav="false">
+    <component :is="Shell" v-bind="shellProps">
         <header class="flex items-center gap-3 pt-2">
             <Link
                 :href="route('settings')"
@@ -96,7 +101,7 @@ const goalProgress = ref(false);
                 </div>
             </div>
         </div>
-    </MobileShell>
+    </component>
 
     
 </template>

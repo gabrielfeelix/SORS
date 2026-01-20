@@ -300,9 +300,14 @@ watch(
 </script>
 
 <template>
-    <div v-if="open" class="transaction-modal fixed inset-0 z-[60] bg-white" role="dialog" aria-modal="true">
-        <div class="flex h-full flex-col">
-                <header class="relative flex h-14 items-center px-4 pt-[env(safe-area-inset-top)]">
+    <div
+        v-if="open"
+        class="transaction-modal fixed inset-0 z-[60] bg-white md:flex md:items-center md:justify-center md:bg-black/40 md:backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+    >
+        <div class="flex h-full flex-col md:h-auto md:max-h-[92vh] md:w-full md:max-w-[680px] md:overflow-hidden md:rounded-[28px] md:bg-white md:shadow-2xl md:ring-1 md:ring-slate-200/60">
+                <header class="relative flex h-14 items-center px-4 pt-[env(safe-area-inset-top)] md:h-16 md:px-6 md:pt-0">
                     <button class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 text-[#6B7280]" type="button" @click="close" aria-label="Fechar">
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M18 6L6 18" />
@@ -316,7 +321,7 @@ watch(
                 </header>
 
             <div class="flex-1 overflow-y-auto">
-                <div class="px-5 pt-4">
+                <div class="px-5 pt-4 md:px-8">
                     <div class="rounded-2xl bg-slate-50 p-2 ring-1 ring-slate-200/70">
                         <div class="grid grid-cols-3 gap-2">
                             <button type="button" class="flex h-11 items-center justify-center rounded-xl text-sm font-semibold" :class="pillClass('expense')" @click="localKind = 'expense'">
@@ -332,7 +337,7 @@ watch(
                     </div>
                 </div>
 
-                <div class="mt-6 px-5">
+                <div class="mt-6 px-5 md:px-8">
                     <div class="text-center text-xs font-bold uppercase tracking-wide text-slate-300">Valor da transação</div>
                     <div class="mt-2 flex items-center justify-center gap-3">
                         <div class="text-2xl font-bold" :class="amountTextClass">R$</div>
@@ -351,7 +356,7 @@ watch(
                     </div>
                 </div>
 
-                <div v-if="!isTransfer" class="mt-6 space-y-4 px-5">
+                <div v-if="!isTransfer" class="mt-6 space-y-4 px-5 md:px-8">
                     <div class="rounded-2xl bg-slate-50 px-4 py-4 ring-1 ring-slate-200/70">
                         <div class="flex items-center gap-3">
                             <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-400 ring-1 ring-slate-200/60">
@@ -610,7 +615,7 @@ watch(
                     </div>
                 </div>
 
-                <div v-if="isTransfer" class="mt-6 space-y-4 px-5 pb-6">
+                <div v-if="isTransfer" class="mt-6 space-y-4 px-5 pb-6 md:px-8">
                     <div class="grid grid-cols-[1fr_auto_1fr] items-start gap-3">
                         <div>
                             <div class="mb-2 text-sm font-bold text-[#374151]">De (Origem)</div>
@@ -668,7 +673,7 @@ watch(
                 </div>
                 </div>
 
-            <footer class="px-6 pt-4 pb-[calc(24px+env(safe-area-inset-bottom))]">
+            <footer class="px-6 pt-4 pb-[calc(24px+env(safe-area-inset-bottom))] md:px-8 md:pb-8">
                     <button
                         class="h-[52px] w-full rounded-xl text-base font-bold text-white"
                         :class="localKind === 'transfer' ? 'bg-[#3B82F6] shadow-[0_2px_8px_rgba(59,130,246,0.25)]' : 'bg-[#14B8A6] shadow-[0_2px_8px_rgba(20,184,166,0.25)]'"

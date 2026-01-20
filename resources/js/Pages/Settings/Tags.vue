@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
+import { useIsMobile } from '@/composables/useIsMobile';
 import MobileShell from '@/Layouts/MobileShell.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 import PickerSheet from '@/Components/PickerSheet.vue';
 import MobileToast from '@/Components/MobileToast.vue';
 import { requestJson } from '@/lib/kitamoApi';
 
-const isMobile = ref(true);
+const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value ? { showNav: false } : { title: 'Tags', showSearch: false, showNewAction: false },
+);
 const page = usePage();
 
 interface Tag {
@@ -126,7 +132,7 @@ const closeEditModal = () => {
 <template>
     <Head title="Tags" />
 
-    <MobileShell :show-nav="false">
+    <component :is="Shell" v-bind="shellProps">
         <header class="flex items-center justify-between pt-2">
             <Link
                 :href="route('dashboard')"
@@ -277,7 +283,7 @@ const closeEditModal = () => {
         </div>
 
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
-    </MobileShell>
+    </component>
 
     
 </template>

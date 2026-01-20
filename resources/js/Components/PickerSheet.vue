@@ -36,12 +36,12 @@ const titleId = computed(() => `sheet-title-${props.title.replace(/\s+/g, '-').t
                 >
                     <section
                         v-if="open"
-                        class="absolute inset-x-0 bottom-0 mx-auto w-full max-w-md rounded-t-[28px] bg-white px-5 pb-[calc(18px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-18px_60px_-40px_rgba(15,23,42,0.55)] md:max-w-xl"
+                        class="absolute inset-x-0 bottom-0 mx-auto w-full max-w-md rounded-t-[28px] bg-white px-5 pb-[calc(18px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-18px_60px_-40px_rgba(15,23,42,0.55)] md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:w-[520px] md:max-w-none md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-[28px] md:px-6 md:pb-6 md:pt-6 md:shadow-[0_30px_90px_-45px_rgba(15,23,42,0.55)]"
                         role="dialog"
                         aria-modal="true"
                         :aria-labelledby="titleId"
                     >
-                        <div class="mx-auto h-1.5 w-12 rounded-full bg-slate-200"></div>
+                        <div class="mx-auto h-1.5 w-12 rounded-full bg-slate-200 md:hidden"></div>
 
                         <div class="relative mt-4 flex items-center justify-center">
                             <h2 :id="titleId" class="text-lg font-semibold text-slate-900">{{ title }}</h2>

@@ -76,10 +76,10 @@ const onReceiptChange = (event: Event) => {
     <div v-if="open" class="fixed inset-0 z-[70]">
         <button class="absolute inset-0 bg-black/50 backdrop-blur-sm" type="button" @click="close" aria-label="Fechar"></button>
 
-        <div class="absolute inset-x-0 bottom-0 w-full max-w-md overflow-hidden rounded-t-[28px] bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.25)] md:max-w-xl">
+        <div class="absolute inset-x-0 bottom-0 w-full max-w-md overflow-hidden rounded-t-[28px] bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.25)] md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:w-[620px] md:max-w-none md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-[28px] md:shadow-[0_30px_90px_-45px_rgba(15,23,42,0.55)]">
             <div class="px-6 pb-[calc(24px+env(safe-area-inset-bottom))] pt-3">
                 <div class="relative flex items-center justify-center">
-                    <div class="h-1 w-10 rounded-full bg-slate-200"></div>
+                    <div class="h-1 w-10 rounded-full bg-slate-200 md:hidden"></div>
                     <button
                         type="button"
                         class="absolute right-0 top-0 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500"

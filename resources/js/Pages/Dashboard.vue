@@ -5,6 +5,7 @@ import { requestJson } from '@/lib/kitamoApi';
 import { buildTransactionRequest } from '@/lib/transactions';
 import type { BootstrapData, CreditCard, Entry, Goal } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 import TransactionModal, { type TransactionModalPayload } from '@/Components/TransactionModal.vue';
 import TransactionDetailModal, { type TransactionDetail } from '@/Components/TransactionDetailModal.vue';
 import type { AccountOption } from '@/Components/AccountPickerSheet.vue';
@@ -15,6 +16,7 @@ import CreateAccountFlowModal from '@/Components/CreateAccountFlowModal.vue';
 import CreateCreditCardFlowModal from '@/Components/CreateCreditCardFlowModal.vue';
 import Modal from '@/Components/Modal.vue';
 import HomeWidgetsManager from '@/Components/HomeWidgetsManager.vue';
+import { useIsMobile } from '@/composables/useIsMobile';
 
 type ProjecaoResponse = {
     projecao_diaria: Array<{
@@ -33,7 +35,7 @@ const bootstrap = computed(
     () => (page.props.bootstrap ?? { entries: [], goals: [], accounts: [], categories: [] }) as BootstrapData,
 );
 
-const isMobile = ref(true);
+const isMobile = useIsMobile();
 
 type HomeWidgetsState = {
     accounts: boolean;
@@ -78,6 +80,18 @@ const todayLabel = computed(() =>
         month: 'long',
         year: 'numeric',
     }).format(new Date()),
+);
+
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value
+        ? { showNav: true }
+        : {
+              title: 'Visão Geral',
+              subtitle: todayLabel.value,
+              searchPlaceholder: 'Buscar transação…',
+              newActionLabel: 'Nova Transação',
+          },
 );
 
 const formatBRL = (value: number) =>
@@ -807,8 +821,8 @@ onMounted(() => {
 </script>
 
 <template>
-	    <MobileShell @add="openTransaction('expense')">
-	        <header class="flex items-center justify-between pt-2">
+	    <component :is="Shell" v-bind="shellProps" @add="openTransaction('expense')">
+	        <header v-if="isMobile" class="flex items-center justify-between pt-2">
 	            <button type="button" @click="openProfileSettings" class="flex items-center gap-3" aria-label="Abrir perfil">
 	                <span class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
 	                    <img v-if="avatarUrl" :src="avatarUrl" alt="" class="h-full w-full object-cover" />
@@ -1304,7 +1318,5 @@ onMounted(() => {
         </Modal>
 
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
-    </MobileShell>
-
-		    
+    </component>
 </template>

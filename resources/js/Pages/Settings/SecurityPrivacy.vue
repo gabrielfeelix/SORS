@@ -1,12 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { useIsMobile } from '@/composables/useIsMobile';
 import MobileShell from '@/Layouts/MobileShell.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 import ToggleSwitch from '@/Components/ToggleSwitch.vue';
 import ChangePasswordModal from '@/Components/ChangePasswordModal.vue';
 
-const isMobile = ref(true);
-
+const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value ? { showNav: false } : { title: 'Segurança e privacidade', showSearch: false, showNewAction: false },
+);
 const biometric = ref(true);
 const passwordOpen = ref(false);
 </script>
@@ -14,7 +19,7 @@ const passwordOpen = ref(false);
 <template>
     <Head title="Segurança e Privacidade" />
 
-    <MobileShell :show-nav="false">
+    <component :is="Shell" v-bind="shellProps">
         <header class="flex items-center gap-3 pt-2">
             <Link
                 :href="route('settings')"
@@ -183,7 +188,7 @@ const passwordOpen = ref(false);
         </div>
 
         <ChangePasswordModal :open="passwordOpen" @close="passwordOpen = false" />
-    </MobileShell>
+    </component>
 
     
 </template>

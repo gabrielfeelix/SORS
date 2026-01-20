@@ -4,11 +4,13 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { requestJson } from '@/lib/kitamoApi';
 import type { BootstrapData } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 import TransactionModal, { type TransactionModalPayload } from '@/Components/TransactionModal.vue';
 import ExportReportModal from '@/Components/ExportReportModal.vue';
 import MobileToast from '@/Components/MobileToast.vue';
 import type { AccountOption } from '@/Components/AccountPickerSheet.vue';
 import type { CategoryOption } from '@/Components/CategoryPickerSheet.vue';
+import { useIsMobile } from '@/composables/useIsMobile';
 
 const page = usePage();
 const bootstrap = computed(
@@ -45,7 +47,19 @@ const monthLabel = computed(() => {
     const month = new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(activeMonth.value).toUpperCase();
     return `${month} ${activeMonth.value.getFullYear()}`;
 });
-const isMobile = ref(true);
+const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value
+        ? { showNav: true }
+        : {
+              title: 'Relatórios',
+              subtitle: monthLabel.value,
+              searchPlaceholder: 'Buscar transação…',
+              newActionLabel: 'Nova Transação',
+              showSearch: false,
+          },
+);
 const shiftMonth = (delta: number) => {
     const d = new Date(activeMonth.value);
     d.setMonth(d.getMonth() + delta);
@@ -239,9 +253,9 @@ const onTransactionSave = async (payload: TransactionModalPayload) => {
 </script>
 
 <template>
-    <MobileShell @add="openQuickTransaction">
+    <component :is="Shell" v-bind="shellProps" @add="openQuickTransaction">
         <header class="flex items-center justify-between pt-2">
-            <div>
+            <div v-if="isMobile">
                 <div class="text-2xl font-semibold tracking-tight text-slate-900">Análise</div>
             </div>
             <button
@@ -452,7 +466,6 @@ const onTransactionSave = async (payload: TransactionModalPayload) => {
             @exported="({ channel, format }) => { if (channel === 'download') exportTransactions(format); showToast(channel === 'download' ? 'Relatório baixado' : 'Relatório enviado por email'); }"
         />
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
-    </MobileShell>
+    </component>
 
-    
 </template>

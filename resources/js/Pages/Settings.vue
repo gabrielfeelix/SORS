@@ -2,8 +2,14 @@
 import { computed, ref, watch } from 'vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import MobileShell from '@/Layouts/MobileShell.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
+import { useIsMobile } from '@/composables/useIsMobile';
 
-const isMobile = ref(true);
+const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value ? { showNav: false } : { title: 'Configurações', showSearch: false, showNewAction: false },
+);
 const page = usePage();
 const userName = computed(() => page.props.auth?.user?.name ?? 'Gabriel Felix');
 const userEmail = computed(() => page.props.auth?.user?.email ?? 'gab.feelix@gmail.com');
@@ -47,7 +53,7 @@ const initials = computed(() => {
 
 
 <template>
-    <MobileShell :show-nav="false">
+    <component :is="Shell" v-bind="shellProps">
         <div class="fixed inset-0 flex flex-col bg-[#14B8A6]">
             <!-- Header com perfil -->
             <div class="px-5 pb-6 pt-[calc(0.5rem+env(safe-area-inset-top))]">
@@ -167,7 +173,6 @@ const initials = computed(() => {
                 </div>
             </div>
         </div>
-    </MobileShell>
+    </component>
 
-    
 </template>

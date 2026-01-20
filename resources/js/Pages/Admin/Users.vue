@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import MobileShell from '@/Layouts/MobileShell.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
+import { useIsMobile } from '@/composables/useIsMobile';
 
 const props = defineProps<{
     users: Array<{
@@ -13,7 +15,11 @@ const props = defineProps<{
     }>;
 }>();
 
-const isMobile = ref(true);
+const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value ? { showNav: false } : { title: 'Administração', showSearch: false, showNewAction: false },
+);
 const activeUserId = ref<number | null>(null);
 
 const form = useForm({
@@ -43,7 +49,7 @@ const formatDate = (value: string) => new Date(value).toLocaleDateString('pt-BR'
 <template>
     <Head title="Administração" />
 
-    <MobileShell :show-nav="false">
+    <component :is="Shell" v-bind="shellProps">
         <div class="space-y-4">
             <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200/60">
                 <div class="text-xl font-semibold text-slate-900">Administração</div>
@@ -110,7 +116,6 @@ const formatDate = (value: string) => new Date(value).toLocaleDateString('pt-BR'
                 </div>
             </div>
         </div>
-    </MobileShell>
+    </component>
 
-    
 </template>

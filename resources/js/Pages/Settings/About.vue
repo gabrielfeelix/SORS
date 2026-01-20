@@ -1,15 +1,21 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { useIsMobile } from '@/composables/useIsMobile';
 import MobileShell from '@/Layouts/MobileShell.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 
-const isMobile = ref(true);
+const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value ? { showNav: false } : { title: 'Sobre', showSearch: false, showNewAction: false },
+);
 </script>
 
 <template>
     <Head title="Sobre" />
 
-    <MobileShell :show-nav="false">
+    <component :is="Shell" v-bind="shellProps">
         <header class="flex items-center gap-3 pt-2">
             <Link
                 :href="route('settings')"
@@ -101,7 +107,7 @@ const isMobile = ref(true);
             <div>Feito com ❤️ no Brasil</div>
             <div class="mt-2">© 2026 - Todos os direitos reservados</div>
         </div>
-    </MobileShell>
+    </component>
 
     
 </template>

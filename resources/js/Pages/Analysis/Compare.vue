@@ -4,10 +4,18 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 import { requestJson } from '@/lib/kitamoApi';
 import type { BootstrapData, Entry } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 import MobileToast from '@/Components/MobileToast.vue';
 import type { TransactionModalPayload } from '@/Components/TransactionModal.vue';
+import { useIsMobile } from '@/composables/useIsMobile';
 
-const isMobile = ref(true);
+const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value
+        ? { showNav: false }
+        : { title: 'Relatórios', subtitle: 'Comparar períodos', showSearch: false, showNewAction: false },
+);
 const page = usePage();
 const bootstrap = computed(
     () => (page.props.bootstrap ?? { entries: [], goals: [], accounts: [], categories: [] }) as BootstrapData,
@@ -154,7 +162,7 @@ const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
 <template>
     <Head title="Comparativo" />
 
-    <MobileShell :show-nav="false">
+    <component :is="Shell" v-bind="shellProps">
         <header class="flex items-center gap-3 pt-2">
             <Link
                 :href="route('analysis')"
@@ -334,7 +342,6 @@ const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
                 </div>
             </div>
         </div>
-    </MobileShell>
+    </component>
 
-    
 </template>

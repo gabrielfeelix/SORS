@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { useIsMobile } from '@/composables/useIsMobile';
 import MobileShell from '@/Layouts/MobileShell.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 
-const isMobile = ref(true);
+const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value ? { showNav: false } : { title: 'Ajuda e suporte', showSearch: false, showNewAction: false },
+);
 const query = ref('');
 
 type Faq = { id: string; title: string; body: string };
@@ -31,7 +37,7 @@ const filteredFaqs = computed(() => {
 <template>
     <Head title="Ajuda e Suporte" />
 
-    <MobileShell :show-nav="false">
+    <component :is="Shell" v-bind="shellProps">
         <header class="flex items-center gap-3 pt-2">
             <Link
                 :href="route('settings')"
@@ -118,7 +124,7 @@ const filteredFaqs = computed(() => {
                 </button>
             </div>
         </div>
-    </MobileShell>
+    </component>
 
     
 </template>

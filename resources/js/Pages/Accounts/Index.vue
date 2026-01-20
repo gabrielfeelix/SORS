@@ -5,11 +5,13 @@
 	import { buildTransactionRequest } from '@/lib/transactions';
 	import type { BootstrapData, Entry } from '@/types/kitamo';
 	import MobileShell from '@/Layouts/MobileShell.vue';
+	import DesktopShell from '@/Layouts/DesktopShell.vue';
 	import TransactionModal, { type TransactionModalPayload } from '@/Components/TransactionModal.vue';
 	import MobileToast from '@/Components/MobileToast.vue';
 	import TransactionDetailModal, { type TransactionDetail } from '@/Components/TransactionDetailModal.vue';
 	import TransactionFilterModal, { type TransactionFilterState } from '@/Components/TransactionFilterModal.vue';
 	import ImportInvoiceModal from '@/Components/ImportInvoiceModal.vue';
+	import { useIsMobile } from '@/composables/useIsMobile';
 	
 import type { AccountOption } from '@/Components/AccountPickerSheet.vue';
 import type { CategoryOption } from '@/Components/CategoryPickerSheet.vue';
@@ -19,7 +21,18 @@ const userName = computed(() => page.props.auth?.user?.name ?? 'Gabriel');
 const bootstrap = computed(
     () => (page.props.bootstrap ?? { entries: [], goals: [], accounts: [], categories: [] }) as BootstrapData,
 );
-const isMobile = ref(true);
+const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value
+        ? { showNav: true }
+        : {
+              title: 'Lançamentos',
+              subtitle: monthLabel.value,
+              searchPlaceholder: 'Buscar transação…',
+              newActionLabel: 'Nova Transação',
+          },
+);
 
 type FilterKind = 'all' | 'paid' | 'to_pay';
 
@@ -536,9 +549,9 @@ onMounted(() => {
 </script>
 
 <template>
-    <MobileShell @add="openCreate">
+    <component :is="Shell" v-bind="shellProps" @add="openCreate">
 	        <header class="flex items-center justify-between pt-2">
-	            <div>
+	            <div v-if="isMobile">
 	                <div class="text-2xl font-semibold tracking-tight text-slate-900">Lançamentos</div>
 	            </div>
 	            <div class="flex items-center gap-2">
@@ -801,7 +814,6 @@ onMounted(() => {
         />
         <ImportInvoiceModal :open="importOpen" @close="importOpen = false" @imported="onInvoiceImported" />
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
-    </MobileShell>
+    </component>
 
-    
 </template>

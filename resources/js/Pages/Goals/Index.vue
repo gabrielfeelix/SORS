@@ -5,10 +5,16 @@ import { requestJson } from '@/lib/kitamoApi';
 import { buildTransactionRequest } from '@/lib/transactions';
 import type { BootstrapData, Goal, Entry } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 import MobileToast from '@/Components/MobileToast.vue';
 import type { TransactionModalPayload } from '@/Components/TransactionModal.vue';
+import { useIsMobile } from '@/composables/useIsMobile';
 
-const isMobile = ref(true);
+const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value ? { showNav: true } : { title: 'Metas', showSearch: false, showNewAction: false },
+);
 
 const page = usePage();
 const bootstrap = computed(
@@ -124,9 +130,9 @@ const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
 <template>
     <Head title="Metas" />
 
-    <MobileShell>
+    <component :is="Shell" v-bind="shellProps">
         <header class="flex items-center justify-between pt-2">
-            <div class="text-2xl font-semibold tracking-tight text-slate-900">Metas</div>
+            <div v-if="isMobile" class="text-2xl font-semibold tracking-tight text-slate-900">Metas</div>
             <Link
                 :href="route('goals.create')"
                 class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[#14B8A6] shadow-sm ring-1 ring-slate-200/60"
@@ -214,7 +220,7 @@ const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
             </Link>
         </div>
 
-        <template #fab>
+        <template v-if="isMobile" #fab>
             <Link
                 :href="route('goals.create')"
                 class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom)+1rem)] right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-teal-500 text-white shadow-xl shadow-teal-500/30"
@@ -226,7 +232,6 @@ const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
                 </svg>
             </Link>
         </template>
-    </MobileShell>
+    </component>
 
-    
 </template>
