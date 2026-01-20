@@ -4,12 +4,16 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { requestJson } from '@/lib/kitamoApi';
 import type { BootstrapData, Goal } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import KitamoLayout from '@/Layouts/KitamoLayout.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
 import { formatMoneyInputCentsShift, moneyInputToNumber } from '@/lib/moneyInput';
 import { preventNonDigitKeydown } from '@/lib/inputGuards';
 
 const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value ? { showNav: false } : { title: 'Editar meta', showSearch: false, showNewAction: false },
+);
 
 const page = usePage();
 const bootstrap = computed(
@@ -83,8 +87,8 @@ const submit = async () => {
 <template>
     <Head title="Editar meta" />
 
-    <MobileShell v-if="isMobile" :show-nav="false">
-        <header class="relative flex items-center justify-center pt-2">
+    <component :is="Shell" v-bind="shellProps">
+        <header v-if="isMobile" class="relative flex items-center justify-center pt-2">
             <Link
                 :href="route('goals.show', { goalId })"
                 class="absolute left-0 flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200/60"
@@ -97,7 +101,7 @@ const submit = async () => {
             <div class="text-xl font-semibold tracking-tight text-slate-900">Editar meta</div>
         </header>
 
-        <div class="mt-8 space-y-5 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+        <div class="mt-8 space-y-5 pb-[calc(6rem+env(safe-area-inset-bottom))] md:mx-auto md:max-w-md md:rounded-3xl md:bg-white md:p-6 md:pb-6 md:shadow-sm md:ring-1 md:ring-slate-200/60">
             <div>
                 <div class="mb-2 text-sm font-semibold text-slate-700">Nome da meta</div>
                 <input
@@ -188,8 +192,8 @@ const submit = async () => {
             </div>
         </div>
 
-        <div class="fixed inset-x-0 bottom-0 bg-white px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-18px_40px_-32px_rgba(15,23,42,0.45)]">
-            <div class="mx-auto w-full max-w-md">
+        <div class="fixed inset-x-0 bottom-0 bg-white px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-18px_40px_-32px_rgba(15,23,42,0.45)] md:static md:bg-transparent md:px-0 md:pb-0 md:pt-6 md:shadow-none">
+            <div class="mx-auto w-full max-w-md md:mx-auto">
                 <button
                     type="button"
                     class="h-[52px] w-full rounded-2xl bg-[#14B8A6] text-base font-bold text-white shadow-[0_2px_8px_rgba(20,184,166,0.25)]"
@@ -199,12 +203,5 @@ const submit = async () => {
                 </button>
             </div>
         </div>
-    </MobileShell>
-
-    <KitamoLayout v-else title="Editar meta" subtitle="Mobile-first por enquanto.">
-        <div class="rounded-[28px] border border-white/70 bg-white p-8 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.4)]">
-            <div class="text-sm font-semibold text-slate-900">Editar meta (desktop/tablet)</div>
-            <div class="mt-2 text-sm text-slate-500">Vamos adaptar essa tela depois da versão mobile.</div>
-        </div>
-    </KitamoLayout>
+    </component>
 </template>

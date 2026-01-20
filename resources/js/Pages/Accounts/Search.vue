@@ -3,10 +3,14 @@ import { computed, ref } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import type { BootstrapData } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import KitamoLayout from '@/Layouts/KitamoLayout.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
 
 const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value ? { showNav: false } : { title: 'Buscar', showSearch: false, showNewAction: false },
+);
 const query = ref('');
 const page = usePage();
 const bootstrap = computed(
@@ -54,7 +58,7 @@ const recent = computed(() => {
 <template>
     <Head title="Buscar" />
 
-    <MobileShell v-if="isMobile" :show-nav="false">
+    <component :is="Shell" v-bind="shellProps">
         <header class="flex items-center gap-3 pt-2">
             <Link
                 :href="route('accounts.index')"
@@ -145,12 +149,5 @@ const recent = computed(() => {
                 </Link>
             </div>
         </div>
-    </MobileShell>
-
-    <KitamoLayout v-else title="Buscar" subtitle="Mobile-only por enquanto.">
-        <div class="rounded-[28px] border border-white/70 bg-white p-8 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.4)]">
-            <div class="text-sm font-semibold text-slate-900">Busca</div>
-            <div class="mt-2 text-sm text-slate-500">Vamos adaptar essa tela depois da versão mobile.</div>
-        </div>
-    </KitamoLayout>
+    </component>
 </template>

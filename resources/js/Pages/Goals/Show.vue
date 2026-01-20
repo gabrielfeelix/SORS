@@ -4,12 +4,16 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 import { requestJson } from '@/lib/kitamoApi';
 import type { BootstrapData, Goal } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
-import KitamoLayout from '@/Layouts/KitamoLayout.vue';
+import DesktopShell from '@/Layouts/DesktopShell.vue';
 import AddMoneyModal from '@/Components/AddMoneyModal.vue';
 import MobileToast from '@/Components/MobileToast.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
 
 const isMobile = useIsMobile();
+const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
+const shellProps = computed(() =>
+    isMobile.value ? { showNav: false } : { title: 'Metas', subtitle: 'Detalhes', showSearch: false, showNewAction: false },
+);
 
 const page = usePage();
 const bootstrap = computed(
@@ -69,8 +73,8 @@ const onDepositConfirm = async (payload: { amount: string }) => {
 <template>
     <Head :title="goal.title" />
 
-    <MobileShell v-if="isMobile" :show-nav="false">
-        <header class="relative flex items-center justify-center pt-2">
+    <component :is="Shell" v-bind="shellProps">
+        <header v-if="isMobile" class="relative flex items-center justify-center pt-2">
             <Link
                 :href="route('goals.index')"
                 class="absolute left-0 flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200/60"
@@ -93,7 +97,7 @@ const onDepositConfirm = async (payload: { amount: string }) => {
             </Link>
         </header>
 
-        <div class="-mx-5 mt-4 overflow-hidden rounded-b-[36px] px-5 pb-10 pt-8 text-white" :class="headerClass">
+        <div class="-mx-5 mt-4 overflow-hidden rounded-b-[36px] px-5 pb-10 pt-8 text-white md:mx-0 md:rounded-3xl md:px-8 md:pb-12 md:pt-10" :class="headerClass">
             <div class="flex flex-col items-center">
                 <div class="flex h-20 w-20 items-center justify-center rounded-full bg-white/20 ring-1 ring-white/30">
                     <svg v-if="goal.icon === 'home'" class="h-9 w-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -130,7 +134,7 @@ const onDepositConfirm = async (payload: { amount: string }) => {
             </div>
         </div>
 
-        <div class="-mt-7 grid grid-cols-2 gap-3">
+        <div class="-mt-7 grid grid-cols-2 gap-3 md:mx-auto md:max-w-md">
             <div class="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200/60">
                 <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">FALTAM</div>
                 <div class="mt-2 text-lg font-semibold text-slate-900">{{ formatMoney0(remaining).replace('R$', 'R$') }}</div>
@@ -141,7 +145,7 @@ const onDepositConfirm = async (payload: { amount: string }) => {
             </div>
         </div>
 
-        <div class="mt-7 pb-[calc(7rem+env(safe-area-inset-bottom))]">
+        <div class="mt-7 pb-[calc(7rem+env(safe-area-inset-bottom))] md:mx-auto md:max-w-md">
             <div class="text-base font-semibold text-slate-900">Histórico de depósitos</div>
             <div class="mt-4 space-y-3">
                 <div v-for="d in deposits" :key="d.id" class="flex items-center justify-between rounded-3xl bg-white px-4 py-4 shadow-sm ring-1 ring-slate-200/60">
@@ -162,7 +166,7 @@ const onDepositConfirm = async (payload: { amount: string }) => {
             </div>
         </div>
 
-        <div class="fixed inset-x-0 bottom-0 bg-white px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-18px_40px_-32px_rgba(15,23,42,0.45)]">
+        <div class="fixed inset-x-0 bottom-0 bg-white px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-18px_40px_-32px_rgba(15,23,42,0.45)] md:static md:bg-transparent md:px-0 md:pb-0 md:pt-6 md:shadow-none">
             <div class="mx-auto w-full max-w-md">
                 <button
                     type="button"
@@ -185,12 +189,5 @@ const onDepositConfirm = async (payload: { amount: string }) => {
             @confirm="onDepositConfirm"
         />
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
-    </MobileShell>
-
-    <KitamoLayout v-else :title="goal.title" subtitle="Mobile-first por enquanto.">
-        <div class="rounded-[28px] border border-white/70 bg-white p-8 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.4)]">
-            <div class="text-sm font-semibold text-slate-900">Detalhe de meta (desktop/tablet)</div>
-            <div class="mt-2 text-sm text-slate-500">Vamos adaptar essa tela depois da versão mobile.</div>
-        </div>
-    </KitamoLayout>
+    </component>
 </template>
