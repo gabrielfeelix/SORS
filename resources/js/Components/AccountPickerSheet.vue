@@ -54,6 +54,26 @@ const saldoLabel = (opt: AccountOption) => {
 
 const bankAndWalletOptions = computed(() => props.options.filter((o) => o.type !== 'credit_card'));
 const creditCardOptions = computed(() => props.options.filter((o) => o.type === 'credit_card'));
+
+const normalizeLabel = (value: string) => String(value ?? '').trim().toLowerCase();
+const creditCardOptionsDisplay = computed(() => {
+    const counts = new Map<string, number>();
+    for (const opt of creditCardOptions.value) {
+        const key = normalizeLabel(opt.label);
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+
+    const seen = new Map<string, number>();
+    return creditCardOptions.value.map((opt) => {
+        const key = normalizeLabel(opt.label);
+        const count = counts.get(key) ?? 0;
+        if (count <= 1) return { opt, label: opt.label };
+
+        const idx = (seen.get(key) ?? 0) + 1;
+        seen.set(key, idx);
+        return { opt, label: `${opt.label} (${idx})` };
+    });
+});
 </script>
 
 <template>
@@ -95,25 +115,25 @@ const creditCardOptions = computed(() => props.options.filter((o) => o.type === 
                 <div class="px-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">CARTÕES DE CRÉDITO</div>
                 <div class="mt-2 space-y-3">
                     <button
-                        v-for="opt in creditCardOptions"
-                        :key="opt.key"
+                        v-for="row in creditCardOptionsDisplay"
+                        :key="row.opt.key"
                         type="button"
                         class="flex w-full items-center gap-4 rounded-2xl bg-slate-50 px-4 py-4 text-left ring-1 ring-slate-200/70"
-                        @click="emit('select', opt.key)"
+                        @click="emit('select', row.opt.key)"
                     >
                         <span
                             class="flex h-12 w-12 items-center justify-center rounded-full text-lg font-semibold"
-                            :class="opt.customColor ? '' : toneClass(opt.tone)"
-                            :style="opt.customColor ? { backgroundColor: opt.customColor, color: 'white' } : {}"
+                            :class="row.opt.customColor ? '' : toneClass(row.opt.tone)"
+                            :style="row.opt.customColor ? { backgroundColor: row.opt.customColor, color: 'white' } : {}"
                         >
-                            <AccountIcon :type="opt.type" :icon="opt.icon" class="h-6 w-6" />
+                            <AccountIcon :type="row.opt.type" :icon="row.opt.icon" class="h-6 w-6" />
                         </span>
                         <div class="min-w-0 flex-1">
-                            <div class="truncate text-base font-semibold text-slate-900">{{ opt.label }}</div>
+                            <div class="truncate text-base font-semibold text-slate-900">{{ row.label }}</div>
                             <div class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold">
-                                <span v-if="opt.subtitle" class="truncate text-slate-400">{{ opt.subtitle }}</span>
-                                <span v-if="opt.subtitle && saldoLabel(opt)" class="text-slate-300">•</span>
-                                <span v-if="saldoLabel(opt)" class="truncate text-slate-500">{{ saldoLabel(opt) }}</span>
+                                <span v-if="row.opt.subtitle" class="truncate text-slate-400">{{ row.opt.subtitle }}</span>
+                                <span v-if="row.opt.subtitle && saldoLabel(row.opt)" class="text-slate-300">•</span>
+                                <span v-if="saldoLabel(row.opt)" class="truncate text-slate-500">{{ saldoLabel(row.opt) }}</span>
                             </div>
                         </div>
                         <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">

@@ -104,6 +104,44 @@ const corProgresso = (card: CreditCard) => {
   if (pct < 80) return '#F59E0B'; // yellow
   return '#EF4444'; // red
 };
+
+const cardsListDisplay = computed(() => {
+  const normalize = (value: string) => String(value ?? '').trim().toLowerCase();
+  const grouped = new Map<string, CreditCard[]>();
+
+  for (const card of cardsList.value) {
+    const key = normalize(card.nome);
+    const items = grouped.get(key) ?? [];
+    items.push(card);
+    grouped.set(key, items);
+  }
+
+  const result: Array<CreditCard & { displayName: string }> = [];
+  for (const group of grouped.values()) {
+    if (group.length === 1) {
+      result.push({ ...group[0]!, displayName: group[0]!.nome });
+      continue;
+    }
+
+    const sorted = [...group].sort((a, b) => String(a.id).localeCompare(String(b.id)));
+    const hasBrandDiff = new Set(sorted.map((c) => String(c.bandeira ?? '').toLowerCase())).size > 1;
+    const hasDueDiff = new Set(sorted.map((c) => c.dia_vencimento ?? null)).size > 1;
+    const hasClosingDiff = new Set(sorted.map((c) => c.dia_fechamento ?? null)).size > 1;
+
+    sorted.forEach((card, index) => {
+      const parts: string[] = [];
+      if (hasBrandDiff && card.bandeira) parts.push(String(card.bandeira).toUpperCase());
+      if (hasDueDiff && card.dia_vencimento) parts.push(`Venc. ${card.dia_vencimento}`);
+      if (hasClosingDiff && card.dia_fechamento) parts.push(`Fecha ${card.dia_fechamento}`);
+
+      const displayName = parts.length ? `${card.nome} • ${parts.join(' • ')}` : `${card.nome} (${index + 1})`;
+      result.push({ ...card, displayName });
+    });
+  }
+
+  const indexById = new Map(cardsList.value.map((c, idx) => [String(c.id), idx]));
+  return result.sort((a, b) => (indexById.get(String(a.id)) ?? 0) - (indexById.get(String(b.id)) ?? 0));
+});
 </script>
 
 <template>
@@ -123,7 +161,7 @@ const corProgresso = (card: CreditCard) => {
     </header>
 
     <div v-if="cardsList.length" class="mt-6 space-y-3">
-      <div v-for="card in cardsList" :key="card.id" class="overflow-hidden rounded-2xl shadow-sm ring-1 ring-slate-200/60">
+      <div v-for="card in cardsListDisplay" :key="card.id" class="overflow-hidden rounded-2xl shadow-sm ring-1 ring-slate-200/60">
         <!-- Card -->
         <div
           class="aspect-video rounded-2xl bg-gradient-to-br from-white to-slate-50 p-5"
@@ -132,7 +170,7 @@ const corProgresso = (card: CreditCard) => {
           <div class="flex items-start justify-between">
             <div>
               <div class="text-sm font-semibold text-white/80">{{ card.bandeira.toUpperCase() }}</div>
-              <div class="mt-2 text-lg font-bold text-white">{{ card.nome }}</div>
+              <div class="mt-2 text-lg font-bold text-white">{{ card.displayName }}</div>
             </div>
             <button
               class="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30"
@@ -200,11 +238,11 @@ const corProgresso = (card: CreditCard) => {
       </header>
 
       <div v-if="cardsList.length" class="grid gap-4 sm:grid-cols-2">
-        <div v-for="card in cardsList" :key="card.id" class="rounded-xl border border-slate-200 p-6">
+        <div v-for="card in cardsListDisplay" :key="card.id" class="rounded-xl border border-slate-200 p-6">
           <div class="flex items-start justify-between">
             <div>
               <div class="text-sm text-slate-600">{{ card.bandeira.toUpperCase() }}</div>
-              <div class="mt-2 text-lg font-semibold text-slate-900">{{ card.nome }}</div>
+              <div class="mt-2 text-lg font-semibold text-slate-900">{{ card.displayName }}</div>
             </div>
             <button
               class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100"

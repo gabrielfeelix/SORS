@@ -87,6 +87,9 @@ const creditCards = computed(() => {
         return {
             id: a.id,
             nome: a.name || a.nome,
+            bandeira: a.bandeira ?? a.card_brand ?? null,
+            fechamentoDia: Number(a.dia_fechamento ?? a.closing_day ?? 0) || null,
+            vencimentoDia: Number(a.dia_vencimento ?? a.due_day ?? 0) || null,
             cor: ((a as any).color || a.cor) ?? '#8B5CF6',
             limite,
             usado,
@@ -95,6 +98,44 @@ const creditCards = computed(() => {
             status,
         };
     });
+});
+
+const creditCardsDisplay = computed(() => {
+    const normalize = (value: string) => String(value ?? '').trim().toLowerCase();
+    const grouped = new Map<string, Array<(typeof creditCards.value)[number]>>();
+
+    for (const card of creditCards.value) {
+        const key = normalize(card.nome);
+        const items = grouped.get(key) ?? [];
+        items.push(card);
+        grouped.set(key, items);
+    }
+
+    const result: Array<(typeof creditCards.value)[number] & { displayName: string }> = [];
+    for (const group of grouped.values()) {
+        if (group.length === 1) {
+            result.push({ ...group[0]!, displayName: group[0]!.nome });
+            continue;
+        }
+
+        const sorted = [...group].sort((a, b) => String(a.id).localeCompare(String(b.id)));
+        const hasBrandDiff = new Set(sorted.map((c) => String(c.bandeira ?? '').toLowerCase())).size > 1;
+        const hasDueDiff = new Set(sorted.map((c) => c.vencimentoDia ?? null)).size > 1;
+        const hasClosingDiff = new Set(sorted.map((c) => c.fechamentoDia ?? null)).size > 1;
+
+        sorted.forEach((card, index) => {
+            const parts: string[] = [];
+            if (hasBrandDiff && card.bandeira) parts.push(String(card.bandeira).toUpperCase());
+            if (hasDueDiff && card.vencimentoDia) parts.push(`Venc. ${card.vencimentoDia}`);
+            if (hasClosingDiff && card.fechamentoDia) parts.push(`Fecha ${card.fechamentoDia}`);
+
+            const displayName = parts.length ? `${card.nome} • ${parts.join(' • ')}` : `${card.nome} (${index + 1})`;
+            result.push({ ...card, displayName });
+        });
+    }
+
+    const indexById = new Map(creditCards.value.map((c, idx) => [String(c.id), idx]));
+    return result.sort((a, b) => (indexById.get(String(a.id)) ?? 0) - (indexById.get(String(b.id)) ?? 0));
 });
 
 watch(
@@ -275,7 +316,7 @@ const handleCreateCreditCardFlowSave = () => {
                 :class="isMobile ? 'mt-4 space-y-3 pb-8' : 'mt-5 grid grid-cols-2 gap-4 pb-10 xl:grid-cols-3'"
             >
                 <Link
-                    v-for="card in creditCards"
+                    v-for="card in creditCardsDisplay"
                     :key="card.id"
                     :href="route('credit-cards.show', { account: card.id })"
                     class="block overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60"
@@ -296,9 +337,9 @@ const handleCreateCreditCardFlowSave = () => {
 
                             <!-- Card Info -->
                             <div class="flex-1 min-w-0">
-                                <div class="text-base font-bold text-slate-900">{{ card.nome }}</div>
+                                <div class="text-base font-bold text-slate-900">{{ card.displayName }}</div>
                                 <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                                    {{ card.nome.toUpperCase() }}
+                                    {{ card.displayName.toUpperCase() }}
                                 </div>
                             </div>
 
