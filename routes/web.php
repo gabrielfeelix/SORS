@@ -91,20 +91,38 @@ Route::get('/settings/notifications', function () {
 
 Route::get('/settings/categories', function () {
     $user = request()->user();
-    $categories = \App\Models\Category::query()
+    $categoryModels = \App\Models\Category::query()
         ->whereNull('user_id')
         ->orWhere('user_id', $user->id)
         ->orderBy('is_default', 'desc')
         ->orderBy('name')
-        ->get()
-        ->map(fn ($category) => [
-            'id' => (string) $category->id,
-            'name' => $category->name,
-            'type' => $category->type,
-            'color' => $category->color,
-            'icon' => $category->icon,
-            'is_default' => (bool) $category->is_default,
-        ]);
+        ->get();
+
+    $normalize = static fn (string $name): string => mb_strtolower(trim($name));
+    $grouped = $categoryModels->groupBy(fn (\App\Models\Category $c) => $normalize($c->name) . '|' . $c->type);
+
+    $categories = $grouped
+        ->map(function ($items) use ($user) {
+            /** @var \Illuminate\Support\Collection<int, \App\Models\Category> $items */
+            $userCategory = $items->firstWhere('user_id', $user->id);
+            $defaultCategory = $items->firstWhere('user_id', null);
+            $chosen = $userCategory ?? $defaultCategory ?? $items->first();
+
+            $color = $chosen?->color ?: $defaultCategory?->color;
+            $icon = $chosen?->icon ?: $defaultCategory?->icon;
+
+            return [
+                'id' => (string) $chosen->id,
+                'name' => $chosen->name,
+                'type' => $chosen->type,
+                'color' => $color,
+                'icon' => $icon,
+                'is_default' => (bool) $chosen->is_default,
+            ];
+        })
+        ->values()
+        ->sortBy('name')
+        ->values();
 
     return Inertia::render('Settings/Categories', [
         'userCategories' => $categories,

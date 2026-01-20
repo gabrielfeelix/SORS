@@ -357,15 +357,6 @@ watch(
         <section class="mt-6 rounded-3xl bg-gradient-to-br from-[#14B8A6] to-[#0D9488] p-5 text-white shadow-lg shadow-teal-600/20">
             <div class="text-[11px] font-bold uppercase tracking-wide text-white/80">Patrimônio líquido</div>
             <div class="mt-2 text-3xl font-bold tracking-tight">{{ formatBRL(netWorth) }}</div>
-            <div class="mt-4 flex items-center justify-end">
-                <button
-                    type="button"
-                    class="inline-flex items-center gap-2 rounded-2xl bg-white/10 px-4 py-2 text-xs font-semibold ring-1 ring-white/15"
-                    @click="creditCardModalOpen = true"
-                >
-                    + Cartão
-                </button>
-            </div>
         </section>
 
 	        <section class="mt-8">

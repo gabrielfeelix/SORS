@@ -13,6 +13,47 @@ use Carbon\Carbon;
 
 class KitamoBootstrap
 {
+    private function normalizeCategoryName(string $name): string
+    {
+        return mb_strtolower(trim($name));
+    }
+
+    private function categoriesForUser(User $user): array
+    {
+        $categoryModels = Category::query()
+            ->whereNull('user_id')
+            ->orWhere('user_id', $user->id)
+            ->orderBy('is_default', 'desc')
+            ->orderBy('name')
+            ->get();
+
+        $grouped = $categoryModels->groupBy(
+            fn (Category $c) => $this->normalizeCategoryName($c->name) . '|' . $c->type
+        );
+
+        return $grouped
+            ->map(function ($items) use ($user) {
+                /** @var \Illuminate\Support\Collection<int, Category> $items */
+                $userCategory = $items->firstWhere('user_id', $user->id);
+                $defaultCategory = $items->firstWhere('user_id', null);
+                $chosen = $userCategory ?? $defaultCategory ?? $items->first();
+
+                $resolved = $this->category($chosen);
+                if (empty($resolved['color']) && !empty($defaultCategory?->color)) {
+                    $resolved['color'] = $defaultCategory->color;
+                }
+                if (empty($resolved['icon']) && !empty($defaultCategory?->icon)) {
+                    $resolved['icon'] = $defaultCategory->icon;
+                }
+
+                return $resolved;
+            })
+            ->values()
+            ->sortBy('name')
+            ->values()
+            ->all();
+    }
+
     public function forUser(User $user): array
     {
         $transactions = Transaction::with(['category', 'account'])
@@ -31,12 +72,7 @@ class KitamoBootstrap
             ->orderBy('name')
             ->get();
 
-        $categories = Category::query()
-            ->whereNull('user_id')
-            ->orWhere('user_id', $user->id)
-            ->orderBy('is_default', 'desc')
-            ->orderBy('name')
-            ->get();
+        $categories = $this->categoriesForUser($user);
 
         $tags = Tag::where('user_id', $user->id)
             ->orderBy('nome')
@@ -46,7 +82,7 @@ class KitamoBootstrap
             'entries' => $transactions->map(fn (Transaction $t) => $this->entry($t))->values(),
             'goals' => $goals->map(fn (Goal $g) => $this->goal($g))->values(),
             'accounts' => $accounts->map(fn (Account $a) => $this->account($a))->values(),
-            'categories' => $categories->map(fn (Category $c) => $this->category($c))->values(),
+            'categories' => $categories,
             'tags' => $tags->map(fn (Tag $t) => $this->tag($t))->values(),
         ];
     }
