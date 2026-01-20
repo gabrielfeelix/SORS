@@ -62,7 +62,8 @@ const loadAccountsForMonth = async (monthKey: string) => {
             const accountsResponse = await requestJson<{ accounts: any[] }>(`/api/contas-by-month?year=${year}&month=${month}`, {
                 method: 'GET',
             });
-            accountsDataByMonth.value.set(accountsKey, accountsResponse.accounts);
+            const accounts = (accountsResponse as any)?.accounts ?? (accountsResponse as any)?.contas ?? [];
+            accountsDataByMonth.value.set(accountsKey, Array.isArray(accounts) ? accounts : []);
         }
 
         // Load credit cards
@@ -70,7 +71,8 @@ const loadAccountsForMonth = async (monthKey: string) => {
             const cardsResponse = await requestJson<{ cartoes: any[] }>(`/api/cartoes-by-month?year=${year}&month=${month}`, {
                 method: 'GET',
             });
-            accountsDataByMonth.value.set(cardsKey, cardsResponse.cartoes);
+            const cards = (cardsResponse as any)?.cartoes ?? (cardsResponse as any)?.cards ?? [];
+            accountsDataByMonth.value.set(cardsKey, Array.isArray(cards) ? cards : []);
         }
     } catch {
         // Fallback to bootstrap data if API call fails
@@ -80,64 +82,70 @@ const loadAccountsForMonth = async (monthKey: string) => {
 
 const bankAccounts = computed(() => {
     const monthKey = selectedMonthKey.value;
-    const monthData = accountsDataByMonth.value.get(monthKey);
+    const hasMonthData = Boolean(monthKey) && accountsDataByMonth.value.has(monthKey);
+    const monthData = hasMonthData ? (accountsDataByMonth.value.get(monthKey) ?? []) : null;
 
-    if (monthData) {
-        return monthData.filter((a: any) => a.type !== 'credit_card').map((a: any) => ({
+    if (Array.isArray(monthData)) {
+        return monthData
+            .filter((a: any) => (a.type ?? a.tipo) !== 'credit_card')
+            .map((a: any) => {
+                const type = (a.type ?? a.tipo) as string | undefined;
+                return {
+                    id: a.id,
+                    name: a.name ?? a.nome,
+                    subtitle: a.subtitle ?? a.subtitulo ?? (type === 'wallet' ? 'Dinheiro físico' : type === 'bank' ? 'Corrente' : 'Conta'),
+                    balance: Number(a.current_balance ?? a.saldo_atual ?? a.saldo ?? 0),
+                    color: a.color ?? a.cor ?? '#14B8A6',
+                    icon: a.icon ?? a.icone ?? (type === 'wallet' ? 'wallet' : 'bank'),
+                };
+            });
+    }
+
+    if (!monthKey || accountsDataByMonth.value.has(monthKey)) return [];
+
+    return (bootstrap.value.accounts ?? [])
+        .filter((a) => a.type !== 'credit_card')
+        .map((a) => ({
             id: a.id,
             name: a.name,
-            subtitle: a.subtitle,
+            subtitle: a.type === 'wallet' ? 'Dinheiro físico' : a.type === 'bank' ? 'Corrente' : 'Conta',
             balance: Number(a.current_balance ?? 0),
-            color: a.color ?? '#14B8A6',
+            color: (a as any).color ?? '#14B8A6',
             icon: a.icon ?? (a.type === 'wallet' ? 'wallet' : 'bank'),
         }));
-    }
-
-    // Only use bootstrap if we have not attempted to load yet
-    if (!monthKey) {
-        return [];
-    }
-
-    return (bootstrap.value.accounts ?? []).filter((a) => a.type !== 'credit_card').map((a) => ({
-        id: a.id,
-        name: a.name,
-        subtitle: a.type === 'wallet' ? 'Dinheiro físico' : a.type === 'bank' ? 'Corrente' : 'Conta',
-        balance: Number(a.current_balance ?? 0),
-        color: (a as any).color ?? '#14B8A6',
-        icon: a.icon ?? (a.type === 'wallet' ? 'wallet' : 'bank'),
-    }));
 });
 
 const creditCards = computed(() => {
     const monthKey = selectedMonthKey.value;
-    const monthData = accountsDataByMonth.value.get(`cards-${monthKey}`);
+    const cardsKey = `cards-${monthKey}`;
+    const hasMonthData = Boolean(monthKey) && accountsDataByMonth.value.has(cardsKey);
+    const monthData = hasMonthData ? (accountsDataByMonth.value.get(cardsKey) ?? []) : null;
 
-    if (monthData) {
+    if (Array.isArray(monthData)) {
         return monthData.map((c: any) => ({
             id: c.id,
-            name: c.nome,
-            balance: Math.max(0, Number(c.limite_usado ?? 0)),
-            limit: Number(c.limite ?? 0),
-            color: c.cor ?? '#8B5CF6',
-            brand: c.bandeira ?? 'visa',
-            closingDay: Number(c.dia_fechamento ?? 0) || null,
+            name: c.name ?? c.nome,
+            balance: Math.max(0, Number(c.limite_usado ?? c.current_balance ?? 0)),
+            limit: Number(c.limite ?? c.credit_limit ?? 0),
+            color: c.cor ?? c.color ?? '#8B5CF6',
+            brand: c.bandeira ?? c.card_brand ?? 'visa',
+            closingDay: Number(c.dia_fechamento ?? c.closing_day ?? 0) || null,
         }));
     }
 
-    // Only use bootstrap if we have not attempted to load yet
-    if (!monthKey) {
-        return [];
-    }
+    if (!monthKey || accountsDataByMonth.value.has(cardsKey)) return [];
 
-    return (bootstrap.value.accounts ?? []).filter((a) => a.type === 'credit_card').map((a) => ({
-        id: a.id,
-        name: a.name,
-        balance: Math.max(0, Number(a.current_balance ?? 0)),
-        limit: Number(a.credit_limit ?? 0),
-        color: (a as any).color ?? '#8B5CF6',
-        brand: String((a as any).card_brand ?? 'visa'),
-        closingDay: Number(a.closing_day ?? 0) || null,
-    }));
+    return (bootstrap.value.accounts ?? [])
+        .filter((a) => a.type === 'credit_card')
+        .map((a) => ({
+            id: a.id,
+            name: a.name,
+            balance: Math.max(0, Number(a.current_balance ?? 0)),
+            limit: Number(a.credit_limit ?? 0),
+            color: (a as any).color ?? '#8B5CF6',
+            brand: String((a as any).card_brand ?? 'visa'),
+            closingDay: Number(a.closing_day ?? 0) || null,
+        }));
 });
 
 const totalBankBalance = computed(() => bankAccounts.value.reduce((sum, a) => sum + a.balance, 0));
