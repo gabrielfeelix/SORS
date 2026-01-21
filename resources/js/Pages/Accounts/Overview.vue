@@ -181,12 +181,8 @@ const creditCardsDisplay = computed(() => {
         const hasClosingDiff = new Set(sorted.map((c) => c.closingDay ?? null)).size > 1;
 
         sorted.forEach((card, index) => {
-            const parts: string[] = [];
-            if (hasBrandDiff && card.brand) parts.push(String(card.brand).toUpperCase());
-            if (hasDueDiff && card.dueDay) parts.push(`Venc. ${card.dueDay}`);
-            if (hasClosingDiff && card.closingDay) parts.push(`Fecha ${card.closingDay}`);
-
-            const displayName = parts.length ? `${card.name} • ${parts.join(' • ')}` : `${card.name} (${index + 1})`;
+            const canDisambiguate = hasBrandDiff || hasDueDiff || hasClosingDiff;
+            const displayName = canDisambiguate ? card.name : `${card.name} (${index + 1})`;
             result.push({ ...card, displayName });
         });
     }
@@ -462,7 +458,28 @@ watch(
                         </span>
                         <div>
                             <div class="text-sm font-semibold text-slate-900">{{ card.displayName }}</div>
-                            <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{{ closingLabel(card.closingDay) }}</div>
+                            <div class="mt-1 flex flex-wrap items-center gap-1 text-[11px] font-semibold text-slate-500">
+                                <span
+                                    v-if="card.brand"
+                                    class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 uppercase tracking-wide text-slate-500"
+                                >
+                                    {{ String(card.brand) }}
+                                </span>
+                                <span
+                                    v-if="card.closingDay"
+                                    class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-slate-500"
+                                    :title="`Fechamento dia ${card.closingDay}`"
+                                >
+                                    F {{ card.closingDay }}
+                                </span>
+                                <span
+                                    v-if="card.dueDay"
+                                    class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-slate-500"
+                                    :title="`Vencimento dia ${card.dueDay}`"
+                                >
+                                    V {{ card.dueDay }}
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <div class="text-right">

@@ -933,17 +933,25 @@ watch(
 	                        </div>
                     </div>
 
-                    <button
-                        type="button"
-                        class="flex w-full items-center justify-between rounded-2xl bg-white px-4 py-4 text-left text-sm font-bold tracking-wide ring-1 ring-slate-200/60"
-                        :class="localKind === 'transfer' ? 'text-blue-600' : 'text-emerald-600'"
-                        @click="showAdvanced = !showAdvanced"
-                    >
-                        <span>OPÇÕES AVANÇADAS</span>
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <path d="M6 9l6 6 6-6" />
-                        </svg>
-                    </button>
+	                    <button
+	                        type="button"
+	                        class="flex w-full items-center justify-between rounded-2xl bg-white px-4 py-4 text-left text-sm font-bold tracking-wide ring-1 ring-slate-200/60"
+	                        :class="localKind === 'transfer' ? 'text-blue-600' : 'text-emerald-600'"
+	                        @click="showAdvanced = !showAdvanced"
+	                    >
+	                        <span>OPÇÕES AVANÇADAS</span>
+	                        <svg
+	                            class="h-5 w-5 transition-transform"
+	                            :class="showAdvanced ? 'rotate-180' : ''"
+	                            viewBox="0 0 24 24"
+	                            fill="none"
+	                            stroke="currentColor"
+	                            stroke-width="2"
+	                            aria-hidden="true"
+	                        >
+	                            <path d="M6 9l6 6 6-6" />
+	                        </svg>
+	                    </button>
 
                     <div v-if="showAdvanced" class="space-y-4 pb-4">
                         <div v-if="!isTransfer" class="rounded-2xl bg-white p-4 ring-1 ring-slate-200/60">
@@ -1277,59 +1285,62 @@ watch(
                     </div>
                 </div>
 
-	                <div v-if="isTransfer" class="mt-6 space-y-4 px-5 pb-6 md:px-8">
-	                    <div class="grid grid-cols-[1fr_auto_1fr] items-start gap-3">
-	                        <div>
-	                            <div class="mb-2 text-sm font-bold text-[#374151]">De (Origem)</div>
-	                            <button
-	                                type="button"
-	                                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left shadow-sm"
-	                                @click="openTransferFromSheet"
-	                            >
-	                                <div class="flex items-start gap-3">
-	                                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
-	                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                            <path d="M3 10h18" />
-	                                            <path d="M5 10V8l7-5 7 5v2" />
-	                                            <path d="M6 10v9" />
-	                                            <path d="M18 10v9" />
-	                                        </svg>
-	                                    </span>
-	                                    <div class="min-w-0">
-	                                        <div class="truncate text-sm font-semibold text-slate-900">{{ transferFrom }}</div>
-	                                        <div class="mt-1 text-xs font-semibold text-slate-400">{{ transferFromBalanceLabel || 'Saldo: -' }}</div>
-	                                    </div>
-	                                </div>
-	                            </button>
-	                        </div>
-                        <div class="pt-9 text-slate-300">
-                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 18l6-6-6-6" />
-                            </svg>
-                        </div>
-	                        <div>
-	                            <div class="mb-2 text-sm font-bold text-[#374151]">Para (Destino)</div>
-	                            <button
-	                                type="button"
-	                                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left shadow-sm"
-	                                @click="openTransferToSheet"
-	                            >
-	                                <div class="flex items-start gap-3">
-	                                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
-	                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                            <path d="M4 7h16v12H4z" />
-	                                            <path d="M4 7V5h12v2" />
-	                                            <path d="M16 12h4" />
-	                                        </svg>
-	                                    </span>
-	                                    <div class="min-w-0">
-	                                        <div class="truncate text-sm font-semibold text-slate-900">{{ transferTo }}</div>
-	                                        <div class="mt-1 text-xs font-semibold text-slate-400">{{ transferToBalanceLabel || 'Saldo: -' }}</div>
-	                                    </div>
-	                                </div>
-	                            </button>
-	                        </div>
-	                    </div>
+		                <div v-if="isTransfer" class="mt-6 space-y-4 px-5 pb-6 md:px-8">
+		                    <div class="space-y-3">
+		                        <div>
+		                            <div class="mb-2 text-sm font-bold text-[#374151]">De (Origem)</div>
+		                            <button
+		                                type="button"
+		                                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left shadow-sm"
+		                                @click="openTransferFromSheet"
+		                            >
+		                                <div class="flex items-start gap-3">
+		                                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
+		                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+		                                            <path d="M3 10h18" />
+		                                            <path d="M5 10V8l7-5 7 5v2" />
+		                                            <path d="M6 10v9" />
+		                                            <path d="M18 10v9" />
+		                                        </svg>
+		                                    </span>
+		                                    <div class="min-w-0">
+		                                        <div class="truncate text-sm font-semibold text-slate-900">{{ transferFrom }}</div>
+		                                        <div class="mt-1 text-xs font-semibold text-slate-400">{{ transferFromBalanceLabel || 'Saldo: -' }}</div>
+		                                    </div>
+		                                </div>
+		                            </button>
+		                        </div>
+
+		                        <div class="flex items-center justify-center py-1 text-slate-300">
+		                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+		                                <path d="M12 5v14" />
+		                                <path d="M5 12l7 7 7-7" />
+		                            </svg>
+		                        </div>
+
+		                        <div>
+		                            <div class="mb-2 text-sm font-bold text-[#374151]">Para (Destino)</div>
+		                            <button
+		                                type="button"
+		                                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left shadow-sm"
+		                                @click="openTransferToSheet"
+		                            >
+		                                <div class="flex items-start gap-3">
+		                                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+		                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+		                                            <path d="M4 7h16v12H4z" />
+		                                            <path d="M4 7V5h12v2" />
+		                                            <path d="M16 12h4" />
+		                                        </svg>
+		                                    </span>
+		                                    <div class="min-w-0">
+		                                        <div class="truncate text-sm font-semibold text-slate-900">{{ transferTo }}</div>
+		                                        <div class="mt-1 text-xs font-semibold text-slate-400">{{ transferToBalanceLabel || 'Saldo: -' }}</div>
+		                                    </div>
+		                                </div>
+		                            </button>
+		                        </div>
+		                    </div>
 
                     <div>
                         <div class="mb-2 text-sm font-bold text-[#374151]">Descrição (opcional)</div>

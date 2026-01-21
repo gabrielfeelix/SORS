@@ -124,12 +124,8 @@ const creditCardsDisplay = computed(() => {
         const hasClosingDiff = new Set(sorted.map((c) => c.fechamentoDia ?? null)).size > 1;
 
         sorted.forEach((card, index) => {
-            const parts: string[] = [];
-            if (hasBrandDiff && card.bandeira) parts.push(String(card.bandeira).toUpperCase());
-            if (hasDueDiff && card.vencimentoDia) parts.push(`Venc. ${card.vencimentoDia}`);
-            if (hasClosingDiff && card.fechamentoDia) parts.push(`Fecha ${card.fechamentoDia}`);
-
-            const displayName = parts.length ? `${card.nome} • ${parts.join(' • ')}` : `${card.nome} (${index + 1})`;
+            const canDisambiguate = hasBrandDiff || hasDueDiff || hasClosingDiff;
+            const displayName = canDisambiguate ? card.nome : `${card.nome} (${index + 1})`;
             result.push({ ...card, displayName });
         });
     }
@@ -338,8 +334,27 @@ const handleCreateCreditCardFlowSave = () => {
                             <!-- Card Info -->
                             <div class="flex-1 min-w-0">
                                 <div class="text-base font-bold text-slate-900">{{ card.displayName }}</div>
-                                <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                                    {{ card.displayName.toUpperCase() }}
+                                <div class="mt-1 flex flex-wrap items-center gap-1 text-[11px] font-semibold text-slate-500">
+                                    <span
+                                        v-if="card.bandeira"
+                                        class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 uppercase tracking-wide text-slate-500"
+                                    >
+                                        {{ String(card.bandeira) }}
+                                    </span>
+                                    <span
+                                        v-if="card.fechamentoDia"
+                                        class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-slate-500"
+                                        :title="`Fechamento dia ${card.fechamentoDia}`"
+                                    >
+                                        F {{ card.fechamentoDia }}
+                                    </span>
+                                    <span
+                                        v-if="card.vencimentoDia"
+                                        class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-slate-500"
+                                        :title="`Vencimento dia ${card.vencimentoDia}`"
+                                    >
+                                        V {{ card.vencimentoDia }}
+                                    </span>
                                 </div>
                             </div>
 

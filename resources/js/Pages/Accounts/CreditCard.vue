@@ -171,8 +171,21 @@ const formatMoney = (value: number) =>
 	                    </div>
 	                </div>
 
-	                <div v-if="closingDay && dueDay" class="mt-4 text-xs font-semibold text-slate-500">
-	                    📅 Fecha dia {{ closingDay }} <span class="text-slate-300">|</span> Vence dia {{ dueDay }}
+	                <div v-if="closingDay || dueDay" class="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
+                        <span
+                            v-if="closingDay"
+                            class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-slate-600"
+                            :title="`Fechamento dia ${closingDay}`"
+                        >
+                            F {{ closingDay }}
+                        </span>
+                        <span
+                            v-if="dueDay"
+                            class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-slate-600"
+                            :title="`Vencimento dia ${dueDay}`"
+                        >
+                            V {{ dueDay }}
+                        </span>
 	                </div>
 
                 <button class="mt-5 w-full rounded-2xl bg-slate-900 py-3 text-sm font-semibold text-white disabled:opacity-60" type="button" :disabled="!currentBalance">Pagar fatura</button>

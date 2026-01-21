@@ -129,12 +129,8 @@ const cardsListDisplay = computed(() => {
     const hasClosingDiff = new Set(sorted.map((c) => c.dia_fechamento ?? null)).size > 1;
 
     sorted.forEach((card, index) => {
-      const parts: string[] = [];
-      if (hasBrandDiff && card.bandeira) parts.push(String(card.bandeira).toUpperCase());
-      if (hasDueDiff && card.dia_vencimento) parts.push(`Venc. ${card.dia_vencimento}`);
-      if (hasClosingDiff && card.dia_fechamento) parts.push(`Fecha ${card.dia_fechamento}`);
-
-      const displayName = parts.length ? `${card.nome} • ${parts.join(' • ')}` : `${card.nome} (${index + 1})`;
+      const canDisambiguate = hasBrandDiff || hasDueDiff || hasClosingDiff;
+      const displayName = canDisambiguate ? card.nome : `${card.nome} (${index + 1})`;
       result.push({ ...card, displayName });
     });
   }
@@ -205,9 +201,20 @@ const cardsListDisplay = computed(() => {
           </div>
 
           <div class="mt-4 flex gap-2 text-xs text-slate-500">
-            <span>Fecha: {{ card.dia_fechamento }}</span>
-            <span>•</span>
-            <span>Vence: {{ card.dia_vencimento }}</span>
+            <span
+              v-if="card.dia_fechamento"
+              class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 font-semibold text-slate-600"
+              :title="`Fechamento dia ${card.dia_fechamento}`"
+            >
+              F {{ card.dia_fechamento }}
+            </span>
+            <span
+              v-if="card.dia_vencimento"
+              class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 font-semibold text-slate-600"
+              :title="`Vencimento dia ${card.dia_vencimento}`"
+            >
+              V {{ card.dia_vencimento }}
+            </span>
           </div>
         </div>
       </div>
