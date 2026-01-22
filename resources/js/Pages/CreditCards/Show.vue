@@ -297,6 +297,7 @@ const editInitial = computed<CreditCardModalPayload | null>(() => {
         dia_fechamento: Number(account.value.closing_day ?? 10),
         dia_vencimento: Number(account.value.due_day ?? 17),
         cor: cardColor.value,
+        institution: account.value.institution ?? null,
     };
 });
 

@@ -11,6 +11,7 @@ export type CreditCardModalPayload = {
   dia_fechamento: number;
   dia_vencimento: number;
   cor: string;
+  institution?: string | null;
 };
 
 const props = defineProps<{
@@ -33,6 +34,20 @@ const limite = ref('');
 const dia_fechamento = ref<number | null>(null);
 const dia_vencimento = ref<number | null>(null);
 const cor = ref('#8B5CF6');
+const institution = ref<string | null>(null);
+
+// Institutions
+const institutions = [
+  { nome: 'Nubank', svgFile: 'nubank-logo-svg.png' },
+  { nome: 'Banco Inter', svgFile: 'Banco Inter S.A/inter.svg' },
+  { nome: 'Itaú', svgFile: null },
+  { nome: 'Bradesco', svgFile: 'Bradesco S.A/bradesco com nome.svg' },
+  { nome: 'Banco do Brasil', svgFile: 'Banco do Brasil S.A/banco-do-brasil-com-fundo.svg' },
+  { nome: 'Caixa', svgFile: 'Caixa Econômica Federal/caixa-economica-federal-1.svg' },
+  { nome: 'Santander', svgFile: 'Banco Santander Brasil S.A/banco-santander-logo.svg' },
+  { nome: 'C6 Bank', svgFile: 'C6 Bank/c6-bank-logo-oficial-vector.png' },
+  { nome: 'Outro', svgFile: null },
+];
 
 // Bandeiras
 const bandeiras = [
@@ -66,6 +81,7 @@ const reset = () => {
   dia_fechamento.value = draft?.dia_fechamento ?? null;
   dia_vencimento.value = draft?.dia_vencimento ?? null;
   cor.value = draft?.cor ?? '#8B5CF6';
+  institution.value = draft?.institution ?? null;
 };
 
 const isFormValid = computed(() => {
@@ -93,6 +109,7 @@ const save = () => {
     dia_fechamento: dia_fechamento.value as number,
     dia_vencimento: dia_vencimento.value as number,
     cor: cor.value,
+    institution: institution.value,
   });
 };
 
@@ -130,6 +147,27 @@ watch(
         </header>
 
         <div class="flex-1 overflow-y-auto px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+          <!-- Instituição -->
+          <div class="mt-6">
+            <div class="mb-2 text-sm font-bold text-[#374151]">Instituição financeira</div>
+            <div class="relative">
+              <select
+                v-model="institution"
+                class="h-11 w-full appearance-none rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 pr-9 text-base text-[#374151] focus:border-[#14B8A6] focus:outline-none focus:ring-0"
+              >
+                <option :value="null">Selecione o banco</option>
+                <option v-for="inst in institutions" :key="inst.nome" :value="inst.nome">
+                  {{ inst.nome }}
+                </option>
+              </select>
+              <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </span>
+            </div>
+          </div>
+
           <!-- Nome do Cartão -->
           <div class="mt-6">
             <div class="mb-2 text-sm font-bold text-[#374151]">Nome do cartão</div>

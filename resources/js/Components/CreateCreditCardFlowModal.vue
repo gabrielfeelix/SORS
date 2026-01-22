@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import CreateCreditCardStep1 from './CreateCreditCardStep1.vue';
-import CreateCreditCardStep2 from './CreateCreditCardStep2.vue';
+import CreateAccountStep2 from './CreateAccountStep2.vue';
 import CreateCreditCardStep3 from './CreateCreditCardStep3.vue';
 
 export type BancoSelecionado = {
@@ -46,12 +46,12 @@ const openStep3 = computed(() => props.open && step.value === 3);
 
 <template>
   <CreateCreditCardStep1 :open="openStep1" @close="close" @select="handleSelectBank" />
-  <CreateCreditCardStep2
+  <CreateAccountStep2
     :open="openStep2"
     :banco="banco"
     @close="close"
     @back="step = 1"
-    @select-method="handleSelectMethod"
+    @selectMethod="handleSelectMethod"
   />
   <CreateCreditCardStep3
     :open="openStep3"
