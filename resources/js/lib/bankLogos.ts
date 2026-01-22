@@ -1,6 +1,7 @@
 // Mapping of bank names to SVG file paths
 const bankLogoMap: Record<string, { svgFile: string | null; color: string }> = {
-  'Nubank': { svgFile: 'Nubank/nubank-logo.svg', color: '#8B10AE' },
+  'Nubank': { svgFile: 'Nu Pagamentos S.A/nubank-branco.svg', color: '#8B10AE' },
+  'Nu Pagamentos S.A': { svgFile: 'Nu Pagamentos S.A/nubank-branco.svg', color: '#8B10AE' },
   'Banco Inter S.A': { svgFile: 'Banco Inter S.A/inter.svg', color: '#FF7A00' },
   'Banco Inter': { svgFile: 'Banco Inter S.A/inter.svg', color: '#FF7A00' },
   'Inter': { svgFile: 'Banco Inter S.A/inter.svg', color: '#FF7A00' },

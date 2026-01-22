@@ -21,7 +21,7 @@ const emit = defineEmits<{
 const search = ref('');
 
 const bancos = [
-  { nome: 'Nubank', logo: '🟣', cor: '#8B10AE', svgFile: 'Nubank/nubank-logo.svg' },
+  { nome: 'Nubank', logo: '🟣', cor: '#8B10AE', svgFile: 'Nu Pagamentos S.A/nubank-branco.svg' },
   { nome: 'Banco Inter', logo: '🟢', cor: '#FF7A00', svgFile: 'Banco Inter S.A/inter.svg' },
   { nome: 'Itaú', logo: '🟠', cor: '#EC7000', svgFile: null },
   { nome: 'Bradesco', logo: '🔴', cor: '#CC092F', svgFile: 'Bradesco S.A/bradesco com nome.svg' },
