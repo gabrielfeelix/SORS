@@ -485,18 +485,58 @@ watch(
             <MonthNavigator v-model="selectedMonthKey" :months="monthItems" />
         </div>
 
-        <div class="mt-6 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200/60" :class="isLoading ? 'opacity-70' : ''">
-            <div class="grid grid-cols-2 divide-x divide-slate-100">
-                <div class="px-4 py-4 text-center">
-                    <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ saldoTitle }}</div>
-                    <div class="mt-2 text-lg font-semibold" :class="totalBankBalance >= 0 ? 'text-emerald-600' : 'text-red-500'">
-                        {{ formatBRL(totalBankBalance) }}
+        <!-- Saldo Consolidado Card (estilo Meus Cartões) -->
+        <div class="mt-6" :class="isMobile ? 'px-6' : ''">
+            <div class="rounded-3xl bg-[#1E293B] p-6 shadow-xl">
+                <div class="flex items-start justify-between">
+                    <div class="text-[10px] font-semibold uppercase tracking-wider text-[#64748B]">
+                        Saldo consolidado
+                    </div>
+                    <div class="flex h-6 w-6 items-center justify-center">
+                        <svg class="h-4 w-4 text-white/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <line x1="3" y1="12" x2="21" y2="12" />
+                            <line x1="3" y1="18" x2="21" y2="18" />
+                        </svg>
                     </div>
                 </div>
-                <div class="px-4 py-4 text-center">
-                    <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Balanço mensal</div>
-                    <div class="mt-2 text-lg font-semibold" :class="balancoMensal >= 0 ? 'text-emerald-600' : 'text-red-500'">
-                        {{ balancoMensal >= 0 ? '+' : '-' }} {{ formatBRL(Math.abs(balancoMensal)) }}
+
+                <div v-if="isLoading" class="mt-3 h-10 w-48 animate-pulse rounded-lg bg-white/10"></div>
+                <div v-else class="mt-3 text-[32px] font-bold leading-none text-white">
+                    {{ formatBRL(totalBankBalance) }}
+                </div>
+
+                <div v-if="isLoading" class="mt-6 grid grid-cols-2 gap-6">
+                    <div>
+                        <div class="text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">
+                            {{ saldoTitle }}
+                        </div>
+                        <div class="mt-1 h-7 w-32 animate-pulse rounded bg-white/10"></div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">
+                            Balanço mensal
+                        </div>
+                        <div class="mt-1 h-7 w-32 animate-pulse rounded bg-white/10"></div>
+                    </div>
+                </div>
+
+                <div v-else class="mt-6 grid grid-cols-2 gap-6">
+                    <div>
+                        <div class="text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">
+                            {{ saldoTitle }}
+                        </div>
+                        <div class="mt-1 text-xl font-bold text-white">
+                            {{ formatBRL(totalBankBalance) }}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">
+                            Balanço mensal
+                        </div>
+                        <div class="mt-1 text-xl font-bold" :class="balancoMensal >= 0 ? 'text-[#14B8A6]' : 'text-[#EF4444]'">
+                            {{ balancoMensal >= 0 ? '+' : '-' }} {{ formatBRL(Math.abs(balancoMensal)) }}
+                        </div>
                     </div>
                 </div>
             </div>

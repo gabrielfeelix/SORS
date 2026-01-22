@@ -298,6 +298,7 @@ class AccountController extends Controller
                 ->where('user_id', $user->id)
                 ->whereIn('account_id', $accountIds)
                 ->where('kind', 'income')
+                ->where('status', 'received')
                 ->whereBetween('transaction_date', [$startDate, $endDate])
                 ->sum('amount');
 
@@ -305,6 +306,7 @@ class AccountController extends Controller
                 ->where('user_id', $user->id)
                 ->whereIn('account_id', $accountIds)
                 ->where('kind', 'expense')
+                ->where('status', 'paid')
                 ->whereBetween('transaction_date', [$startDate, $endDate])
                 ->sum('amount');
 
