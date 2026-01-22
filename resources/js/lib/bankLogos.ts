@@ -33,6 +33,47 @@ const bankLogoMap: Record<string, { svgFile: string | null; color: string }> = {
   'Banco do Nordeste do Brasil S.A': { svgFile: 'Banco do Nordeste do Brasil S.A/Logo_BNB.svg', color: '#E71930' },
 };
 
+const normalizeText = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
+const resolveBankKey = (bankName: string | null | undefined): string | null => {
+  if (!bankName) return null;
+  if (bankLogoMap[bankName]) return bankName;
+
+  const text = normalizeText(String(bankName));
+  if (!text) return null;
+
+  // Common fuzzy matches for labels/nicknames
+  const matchers: Array<{ token: string; key: string }> = [
+    { token: 'nubank', key: 'Nubank' },
+    { token: 'nu pagamentos', key: 'Nubank' },
+    { token: 'inter', key: 'Banco Inter' },
+    { token: 'itau', key: 'Itaú' },
+    { token: 'bradesco', key: 'Bradesco' },
+    { token: 'banco do brasil', key: 'Banco do Brasil' },
+    { token: 'caixa', key: 'Caixa' },
+    { token: 'santander', key: 'Santander' },
+    { token: 'c6', key: 'C6 Bank' },
+    { token: 'picpay', key: 'PicPay' },
+    { token: 'neon', key: 'Neon' },
+  ];
+
+  for (const { token, key } of matchers) {
+    if (text.includes(token) && bankLogoMap[key]) return key;
+  }
+
+  // Last resort: try exact normalized key match
+  for (const key of Object.keys(bankLogoMap)) {
+    if (normalizeText(key) === text) return key;
+  }
+
+  return null;
+};
+
 export const bankInstitutions = [
   { nome: 'Nubank', svgFile: bankLogoMap['Nubank']?.svgFile ?? null, color: bankLogoMap['Nubank']?.color ?? '#64748B' },
   { nome: 'Banco Inter', svgFile: bankLogoMap['Banco Inter']?.svgFile ?? null, color: bankLogoMap['Banco Inter']?.color ?? '#64748B' },
@@ -48,18 +89,21 @@ export const bankInstitutions = [
 ] as const;
 
 export const getBankLogo = (bankName: string | null | undefined): { svgFile: string | null; color: string } | null => {
-  if (!bankName) return null;
-  return bankLogoMap[bankName] || null;
+  const key = resolveBankKey(bankName);
+  if (!key) return null;
+  return bankLogoMap[key] || null;
 };
 
 export const getBankSvgPath = (bankName: string | null | undefined): string | null => {
-  if (!bankName) return null;
-  const logo = bankLogoMap[bankName];
+  const key = resolveBankKey(bankName);
+  if (!key) return null;
+  const logo = bankLogoMap[key];
   return logo?.svgFile || null;
 };
 
 export const getBankColor = (bankName: string | null | undefined): string | null => {
-  if (!bankName) return null;
-  const logo = bankLogoMap[bankName];
+  const key = resolveBankKey(bankName);
+  if (!key) return null;
+  const logo = bankLogoMap[key];
   return logo?.color || null;
 };

@@ -42,7 +42,11 @@ const limit = computed(() => Number(account.value?.credit_limit ?? 0));
 const closingDay = computed(() => Number(account.value?.closing_day ?? 0) || null);
 const dueDay = computed(() => Number(account.value?.due_day ?? 0) || null);
 const institution = computed(() => (account.value as any)?.institution ?? null);
-const svgPath = computed(() => ((account.value as any)?.svgPath ?? (institution.value ? getBankSvgPath(institution.value) : null)) as string | null);
+const svgPath = computed(
+    () =>
+        (((account.value as any)?.svgPath ??
+            getBankSvgPath(institution.value ?? accountName.value ?? null)) as string | null),
+);
 
 const months = computed(() => {
     const now = new Date();

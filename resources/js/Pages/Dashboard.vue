@@ -304,6 +304,7 @@ const creditCards = computed(() =>
         .map((account) => {
             const institution = account.institution ?? null;
             const svgPath = (account as any).svgPath ?? null;
+            const logoName = institution ?? account.name ?? null;
             return {
                 id: account.id,
                 label: account.name,
@@ -314,7 +315,7 @@ const creditCards = computed(() =>
                 closingDay: Number(account.closing_day ?? 0) || null,
                 dueDay: Number(account.due_day ?? 0) || null,
                 institution,
-                svgPath: svgPath ?? (institution ? getBankSvgPath(institution) : null),
+                svgPath: svgPath ?? (logoName ? getBankSvgPath(logoName) : null),
                 is_primary: Boolean((account as any).is_primary ?? false),
             };
         }),

@@ -109,7 +109,7 @@ const creditCards = computed(() => {
         if (usado >= limite) status = 'ATRASADA';
         else if (usado > 0) status = 'ABERTA';
 
-        const banco = a.banco ?? a.institution ?? null;
+        const banco = a.banco ?? a.institution ?? a.name ?? a.nome ?? null;
         return {
             id: a.id,
             nome: a.name || a.nome,
