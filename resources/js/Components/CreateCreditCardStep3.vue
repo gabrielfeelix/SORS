@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { formatMoneyInputCentsShift, moneyInputToNumber, numberToMoneyInput } from '@/lib/moneyInput';
 import { preventNonDigitKeydown } from '@/lib/inputGuards';
 import { requestJson } from '@/lib/kitamoApi';
+import { getBankColor } from '@/lib/bankLogos';
 import type { BancoSelecionado } from './CreateCreditCardStep1.vue';
 import type { CreditCardModalPayload } from './CreditCardModal.vue';
 
@@ -23,7 +24,10 @@ const bandeira = ref<'visa' | 'mastercard' | 'elo' | 'amex'>('visa');
 const limite = ref('');
 const dia_fechamento = ref<number | null>(null);
 const dia_vencimento = ref<number | null>(null);
-const cor = ref('#8B5CF6');
+const cor = computed(() => {
+  // Get color from bank logo, or default if no bank selected or no color
+  return (props.banco ? getBankColor(props.banco.nome) : null) ?? '#8B5CF6';
+});
 const is_primary = ref(false);
 
 // Bandeiras
@@ -34,8 +38,6 @@ const bandeiras = [
   { id: 'amex', nome: 'Amex', logo: '💳' },
 ];
 
-// Cores
-const cores = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#1F2937'];
 const dias = Array.from({ length: 31 }, (_, idx) => idx + 1);
 
 const onLimiteInput = (event: Event) => {
@@ -67,7 +69,6 @@ const reset = () => {
   limite.value = '';
   dia_fechamento.value = null;
   dia_vencimento.value = null;
-  cor.value = props.banco?.cor ?? '#8B5CF6';
   is_primary.value = false;
 };
 
@@ -244,23 +245,6 @@ watch(
                   </span>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <!-- Cores -->
-          <div class="mt-6">
-            <div class="mb-3 text-sm font-bold text-[#374151]">Cor do cartão</div>
-            <div class="flex gap-2">
-              <button
-                v-for="c in cores"
-                :key="c"
-                type="button"
-                class="h-10 w-10 rounded-lg border-2 transition"
-                :style="{ backgroundColor: c }"
-                :class="cor === c ? 'border-gray-800' : 'border-transparent'"
-                @click="cor = c"
-                :aria-label="`Cor ${c}`"
-              ></button>
             </div>
           </div>
 

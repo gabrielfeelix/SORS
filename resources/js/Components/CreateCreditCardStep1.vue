@@ -75,24 +75,40 @@ const selectBanco = (banco: typeof bancos[0]) => {
           </div>
 
           <!-- Banks Grid -->
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-3 gap-3">
             <button
               v-for="banco in bancosFiltrados"
               :key="banco.nome"
               type="button"
-              class="relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-6 text-center transition hover:bg-slate-50 hover:border-slate-300"
+              class="flex flex-col items-center gap-2 rounded-2xl border-2 border-slate-200 bg-white p-3 transition hover:border-slate-400 hover:bg-slate-50"
+              :style="{ borderColor: banco.svgFile ? banco.cor : undefined }"
               @click="selectBanco(banco)"
             >
-              <div v-if="banco.svgFile" class="flex h-12 w-12 items-center justify-center">
+              <!-- Logo Card -->
+              <div
+                class="flex h-16 w-16 items-center justify-center rounded-xl"
+                :style="{ backgroundColor: banco.svgFile ? `${banco.cor}15` : `${banco.cor}22` }"
+              >
                 <img
+                  v-if="banco.svgFile"
                   :src="`/Bancos-em-SVG-main/${banco.svgFile}`"
                   :alt="banco.nome"
-                  class="h-10 w-10 object-contain"
+                  class="h-12 w-12 object-contain"
                   @error="($event.target as HTMLImageElement).style.display = 'none'"
                 />
+                <span
+                  v-else
+                  class="text-2xl"
+                  aria-hidden="true"
+                >
+                  {{ banco.logo }}
+                </span>
               </div>
-              <div v-else class="text-4xl">{{ banco.logo }}</div>
-              <div class="text-sm font-semibold text-slate-900">{{ banco.nome }}</div>
+
+              <!-- Bank Name -->
+              <div class="text-center text-xs font-semibold text-slate-900 line-clamp-2">
+                {{ banco.nome }}
+              </div>
             </button>
           </div>
         </div>

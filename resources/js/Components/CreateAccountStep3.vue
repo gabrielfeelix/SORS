@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import type { BancoSelecionado } from './CreateAccountStep1.vue';
 import { formatMoneyInputCentsShift, moneyInputToNumber } from '@/lib/moneyInput';
 import { preventNonDigitKeydown } from '@/lib/inputGuards';
+import { getBankColor } from '@/lib/bankLogos';
 
 export type AccountPayload = {
   banco_nome: string;
@@ -29,7 +30,10 @@ const emit = defineEmits<{
 const saldo = ref('');
 const descricao = ref('');
 const tipo = ref('corrente');
-const cor = ref('#14B8A6');
+const cor = computed(() => {
+  // Get color from bank logo, or default if no bank selected or no color
+  return (props.banco ? getBankColor(props.banco.nome) : null) ?? '#14B8A6';
+});
 const incluirSoma = ref(true);
 
 // Tipos de conta
@@ -40,9 +44,6 @@ const tipos = [
   { id: 'vr_va', nome: 'VR/VA', icone: '🎫' },
   { id: 'outros', nome: 'Outros', icone: '⋯' },
 ];
-
-// Cores
-const cores = ['#14B8A6', '#8B10AE', '#10B981', '#FF7A00'];
 
 const onSaldoInput = (event: Event) => {
   const target = event.target as HTMLInputElement;
@@ -67,7 +68,6 @@ const reset = () => {
   saldo.value = '';
   descricao.value = '';
   tipo.value = props.banco?.nome === 'Carteira' ? 'wallet' : 'corrente';
-  cor.value = '#14B8A6';
   incluirSoma.value = true;
 };
 
@@ -207,23 +207,6 @@ watch(
                   <path d="M6 9l6 6 6-6" />
                 </svg>
               </span>
-            </div>
-          </div>
-
-          <!-- Cor -->
-          <div class="mt-6">
-            <div class="mb-3 text-xs font-semibold uppercase text-slate-500">Cor da conta</div>
-            <div class="flex gap-2">
-              <button
-                v-for="c in cores"
-                :key="c"
-                type="button"
-                class="h-10 w-10 rounded-lg border-2 transition"
-                :style="{ backgroundColor: c }"
-                :class="cor === c ? 'border-gray-800' : 'border-transparent'"
-                @click="cor = c"
-                :aria-label="`Cor ${c}`"
-              ></button>
             </div>
           </div>
 
