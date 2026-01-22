@@ -11,6 +11,10 @@ import CreditCardModal, { type CreditCardModalPayload } from '@/Components/Credi
 import MobileToast from '@/Components/MobileToast.vue';
 import MonthNavigator from '@/Components/MonthNavigator.vue';
 import { requestJson } from '@/lib/kitamoApi';
+import TransactionModal, { type TransactionModalPayload } from '@/Components/TransactionModal.vue';
+import { executeTransfer } from '@/lib/transactions';
+import type { AccountOption } from '@/Components/AccountPickerSheet.vue';
+import type { CategoryOption } from '@/Components/CategoryPickerSheet.vue';
 
 const isMobile = useIsMobile();
 const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
@@ -22,11 +26,10 @@ const bootstrap = computed(
     () => (page.props.bootstrap ?? { entries: [], goals: [], accounts: [], categories: [], tags: [] }) as BootstrapData,
 );
 
-const activeMonth = ref(new Date());
 const monthItems = computed(() => {
-    const base = new Date(activeMonth.value.getFullYear(), activeMonth.value.getMonth(), 1);
+    const base = new Date();
     const items: Array<{ key: string; label: string; date: Date }> = [];
-    for (let i = -2; i <= 2; i += 1) {
+    for (let i = -120; i <= 120; i += 1) {
         const d = new Date(base.getFullYear(), base.getMonth() + i, 1);
         const label = new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(d).replace('.', '').toUpperCase();
         items.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label, date: d });
@@ -40,7 +43,8 @@ const isLoadingMonth = ref<Map<string, boolean>>(new Map());
 
 // Initialize selectedMonthKey after monthItems is computed
 onMounted(() => {
-    selectedMonthKey.value = monthItems.value[2]?.key ?? monthItems.value[0]?.key ?? '';
+    const key = `${new Date().getFullYear()}-${new Date().getMonth()}`;
+    selectedMonthKey.value = monthItems.value.find((m) => m.key === key)?.key ?? monthItems.value[0]?.key ?? '';
 });
 
 // Watch for month changes and load data
@@ -56,6 +60,64 @@ watch(
 
 const formatBRL = (value: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+
+const pickerCategories = computed<CategoryOption[]>(() => {
+    const unique = new Map<string, CategoryOption>();
+    for (const c of bootstrap.value.categories ?? []) {
+        const kind = c.type === 'income' ? 'income' : c.type === 'expense' ? 'expense' : undefined;
+        const current = unique.get(c.name);
+        const mergedKind = current?.kind && kind && current.kind !== kind ? undefined : (current?.kind ?? kind);
+        unique.set(c.name, { key: c.name, label: c.name, icon: 'other', tone: 'slate', kind: mergedKind });
+    }
+    return Array.from(unique.values());
+});
+
+const pickerAccounts = computed<AccountOption[]>(() => {
+    const tone = (name: string): AccountOption['tone'] => {
+        const n = name.toLowerCase();
+        if (n.includes('nubank')) return 'purple';
+        if (n.includes('inter')) return 'amber';
+        if (n.includes('carteira') || n.includes('dinheiro')) return 'emerald';
+        return 'slate';
+    };
+
+    return (bootstrap.value.accounts ?? [])
+        .filter((a) => a.type !== 'credit_card')
+        .map((a) => ({
+            key: a.name,
+            label: a.name,
+            subtitle: a.type === 'wallet' ? 'Carteira' : 'Conta',
+            tone: tone(a.name),
+            type: a.type as 'bank' | 'wallet',
+            balance: Number(a.current_balance ?? 0),
+            customColor: (a as any).color ?? undefined,
+            icon: a.icon ?? undefined,
+        }));
+});
+
+const transactionOpen = ref(false);
+const transactionKind = ref<'expense' | 'income' | 'transfer'>('transfer');
+const transactionInitial = ref<TransactionModalPayload | null>(null);
+
+const openQuickTransfer = () => {
+    transactionKind.value = 'transfer';
+    transactionInitial.value = null;
+    transactionOpen.value = true;
+};
+
+const onTransactionSave = async (payload: TransactionModalPayload) => {
+    if (payload.kind !== 'transfer') return;
+    try {
+        await executeTransfer(payload);
+        showToast('Transferência realizada');
+        transactionOpen.value = false;
+        if (selectedMonthKey.value) {
+            void loadAccountsForMonth(selectedMonthKey.value);
+        }
+    } catch {
+        showToast('Não foi possível realizar a transferência');
+    }
+};
 
 const loadAccountsForMonth = async (monthKey: string) => {
     const accountsKey = monthKey;
@@ -278,46 +340,55 @@ watch(
 
     <component :is="Shell" v-bind="shellProps">
         <template v-if="!isMobile" #headerActions>
-            <div class="relative">
+            <div class="flex items-center gap-2">
                 <button
                     type="button"
                     class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-600 ring-1 ring-slate-200/60"
-                    aria-label="Menu"
-                    @click="accountMenuOpen = !accountMenuOpen"
+                    aria-label="Transferência"
+                    @click="openQuickTransfer"
                 >
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                        <circle cx="12" cy="5" r="2" />
-                        <circle cx="12" cy="12" r="2" />
-                        <circle cx="12" cy="19" r="2" />
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 3h5v5" />
+                        <path d="M21 3l-7 7" />
+                        <path d="M8 21H3v-5" />
+                        <path d="M3 21l7-7" />
                     </svg>
                 </button>
 
-                <div v-if="accountMenuOpen" class="fixed inset-0 z-[65]" @click="accountMenuOpen = false">
-                    <div
-                        class="absolute right-5 top-16 w-56 overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200/70"
-                        @click.stop
+                <div class="relative">
+                    <button
+                        type="button"
+                        class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-600 ring-1 ring-slate-200/60"
+                        aria-label="Menu"
+                        @click="accountMenuOpen = !accountMenuOpen"
                     >
-                        <button
-                            type="button"
-                            class="w-full rounded-t-2xl border-b border-slate-100 px-4 py-3 text-left text-sm font-semibold text-slate-900 hover:bg-slate-50"
-                            @click="openAccountMenuOption('bank')"
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="12" cy="5" r="2" />
+                            <circle cx="12" cy="12" r="2" />
+                            <circle cx="12" cy="19" r="2" />
+                        </svg>
+                    </button>
+
+                    <div v-if="accountMenuOpen" class="fixed inset-0 z-[65]" @click="accountMenuOpen = false">
+                        <div
+                            class="absolute right-5 top-16 w-56 overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200/70"
+                            @click.stop
                         >
-                            Adicionar Conta Bancária
-                        </button>
-                        <button
-                            type="button"
-                            class="w-full border-b border-slate-100 px-4 py-3 text-left text-sm font-semibold text-slate-900 hover:bg-slate-50"
-                            @click="openAccountMenuOption('wallet')"
-                        >
-                            Criar Carteira
-                        </button>
-                        <button
-                            type="button"
-                            class="w-full rounded-b-2xl px-4 py-3 text-left text-sm font-semibold text-slate-900 hover:bg-slate-50"
-                            @click="openAccountMenuOption('card')"
-                        >
-                            Adicionar Cartão de Crédito
-                        </button>
+                            <button
+                                type="button"
+                                class="w-full rounded-t-2xl border-b border-slate-100 px-4 py-3 text-left text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                                @click="openAccountMenuOption('bank')"
+                            >
+                                Adicionar Conta Bancária
+                            </button>
+                            <button
+                                type="button"
+                                class="w-full rounded-b-2xl px-4 py-3 text-left text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                                @click="openAccountMenuOption('wallet')"
+                            >
+                                Criar Carteira
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -338,46 +409,55 @@ watch(
                 <div class="text-lg font-semibold text-slate-900">Minhas Contas</div>
             </div>
 
-            <div class="relative">
+            <div class="flex items-center gap-2">
                 <button
                     type="button"
                     class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200/60"
-                    aria-label="Menu"
-                    @click="accountMenuOpen = !accountMenuOpen"
+                    aria-label="Transferência"
+                    @click="openQuickTransfer"
                 >
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                        <circle cx="12" cy="5" r="2" />
-                        <circle cx="12" cy="12" r="2" />
-                        <circle cx="12" cy="19" r="2" />
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 3h5v5" />
+                        <path d="M21 3l-7 7" />
+                        <path d="M8 21H3v-5" />
+                        <path d="M3 21l7-7" />
                     </svg>
                 </button>
 
-                <div v-if="accountMenuOpen" class="fixed inset-0 z-[65]" @click="accountMenuOpen = false">
-                    <div
-                        class="absolute right-5 top-16 w-56 overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200/70"
-                        @click.stop
+                <div class="relative">
+                    <button
+                        type="button"
+                        class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200/60"
+                        aria-label="Menu"
+                        @click="accountMenuOpen = !accountMenuOpen"
                     >
-                        <button
-                            type="button"
-                            class="w-full text-left px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-50 rounded-t-2xl border-b border-slate-100"
-                            @click="openAccountMenuOption('bank')"
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="12" cy="5" r="2" />
+                            <circle cx="12" cy="12" r="2" />
+                            <circle cx="12" cy="19" r="2" />
+                        </svg>
+                    </button>
+
+                    <div v-if="accountMenuOpen" class="fixed inset-0 z-[65]" @click="accountMenuOpen = false">
+                        <div
+                            class="absolute right-5 top-16 w-56 overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200/70"
+                            @click.stop
                         >
-                            Adicionar Conta Bancária
-                        </button>
-                        <button
-                            type="button"
-                            class="w-full text-left px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-50 border-b border-slate-100"
-                            @click="openAccountMenuOption('wallet')"
-                        >
-                            Criar Carteira
-                        </button>
-                        <button
-                            type="button"
-                            class="w-full text-left px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-50 rounded-b-2xl"
-                            @click="openAccountMenuOption('card')"
-                        >
-                            Adicionar Cartão de Crédito
-                        </button>
+                            <button
+                                type="button"
+                                class="w-full text-left rounded-t-2xl border-b border-slate-100 px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                                @click="openAccountMenuOption('bank')"
+                            >
+                                Adicionar Conta Bancária
+                            </button>
+                            <button
+                                type="button"
+                                class="w-full text-left rounded-b-2xl px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                                @click="openAccountMenuOption('wallet')"
+                            >
+                                Criar Carteira
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -452,5 +532,15 @@ watch(
         <CreateAccountFlowModal :open="createAccountOpen" :start-with-wallet="createAccountWithWallet" @close="() => { createAccountOpen = false; createAccountWithWallet = false; }" @toast="showToast" />
         <CreateCreditCardFlowModal :open="createCreditCardFlowOpen" @close="createCreditCardFlowOpen = false" @save="handleCreateCreditCardFlowSave" />
         <CreditCardModal :open="creditCardModalOpen" @close="creditCardModalOpen = false" @save="saveCreditCard" />
+        <TransactionModal
+            :open="transactionOpen"
+            :kind="transactionKind"
+            :initial="transactionInitial"
+            :categories="pickerCategories"
+            :accounts="pickerAccounts"
+            :tags="bootstrap.tags"
+            @close="transactionOpen = false"
+            @save="onTransactionSave"
+        />
     </component>
 </template>

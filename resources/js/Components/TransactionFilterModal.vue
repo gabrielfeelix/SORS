@@ -2,11 +2,15 @@
 import { computed, ref, watch } from 'vue';
 import { formatMoneyInputCentsShift } from '@/lib/moneyInput';
 import { preventNonDigitKeydown } from '@/lib/inputGuards';
+import DateRangePickerSheet from '@/Components/DateRangePickerSheet.vue';
+import type { UserTag } from '@/types/kitamo';
 
 export type TransactionFilterState = {
     categories: string[];
     tags: string[];
-    period: 'month' | '3m' | '6m';
+    period: 'today' | 'month' | 'range';
+    rangeStart: string;
+    rangeEnd: string;
     status: 'all' | 'paid' | 'to_pay';
     min: string;
     max: string;
@@ -15,6 +19,7 @@ export type TransactionFilterState = {
 const props = defineProps<{
     open: boolean;
     categories: { key: string; label: string; icon: 'food' | 'home' | 'car' }[];
+    tags: UserTag[];
     initial: TransactionFilterState;
     resultsCount: number;
 }>();
@@ -31,6 +36,8 @@ const local = ref<TransactionFilterState>({
     categories: [],
     tags: [],
     period: 'month',
+    rangeStart: '',
+    rangeEnd: '',
     status: 'all',
     min: '0,00',
     max: '10.000,00',
@@ -57,6 +64,19 @@ const toggleTag = (tag: string) => {
     else list.add(tag);
     local.value.tags = Array.from(list);
 };
+
+const rangeOpen = ref(false);
+const openRangePicker = () => {
+    local.value.period = 'range';
+    rangeOpen.value = true;
+};
+
+const isValidBRDate = (value: string) => Boolean(String(value ?? '').trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/));
+const rangeLabel = computed(() => {
+    if (local.value.period !== 'range') return '';
+    if (!isValidBRDate(local.value.rangeStart) || !isValidBRDate(local.value.rangeEnd)) return 'Selecione um período';
+    return `${local.value.rangeStart} — ${local.value.rangeEnd}`;
+});
 
 const onMinInput = (event: Event) => {
     const target = event.target as HTMLInputElement;
@@ -130,7 +150,10 @@ const periodButtonClass = (value: TransactionFilterState['period']) =>
 const statusButtonClass = (value: TransactionFilterState['status']) =>
     local.value.status === value ? 'border-[#14B8A6] text-[#14B8A6] bg-[#E6FFFB]' : 'border-slate-200 text-slate-600 bg-white';
 
-const canApply = computed(() => true);
+const canApply = computed(() => {
+    if (local.value.period !== 'range') return true;
+    return isValidBRDate(local.value.rangeStart) && isValidBRDate(local.value.rangeEnd);
+});
 </script>
 
 <template>
@@ -198,29 +221,17 @@ const canApply = computed(() => true);
                     <div class="mt-6 text-sm font-bold text-slate-900">Tags</div>
                     <div class="mt-3 flex flex-wrap gap-3">
                         <button
+                            v-for="tag in props.tags"
+                            :key="tag.id"
                             type="button"
                             class="rounded-full border px-4 py-2 text-sm font-semibold"
-                            :class="local.tags.includes('Essencial') ? 'border-[#14B8A6] bg-[#E6FFFB] text-[#14B8A6]' : 'border-slate-200 bg-white text-slate-600'"
-                            @click="toggleTag('Essencial')"
+                            :style="local.tags.includes(tag.nome) && tag.cor ? { borderColor: tag.cor, backgroundColor: `${tag.cor}1A`, color: tag.cor } : undefined"
+                            :class="local.tags.includes(tag.nome) ? (tag.cor ? '' : 'border-[#14B8A6] bg-[#E6FFFB] text-[#14B8A6]') : 'border-slate-200 bg-white text-slate-600'"
+                            @click="toggleTag(tag.nome)"
                         >
-                            Essencial
+                            {{ tag.nome }}
                         </button>
-                        <button
-                            type="button"
-                            class="rounded-full border px-4 py-2 text-sm font-semibold"
-                            :class="local.tags.includes('Recorrente') ? 'border-[#14B8A6] bg-[#E6FFFB] text-[#14B8A6]' : 'border-slate-200 bg-white text-slate-600'"
-                            @click="toggleTag('Recorrente')"
-                        >
-                            Recorrente
-                        </button>
-                        <button
-                            type="button"
-                            class="rounded-full border px-4 py-2 text-sm font-semibold"
-                            :class="local.tags.includes('Urgente') ? 'border-[#14B8A6] bg-[#E6FFFB] text-[#14B8A6]' : 'border-slate-200 bg-white text-slate-600'"
-                            @click="toggleTag('Urgente')"
-                        >
-                            Urgente
-                        </button>
+                        <div v-if="props.tags.length === 0" class="text-xs font-semibold text-slate-400">Você ainda não tem tags.</div>
                     </div>
 
                     <div class="mt-6 text-sm font-bold text-slate-900">Status</div>
@@ -238,16 +249,29 @@ const canApply = computed(() => true);
 
                     <div class="mt-6 text-sm font-bold text-slate-900">Período</div>
                     <div class="mt-3 flex flex-wrap gap-3">
+                        <button type="button" class="rounded-full border px-4 py-2 text-sm font-semibold" :class="periodButtonClass('today')" @click="local.period = 'today'">
+                            Hoje
+                        </button>
                         <button type="button" class="rounded-full border px-4 py-2 text-sm font-semibold" :class="periodButtonClass('month')" @click="local.period = 'month'">
                             Este mês
                         </button>
-                        <button type="button" class="rounded-full border px-4 py-2 text-sm font-semibold" :class="periodButtonClass('3m')" @click="local.period = '3m'">
-                            Últimos 3 meses
-                        </button>
-                        <button type="button" class="rounded-full border px-4 py-2 text-sm font-semibold" :class="periodButtonClass('6m')" @click="local.period = '6m'">
-                            Últimos 6 meses
+                        <button
+                            type="button"
+                            class="rounded-full border px-4 py-2 text-sm font-semibold"
+                            :class="periodButtonClass('range')"
+                            @click="openRangePicker"
+                        >
+                            Outro período
                         </button>
                     </div>
+                    <button
+                        v-if="local.period === 'range'"
+                        type="button"
+                        class="mt-3 w-full rounded-2xl bg-slate-50 px-4 py-3 text-left text-sm font-semibold text-slate-700 ring-1 ring-slate-200/60"
+                        @click="openRangePicker"
+                    >
+                        {{ rangeLabel }}
+                    </button>
 
                     <div class="mt-6 text-sm font-bold text-slate-900">Valor</div>
                     <div class="mt-3 grid grid-cols-2 gap-5">
@@ -345,4 +369,13 @@ const canApply = computed(() => true);
             </div>
         </div>
     </div>
+
+    <DateRangePickerSheet
+        :open="rangeOpen"
+        :start="local.rangeStart"
+        :end="local.rangeEnd"
+        @update:start="(v) => (local.rangeStart = v)"
+        @update:end="(v) => (local.rangeEnd = v)"
+        @close="rangeOpen = false"
+    />
 </template>

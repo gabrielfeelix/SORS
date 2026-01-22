@@ -71,34 +71,16 @@ const entries = computed(() => bootstrap.value.entries ?? []);
         const now = new Date();
         const items: Array<{ key: string; label: string; date: Date }> = [];
 
-        // Se for carteira, mostra apenas meses passados + atual
-        if (account.value?.type === 'wallet') {
-            // Começar de 5 meses atrás até o mês atual
-            for (let i = 5; i >= 0; i -= 1) {
-                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-                const label = new Intl.DateTimeFormat('pt-BR', { month: 'short' })
-                    .format(d)
-                    .replace('.', '')
-                    .toUpperCase();
-                items.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label, date: d });
-            }
-        } else {
-            // Bancos e cartões mantêm lógica original (2 passados + atual + 3 futuros)
-            for (let i = 2; i >= -3; i -= 1) {
-                const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-                const label = new Intl.DateTimeFormat('pt-BR', { month: 'short' })
-                    .format(d)
-                    .replace('.', '')
-                    .toUpperCase();
-                items.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label, date: d });
-            }
+        for (let i = -120; i <= 120; i += 1) {
+            const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+            const label = new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(d).replace('.', '').toUpperCase();
+            items.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label, date: d });
         }
         return items;
     });
 
-    const selectedMonthKey = ref(
-        months.value.find((m) => m.date.getMonth() === new Date().getMonth())?.key ?? months.value[0]?.key ?? '',
-    );
+    const currentMonthKey = `${new Date().getFullYear()}-${new Date().getMonth()}`;
+    const selectedMonthKey = ref(months.value.find((m) => m.key === currentMonthKey)?.key ?? months.value[0]?.key ?? '');
     const selectedMonth = computed(() => months.value.find((m) => m.key === selectedMonthKey.value) ?? months.value[0]);
 
 watch(

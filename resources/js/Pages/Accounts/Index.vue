@@ -43,14 +43,15 @@ const activeMonth = ref(new Date());
 const months = computed(() => {
     const now = new Date();
     const items: Array<{ key: string; label: string; date: Date }> = [];
-    for (let i = -2; i <= 2; i += 1) {
+    for (let i = -120; i <= 120; i += 1) {
         const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
         const label = new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(d).replace('.', '').toUpperCase();
         items.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label, date: d });
     }
     return items;
 });
-const selectedMonthKey = ref(months.value.find((m) => m.date.getMonth() === new Date().getMonth())?.key ?? months.value[0]?.key ?? '');
+const currentMonthKey = `${new Date().getFullYear()}-${new Date().getMonth()}`;
+const selectedMonthKey = ref(months.value.find((m) => m.key === currentMonthKey)?.key ?? months.value[0]?.key ?? '');
 const selectedMonth = computed(() => months.value.find((m) => m.key === selectedMonthKey.value) ?? months.value[0]);
 const monthLabel = computed(() => {
     if (!selectedMonth.value) return '';
@@ -179,32 +180,39 @@ const filteredEntries = computed(() => {
 
     if (accountFilter.value !== 'all') raw = raw.filter((e) => e.accountLabel === accountFilter.value);
 
-    const monthAbbrToIndex: Record<string, number> = {
-        JAN: 0,
-        FEV: 1,
-        MAR: 2,
-        ABR: 3,
-        MAI: 4,
-        JUN: 5,
-        JUL: 6,
-        AGO: 7,
-        SET: 8,
-        OUT: 9,
-        NOV: 10,
-        DEZ: 11,
-    };
-    const parseMonthIndex = (label: string) => {
-        const last = label.trim().split(/\s+/).at(-1)?.toUpperCase() ?? '';
-        const idx = monthAbbrToIndex[last];
-        return Number.isFinite(idx) ? idx : null;
-    };
-    if (filterState.value.period === 'month') {
-        const selectedMonthIdx = activeMonth.value.getMonth();
+    if (filterState.value.period === 'today') {
+        const now = new Date();
         raw = raw.filter((e) => {
-            const entryMonthIdx = parseMonthIndex(e.dateLabel);
-            if (entryMonthIdx === null) return true;
-            return entryMonthIdx === selectedMonthIdx;
+            if (!e.transactionDate) return false;
+            const date = parseISODate(e.transactionDate);
+            if (!date) return false;
+            return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
         });
+    } else if (filterState.value.period === 'month') {
+        const month = activeMonth.value.getMonth();
+        const year = activeMonth.value.getFullYear();
+        raw = raw.filter((e) => {
+            if (!e.transactionDate) return false;
+            const date = parseISODate(e.transactionDate);
+            if (!date) return false;
+            return date.getFullYear() === year && date.getMonth() === month;
+        });
+    } else if (filterState.value.period === 'range') {
+        const start = parseBRDate(filterState.value.rangeStart);
+        const end = parseBRDate(filterState.value.rangeEnd);
+        if (start && end) {
+            const startTime = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
+            const endTime = new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime();
+            const minTime = Math.min(startTime, endTime);
+            const maxTime = Math.max(startTime, endTime);
+            raw = raw.filter((e) => {
+                if (!e.transactionDate) return false;
+                const date = parseISODate(e.transactionDate);
+                if (!date) return false;
+                const t = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+                return t >= minTime && t <= maxTime;
+            });
+        }
     }
 
     const selectedCategories = filterState.value.categories;
@@ -476,6 +484,8 @@ const filterState = ref<TransactionFilterState>({
     categories: ['food', 'home', 'car'],
     tags: [],
     period: 'month',
+    rangeStart: '',
+    rangeEnd: '',
     status: 'all',
     min: '0,00',
     max: '10.000,00',
@@ -537,7 +547,7 @@ const toggleCategory = (key: TransactionFilterState['categories'][number]) => {
 
 const clearFilters = () => {
     filter.value = 'all';
-    filterState.value = { categories: [], tags: [], period: 'month', status: 'all', min: '0,00', max: '10.000,00' };
+    filterState.value = { categories: [], tags: [], period: 'month', rangeStart: '', rangeEnd: '', status: 'all', min: '0,00', max: '10.000,00' };
     filterOpen.value = false;
 };
 
@@ -548,6 +558,7 @@ const applyFilters = (payload: TransactionFilterState) => {
 };
 
 const importOpen = ref(false);
+const moreMenuOpen = ref(false);
 const onInvoiceImported = async (payload: { importedCount: number; items: Array<{ title: string; amount: number }> }) => {
     const now = new Date();
     const { dateLabel, dayLabel } = formatDateLabels(now);
@@ -569,6 +580,91 @@ const onInvoiceImported = async (payload: { importedCount: number; items: Array<
         replaceEntry(response.entry);
     }
     showToast('Fatura importada com sucesso!');
+};
+
+const parseISODate = (iso: string) => {
+    const parts = String(iso ?? '').split('-').map((v) => Number(v));
+    if (parts.length !== 3) return null;
+    const [yyyy, mm, dd] = parts;
+    if (!Number.isFinite(yyyy) || !Number.isFinite(mm) || !Number.isFinite(dd)) return null;
+    const date = new Date(yyyy, mm - 1, dd);
+    return Number.isFinite(date.getTime()) ? date : null;
+};
+
+const parseBRDate = (brDate: string) => {
+    const match = String(brDate ?? '')
+        .trim()
+        .match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!match) return null;
+    const [, dd, mm, yyyy] = match;
+    const date = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    return Number.isFinite(date.getTime()) ? date : null;
+};
+
+const toISODate = (date: Date) => {
+    const yyyy = String(date.getFullYear());
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+};
+
+const exportTransactions = (format: 'csv' | 'excel' = 'excel') => {
+    window.location.href = route('exports.transactions', { format });
+};
+
+const downloadReportCsv = async (startISO: string, endISO: string) => {
+    const csrf = document.querySelector('meta[name=\"csrf-token\"]')?.getAttribute('content') ?? '';
+    const response = await fetch(route('api.relatorios.exportar'), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'text/csv',
+            ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+        },
+        body: JSON.stringify({
+            formato: 'csv',
+            periodo_inicio: startISO,
+            periodo_fim: endISO,
+        }),
+    });
+    if (!response.ok) {
+        throw new Error('Falha ao exportar relatório');
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const disposition = response.headers.get('content-disposition') ?? '';
+    const filenameMatch = disposition.match(/filename=\"?([^\";]+)\"?/i);
+    a.href = url;
+    a.download = filenameMatch?.[1] ?? `kitamo_relatorio_${startISO}_a_${endISO}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+};
+
+const exportReport = async () => {
+    const today = new Date();
+    const monthStart = new Date(activeMonth.value.getFullYear(), activeMonth.value.getMonth(), 1);
+    const monthEnd = new Date(activeMonth.value.getFullYear(), activeMonth.value.getMonth() + 1, 0);
+
+    let start = monthStart;
+    let end = monthEnd;
+
+    if (filterState.value.period === 'today') {
+        start = today;
+        end = today;
+    } else if (filterState.value.period === 'range') {
+        const startRange = parseBRDate(filterState.value.rangeStart);
+        const endRange = parseBRDate(filterState.value.rangeEnd);
+        if (startRange && endRange) {
+            start = startRange;
+            end = endRange;
+        }
+    }
+
+    await downloadReportCsv(toISODate(start), toISODate(end));
 };
 
 const desktopImportChooserOpen = ref(false);
@@ -688,19 +784,6 @@ onMounted(() => {
                     </svg>
                 </button>
 
-                <button
-                    type="button"
-                    class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200/60"
-                    aria-label="Importar fatura"
-                    @click="importOpen = true"
-                >
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 3v12" />
-                        <path d="M8 11l4 4 4-4" />
-                        <path d="M4 21h16" />
-                    </svg>
-                </button>
-
                 <Link
                     :href="route('accounts.search')"
                     class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200/60"
@@ -711,6 +794,50 @@ onMounted(() => {
                         <path d="M20 20l-3.5-3.5" />
                     </svg>
                 </Link>
+
+                <div class="relative">
+                    <button
+                        type="button"
+                        class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200/60"
+                        aria-label="Mais opções"
+                        @click="moreMenuOpen = !moreMenuOpen"
+                    >
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="12" cy="5" r="2" />
+                            <circle cx="12" cy="12" r="2" />
+                            <circle cx="12" cy="19" r="2" />
+                        </svg>
+                    </button>
+
+                    <div v-if="moreMenuOpen" class="fixed inset-0 z-[65]" @click="moreMenuOpen = false">
+                        <div
+                            class="absolute right-5 top-16 w-56 overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200/70"
+                            @click.stop
+                        >
+                            <button
+                                type="button"
+                                class="w-full border-b border-slate-100 px-4 py-3 text-left text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                                @click="() => { moreMenuOpen = false; exportTransactions('excel'); }"
+                            >
+                                Exportar
+                            </button>
+                            <button
+                                type="button"
+                                class="w-full border-b border-slate-100 px-4 py-3 text-left text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                                @click="() => { moreMenuOpen = false; importOpen = true; }"
+                            >
+                                Importar fatura
+                            </button>
+                            <button
+                                type="button"
+                                class="w-full px-4 py-3 text-left text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                                @click="async () => { moreMenuOpen = false; try { await exportReport(); } catch { showToast('Não foi possível exportar o relatório'); } }"
+                            >
+                                Exportar relatório
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -924,6 +1051,7 @@ onMounted(() => {
         <TransactionFilterModal
             :open="filterOpen"
             :categories="filterCategories"
+            :tags="bootstrap.tags"
             :initial="filterState"
             :results-count="filteredEntries.length"
             @close="filterOpen = false"
