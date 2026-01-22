@@ -9,6 +9,7 @@ import CreateAccountFlowModal from '@/Components/CreateAccountFlowModal.vue';
 import CreateCreditCardFlowModal from '@/Components/CreateCreditCardFlowModal.vue';
 import CreditCardModal, { type CreditCardModalPayload } from '@/Components/CreditCardModal.vue';
 import MobileToast from '@/Components/MobileToast.vue';
+import MonthNavigator from '@/Components/MonthNavigator.vue';
 import { requestJson } from '@/lib/kitamoApi';
 
 const isMobile = useIsMobile();
@@ -196,8 +197,6 @@ const creditCardsDisplay = computed(() => {
 });
 
 const totalBankBalance = computed(() => bankAccounts.value.reduce((sum, a) => sum + a.balance, 0));
-const totalCardsBalance = computed(() => creditCards.value.reduce((sum, c) => sum + c.balance, 0));
-const netWorth = computed(() => totalBankBalance.value - totalCardsBalance.value);
 
 const selectedMonthMode = computed(() => {
     const key = selectedMonthKey.value;
@@ -385,28 +384,16 @@ watch(
         </header>
 
         <div class="mt-6">
-            <div class="flex gap-4 overflow-x-auto pb-2 text-xs font-bold text-slate-300">
-                <button
-                    v-for="m in monthItems"
-                    :key="m.key"
-                    type="button"
-                    class="relative shrink-0 px-2 py-1"
-                    :class="m.key === selectedMonthKey ? 'text-[#14B8A6]' : ''"
-                    @click="selectedMonthKey = m.key"
-                >
-                    {{ m.label }}
-                    <span v-if="m.key === selectedMonthKey" class="absolute inset-x-0 -bottom-1 mx-auto h-1 w-4 rounded-full bg-[#14B8A6]"></span>
-                </button>
-            </div>
+            <MonthNavigator v-model="selectedMonthKey" :months="monthItems" />
         </div>
 
         <section class="mt-6 rounded-3xl bg-gradient-to-br from-[#14B8A6] to-[#0D9488] p-5 text-white shadow-lg shadow-teal-600/20">
-            <div class="text-[11px] font-bold uppercase tracking-wide text-white/80">Patrimônio líquido</div>
+            <div class="text-[11px] font-bold uppercase tracking-wide text-white/80">Saldo Total</div>
             <div v-if="isLoading" class="mt-2 h-9 w-48 animate-pulse rounded-lg bg-white/20"></div>
-            <div v-else class="mt-2 text-3xl font-bold tracking-tight">{{ formatBRL(netWorth) }}</div>
+            <div v-else class="mt-2 text-3xl font-bold tracking-tight">{{ formatBRL(totalBankBalance) }}</div>
         </section>
 
-	        <section class="mt-8">
+	        <section class="mt-8 pb-[calc(2rem+env(safe-area-inset-bottom))]">
 	            <div class="flex items-center justify-between">
 	                <div class="text-xs font-bold uppercase tracking-wide text-slate-400">Contas e carteiras</div>
 	                <div v-if="isLoading" class="h-4 w-20 animate-pulse rounded bg-slate-200"></div>
@@ -457,81 +444,6 @@ watch(
                         </div>
                     </div>
                     <div class="text-sm font-semibold text-slate-900">{{ formatBRL(account.balance) }}</div>
-                </Link>
-            </div>
-        </section>
-
-        <section class="mt-8 pb-[calc(2rem+env(safe-area-inset-bottom))]">
-            <div class="flex items-center justify-between">
-                <div class="text-xs font-bold uppercase tracking-wide text-slate-400">Cartões de crédito</div>
-                <div v-if="isLoading" class="h-6 w-24 animate-pulse rounded-full bg-slate-200"></div>
-                <div v-else class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">{{ formatBRL(totalCardsBalance) }}</div>
-            </div>
-
-            <div v-if="isLoading" class="mt-4 space-y-3">
-                <div v-for="i in 2" :key="i" class="flex items-center justify-between rounded-3xl bg-white px-4 py-4 shadow-sm ring-1 ring-slate-200/60">
-                    <div class="flex items-center gap-3">
-                        <div class="h-12 w-12 animate-pulse rounded-2xl bg-slate-200"></div>
-                        <div>
-                            <div class="h-4 w-32 animate-pulse rounded bg-slate-200"></div>
-                            <div class="mt-2 flex gap-1">
-                                <div class="h-5 w-12 animate-pulse rounded-md bg-slate-100"></div>
-                                <div class="h-5 w-8 animate-pulse rounded-md bg-slate-100"></div>
-                                <div class="h-5 w-8 animate-pulse rounded-md bg-slate-100"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="h-4 w-20 animate-pulse rounded bg-slate-200"></div>
-                        <div class="mt-1 h-3 w-16 animate-pulse rounded bg-slate-100"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div v-else class="mt-4 space-y-3">
-                <Link
-                    v-for="card in creditCardsDisplay"
-                    :key="card.id"
-                    :href="route('credit-cards.show', { account: card.id })"
-                    class="flex items-center justify-between rounded-3xl bg-white px-4 py-4 shadow-sm ring-1 ring-slate-200/60"
-                >
-                    <div class="flex items-center gap-3">
-                        <span class="flex h-12 w-12 items-center justify-center rounded-2xl text-white" :style="{ backgroundColor: card.color }">
-                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="5" width="18" height="14" rx="3" />
-                                <path d="M3 10h18" />
-                            </svg>
-                        </span>
-                        <div>
-                            <div class="text-sm font-semibold text-slate-900">{{ card.displayName }}</div>
-                            <div class="mt-1 flex flex-wrap items-center gap-1 text-[11px] font-semibold text-slate-500">
-                                <span
-                                    v-if="card.brand"
-                                    class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 uppercase tracking-wide text-slate-500"
-                                >
-                                    {{ String(card.brand) }}
-                                </span>
-                                <span
-                                    v-if="card.closingDay"
-                                    class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-slate-500"
-                                    :title="`Fechamento dia ${card.closingDay}`"
-                                >
-                                    F {{ card.closingDay }}
-                                </span>
-                                <span
-                                    v-if="card.dueDay"
-                                    class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-slate-500"
-                                    :title="`Vencimento dia ${card.dueDay}`"
-                                >
-                                    V {{ card.dueDay }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-sm font-semibold text-slate-900">{{ formatBRL(card.balance) }}</div>
-                        <div class="text-[11px] font-semibold text-slate-400">Limite: {{ card.limit ? `${Math.round(card.limit / 1000)}k` : '-' }}</div>
-                    </div>
                 </Link>
             </div>
         </section>
