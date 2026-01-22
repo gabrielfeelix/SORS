@@ -90,8 +90,8 @@ class User extends Authenticatable
     {
         static::created(function (self $user) {
             $defaults = [
-                ['nome' => 'Essencial', 'cor' => '#0F172A'],
-                ['nome' => 'Urgente', 'cor' => '#EF4444'],
+                ['nome' => 'Essencial', 'cor' => '#EF4444'],
+                ['nome' => 'Urgente', 'cor' => '#F59E0B'],
             ];
 
             foreach ($defaults as $tag) {

@@ -270,6 +270,12 @@ const showToast = (message: string) => {
     toastOpen.value = true;
 };
 
+const exportTransactions = (format: 'pdf' | 'excel' | 'csv') => {
+    const targetFormat = format === 'excel' ? 'excel' : 'csv';
+    const url = route('exports.transactions', { format: targetFormat });
+    window.location.href = url;
+};
+
 const openQuickTransaction = () => {
     transactionKind.value = 'expense';
     transactionOpen.value = true;
@@ -512,9 +518,8 @@ const onTransactionSave = async (payload: TransactionModalPayload) => {
         />
         <ExportReportModal
             :open="exportOpen"
-            :default-month-key="monthKey(activeMonth)"
             @close="exportOpen = false"
-            @exported="({ channel }) => { showToast(channel === 'download' ? 'Relatório baixado' : 'Relatório enviado por email'); }"
+            @exported="({ channel, format }) => { if (channel === 'download') exportTransactions(format); showToast(channel === 'download' ? 'Relatório baixado' : 'Relatório enviado por email'); }"
         />
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
     </component>

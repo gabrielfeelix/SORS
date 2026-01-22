@@ -131,7 +131,7 @@ const existingReceiptUrl = ref<string | null>(null);
 const existingReceiptName = ref<string | null>(null);
 const removeReceipt = ref(false);
 const receiptFileInput = ref<HTMLInputElement | null>(null);
-const receiptDropActive = ref(false);
+const receiptCameraInput = ref<HTMLInputElement | null>(null);
 
 const amountTextClass = computed(() => {
     if (localKind.value === 'expense') return 'text-[#EF4444]';
@@ -282,6 +282,10 @@ const tagOptions = computed<UserTag[]>(() => {
         map.set(key, { id: tag.id, nome, cor: tag.cor || '#64748B' });
     };
 
+    for (const nome of ['Essencial', 'Urgente', 'Supérfluo']) {
+        add({ id: `builtin:${nome}`, nome, cor: '#64748B' });
+    }
+
     for (const tag of props.tags ?? []) add(tag);
     for (const tag of createdTags.value) add(tag);
 
@@ -316,37 +320,12 @@ const receiptLabel = computed(() => receiptFile.value?.name || existingReceiptNa
 const receiptIsImage = computed(() => Boolean(receiptFile.value?.type?.startsWith('image/')));
 
 const pickReceiptFile = () => receiptFileInput.value?.click();
+const pickReceiptCamera = () => receiptCameraInput.value?.click();
 const onReceiptChange = (event: Event) => {
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0] ?? null;
-    if (file && file.size > 10 * 1024 * 1024) {
-        window.alert('Arquivo muito grande. Máximo 10MB.');
-        target.value = '';
-        return;
-    }
-    if (file && !(file.type === 'application/pdf' || file.type.startsWith('image/'))) {
-        window.alert('Formato inválido. Envie PDF ou imagem.');
-        target.value = '';
-        return;
-    }
     setReceiptFile(file);
     target.value = '';
-};
-
-const onReceiptDrop = (event: DragEvent) => {
-    event.preventDefault();
-    receiptDropActive.value = false;
-    const file = event.dataTransfer?.files?.[0] ?? null;
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-        window.alert('Arquivo muito grande. Máximo 10MB.');
-        return;
-    }
-    if (!(file.type === 'application/pdf' || file.type.startsWith('image/'))) {
-        window.alert('Formato inválido. Envie PDF ou imagem.');
-        return;
-    }
-    setReceiptFile(file);
 };
 
 const removeReceiptNow = () => {
@@ -1137,7 +1116,7 @@ watch(
                                     :disabled="createTagBusy"
                                     @click="createTagOpen = !createTagOpen"
                                 >
-                                    {{ createTagOpen ? '- Tag' : '+ Tag' }}
+                                    + Tag
                                 </button>
                             </div>
 
@@ -1191,32 +1170,27 @@ watch(
                                 </button>
                             </div>
 
+                            <input ref="receiptCameraInput" class="hidden" type="file" accept="image/*" capture="environment" @change="onReceiptChange" />
                             <input ref="receiptFileInput" class="hidden" type="file" accept="application/pdf,image/*" @change="onReceiptChange" />
 
-                            <div
-                                v-if="!hasReceipt"
-                                class="mt-4 rounded-2xl border-2 border-dashed bg-slate-50 px-4 py-6 text-center transition"
-                                :class="receiptDropActive ? 'border-[#14B8A6] bg-[#E6FFFB]' : 'border-slate-200'"
-                                role="button"
-                                tabindex="0"
-                                @click="pickReceiptFile"
-                                @keydown.enter.prevent="pickReceiptFile"
-                                @keydown.space.prevent="pickReceiptFile"
-                                @dragenter.prevent="receiptDropActive = true"
-                                @dragover.prevent="receiptDropActive = true"
-                                @dragleave.prevent="receiptDropActive = false"
-                                @drop="onReceiptDrop"
-                                aria-label="Adicionar comprovante"
-                            >
-                                <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200/60">
-                                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M12 16V4" />
-                                        <path d="M8 8l4-4 4 4" />
-                                        <path d="M4 20h16" />
-                                    </svg>
-                                </div>
-                                <div class="mt-3 text-sm font-semibold text-slate-900">Arraste ou clique para adicionar</div>
-                                <div class="mt-1 text-xs font-semibold text-slate-400">PDF ou imagem (até 10MB).</div>
+                            <div v-if="!hasReceipt" class="mt-4 grid grid-cols-2 gap-3">
+                                <button
+                                    type="button"
+                                    class="flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-50 text-sm font-semibold text-slate-600 ring-1 ring-slate-200/60"
+                                    @click="pickReceiptCamera"
+                                >
+                                    <span aria-hidden="true">📷</span>
+                                    Tirar foto
+                                </button>
+                                <button
+                                    type="button"
+                                    class="flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-50 text-sm font-semibold text-slate-600 ring-1 ring-slate-200/60"
+                                    @click="pickReceiptFile"
+                                >
+                                    <span aria-hidden="true">📁</span>
+                                    Escolher arquivo
+                                </button>
+                                <div class="col-span-2 text-xs font-semibold text-slate-400">Aceita imagem ou PDF (até 10MB).</div>
                             </div>
 
                             <div v-else class="mt-4 overflow-hidden rounded-xl bg-slate-50 p-3 ring-1 ring-slate-200/60">

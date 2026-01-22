@@ -11,7 +11,6 @@ import { buildTransactionFormData, buildTransactionRequest, executeTransfer, has
 	import TransactionDetailModal, { type TransactionDetail } from '@/Components/TransactionDetailModal.vue';
 	import TransactionFilterModal, { type TransactionFilterState } from '@/Components/TransactionFilterModal.vue';
 	import ImportInvoiceModal from '@/Components/ImportInvoiceModal.vue';
-    import ExportReportModal from '@/Components/ExportReportModal.vue';
 import MonthNavigator from '@/Components/MonthNavigator.vue';
 	import { useIsMobile } from '@/composables/useIsMobile';
 	
@@ -180,12 +179,6 @@ const filteredEntries = computed(() => {
     if (entryKindFilter.value !== 'all') raw = raw.filter((e) => e.kind === entryKindFilter.value);
 
     if (accountFilter.value !== 'all') raw = raw.filter((e) => e.accountLabel === accountFilter.value);
-
-    if (filterState.value.recurrence === 'recurring') {
-        raw = raw.filter((e) => Boolean(e.isRecurring));
-    } else if (filterState.value.recurrence === 'non_recurring') {
-        raw = raw.filter((e) => !Boolean(e.isRecurring));
-    }
 
     if (filterState.value.period === 'today') {
         const now = new Date();
@@ -508,7 +501,6 @@ const filterState = ref<TransactionFilterState>({
     rangeStart: '',
     rangeEnd: '',
     status: 'all',
-    recurrence: 'all',
     min: '0,00',
     max: '10.000,00',
 });
@@ -569,17 +561,7 @@ const toggleCategory = (key: TransactionFilterState['categories'][number]) => {
 
 const clearFilters = () => {
     filter.value = 'all';
-    filterState.value = {
-        categories: [],
-        tags: [],
-        period: 'month',
-        rangeStart: '',
-        rangeEnd: '',
-        status: 'all',
-        recurrence: 'all',
-        min: '0,00',
-        max: '10.000,00',
-    };
+    filterState.value = { categories: [], tags: [], period: 'month', rangeStart: '', rangeEnd: '', status: 'all', min: '0,00', max: '10.000,00' };
     filterOpen.value = false;
 };
 
@@ -590,7 +572,6 @@ const applyFilters = (payload: TransactionFilterState) => {
 };
 
 const importOpen = ref(false);
-const exportOpen = ref(false);
 const moreMenuOpen = ref(false);
 const onInvoiceImported = async (payload: { importedCount: number; items: Array<{ title: string; amount: number }> }) => {
     const now = new Date();
@@ -641,7 +622,64 @@ const toISODate = (date: Date) => {
     return `${yyyy}-${mm}-${dd}`;
 };
 
-// Export de relatório agora usa ExportReportModal (PDF/Excel/CSV).
+const exportTransactions = (format: 'csv' | 'excel' = 'excel') => {
+    window.location.href = route('exports.transactions', { format });
+};
+
+const downloadReportCsv = async (startISO: string, endISO: string) => {
+    const csrf = document.querySelector('meta[name=\"csrf-token\"]')?.getAttribute('content') ?? '';
+    const response = await fetch(route('api.relatorios.exportar'), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'text/csv',
+            ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+        },
+        body: JSON.stringify({
+            formato: 'csv',
+            periodo_inicio: startISO,
+            periodo_fim: endISO,
+        }),
+    });
+    if (!response.ok) {
+        throw new Error('Falha ao exportar relatório');
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const disposition = response.headers.get('content-disposition') ?? '';
+    const filenameMatch = disposition.match(/filename=\"?([^\";]+)\"?/i);
+    a.href = url;
+    a.download = filenameMatch?.[1] ?? `kitamo_relatorio_${startISO}_a_${endISO}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+};
+
+const exportReport = async () => {
+    const today = new Date();
+    const monthStart = new Date(activeMonth.value.getFullYear(), activeMonth.value.getMonth(), 1);
+    const monthEnd = new Date(activeMonth.value.getFullYear(), activeMonth.value.getMonth() + 1, 0);
+
+    let start = monthStart;
+    let end = monthEnd;
+
+    if (filterState.value.period === 'today') {
+        start = today;
+        end = today;
+    } else if (filterState.value.period === 'range') {
+        const startRange = parseBRDate(filterState.value.rangeStart);
+        const endRange = parseBRDate(filterState.value.rangeEnd);
+        if (startRange && endRange) {
+            start = startRange;
+            end = endRange;
+        }
+    }
+
+    await downloadReportCsv(toISODate(start), toISODate(end));
+};
 
 const desktopImportChooserOpen = ref(false);
 const desktopDrawerOpen = ref(false);
@@ -813,6 +851,13 @@ onMounted(() => {
                             <button
                                 type="button"
                                 class="w-full border-b border-slate-100 px-4 py-3 text-left text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                                @click="() => { moreMenuOpen = false; exportTransactions('excel'); }"
+                            >
+                                Exportar
+                            </button>
+                            <button
+                                type="button"
+                                class="w-full border-b border-slate-100 px-4 py-3 text-left text-sm font-semibold text-slate-900 hover:bg-slate-50"
                                 @click="() => { moreMenuOpen = false; importOpen = true; }"
                             >
                                 Importar fatura
@@ -820,7 +865,7 @@ onMounted(() => {
                             <button
                                 type="button"
                                 class="w-full px-4 py-3 text-left text-sm font-semibold text-slate-900 hover:bg-slate-50"
-                                @click="() => { moreMenuOpen = false; exportOpen = true; }"
+                                @click="async () => { moreMenuOpen = false; try { await exportReport(); } catch { showToast('Não foi possível exportar o relatório'); } }"
                             >
                                 Exportar relatório
                             </button>
@@ -1041,12 +1086,6 @@ onMounted(() => {
             @apply="applyFilters"
         />
         <ImportInvoiceModal :open="importOpen" @close="importOpen = false" @imported="onInvoiceImported" />
-        <ExportReportModal
-            :open="exportOpen"
-            :default-month-key="selectedMonthKey"
-            @close="exportOpen = false"
-            @exported="() => { showToast('Relatório baixado'); }"
-        />
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
     </component>
 
