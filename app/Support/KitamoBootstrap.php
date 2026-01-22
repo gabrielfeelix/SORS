@@ -247,6 +247,41 @@ class KitamoBootstrap
 
     public function account(Account $account): array
     {
+        $svgPath = null;
+        if ($account->institution) {
+            // Map institution name to logo file path
+            $logoMap = [
+                'Nubank' => 'nubank-logo-svg.png',
+                'Nu Pagamentos S.A' => 'nubank-logo-svg.png',
+                'Banco Inter S.A' => 'Banco Inter S.A/inter.svg',
+                'Banco Inter' => 'Banco Inter S.A/inter.svg',
+                'Inter' => 'Banco Inter S.A/inter.svg',
+                'Itaú' => null,
+                'Itaú Unibanco' => null,
+                'Bradesco' => 'Bradesco S.A/bradesco com nome.svg',
+                'Bradesco S.A' => 'Bradesco S.A/bradesco com nome.svg',
+                'Banco do Brasil' => 'Banco do Brasil S.A/banco-do-brasil-com-fundo.svg',
+                'Banco do Brasil S.A' => 'Banco do Brasil S.A/banco-do-brasil-com-fundo.svg',
+                'Caixa' => 'Caixa Econômica Federal/caixa-economica-federal-1.svg',
+                'Caixa Econômica Federal' => 'Caixa Econômica Federal/caixa-economica-federal-1.svg',
+                'Santander' => 'Banco Santander Brasil S.A/banco-santander-logo.svg',
+                'Banco Santander Brasil S.A' => 'Banco Santander Brasil S.A/banco-santander-logo.svg',
+                'Banco Santander' => 'Banco Santander Brasil S.A/banco-santander-logo.svg',
+                'C6 Bank' => 'C6 Bank/c6-bank-logo-oficial-vector.png',
+                'Banco C6 S.A' => 'C6 Bank/c6-bank-logo-oficial-vector.png',
+                'PicPay' => 'PicPay/Logo-PicPay -nome .svg',
+                'Neon' => 'Neon/header-logo-neon.svg',
+                'Banco Safra S.A' => 'Banco Safra S.A/logo-safra-nome.svg',
+                'Banco Votorantim' => 'Banco Votorantim/banco-bv-logo.svg',
+                'Banco BTG Pacutal' => 'Banco BTG Pacutal/btg-pactual-nome .svg',
+                'Banco Original S.A' => 'Banco Original S.A/banco-original-logo-branco-nome.svg',
+                'Banco Sofisa' => 'Banco Sofisa/logo-banco-sofisa-verde.svg',
+                'Banco Mercantil do Brasil S.A' => 'Banco Mercantil do Brasil S.A/banco-mercantil-novo-azul.svg',
+            ];
+
+            $svgPath = $logoMap[$account->institution] ?? null;
+        }
+
         return [
             'id' => (string) $account->id,
             'name' => $account->name,
@@ -261,6 +296,7 @@ class KitamoBootstrap
             'incluir_soma' => (bool) $account->incluir_soma,
             'institution' => $account->institution,
             'bank_account_type' => $account->bank_account_type,
+            'svgPath' => $svgPath,
         ];
     }
 
