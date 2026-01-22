@@ -123,6 +123,7 @@ class CreditCardController extends Controller
             'dia_vencimento' => ['required', 'integer', 'min:1', 'max:31'],
             'cor' => ['nullable', 'string', 'max:20'],
             'icone' => ['nullable', 'string', 'max:50'],
+            'institution' => ['nullable', 'string', 'max:255'],
             'is_primary' => ['nullable', 'boolean'],
         ]);
 
@@ -138,6 +139,7 @@ class CreditCardController extends Controller
             'credit_limit' => $data['limite'],
             'closing_day' => $data['dia_fechamento'],
             'due_day' => $data['dia_vencimento'],
+            'institution' => $data['institution'] ?? null,
             'is_primary' => $data['is_primary'] ?? false,
         ]);
 
@@ -159,6 +161,7 @@ class CreditCardController extends Controller
             'dia_vencimento' => ['sometimes', 'required', 'integer', 'min:1', 'max:31'],
             'cor' => ['nullable', 'string', 'max:20'],
             'icone' => ['nullable', 'string', 'max:50'],
+            'institution' => ['nullable', 'string', 'max:255'],
             'is_primary' => ['nullable', 'boolean'],
         ]);
 
@@ -170,6 +173,7 @@ class CreditCardController extends Controller
             'icon' => $data['icone'] ?? $cartao->icon,
             'color' => $data['cor'] ?? $cartao->color,
             'card_brand' => $data['bandeira'] ?? $cartao->card_brand,
+            'institution' => array_key_exists('institution', $data) ? ($data['institution'] ?: null) : $cartao->institution,
             'is_primary' => array_key_exists('is_primary', $data) ? $data['is_primary'] : $cartao->is_primary,
         ]);
         $cartao->save();
