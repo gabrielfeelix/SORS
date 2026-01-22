@@ -525,7 +525,7 @@ const handleCreateCreditCardFlowSave = async () => {
     router.reload();
 };
 
-const isRecurringEntry = (entry: Entry) => Boolean(entry.tags?.includes('Recorrente')) && !Boolean(entry.installment);
+const isRecurringEntry = (entry: Entry) => Boolean(entry.isRecurring) && !Boolean(entry.installment);
 
 const replaceEntry = (entry: Entry) => {
     const idx = desktopEntries.value.findIndex((item) => item.id === entry.id);
@@ -737,6 +737,13 @@ const parseInstallmentCount = (installment?: string | null) => {
 };
 
 const openEntryEdit = (entry: Entry) => {
+    const transferChoices = (() => {
+        const keys = pickerAccounts.value.filter((a) => a.type !== 'credit_card').map((a) => a.key);
+        const from = keys[0] ?? entry.accountLabel ?? '';
+        const to = keys.find((k) => k !== from) ?? from;
+        return { from, to };
+    })();
+
     transactionKind.value = entry.kind;
     const initial: TransactionModalPayload = {
         id: entry.id,
@@ -745,8 +752,9 @@ const openEntryEdit = (entry: Entry) => {
         description: entry.title,
         category: entry.categoryLabel,
         account: entry.accountLabel,
-        dateKind: 'today',
-        dateOther: '',
+        dateKind: entry.transactionDate ? 'other' : 'today',
+        dateOther: entry.transactionDate ?? '',
+        transactionDate: entry.transactionDate ?? '',
         isInstallment: Boolean(entry.installment),
         installmentCount: parseInstallmentCount(entry.installment),
         isPaid: entry.status === 'paid' || entry.status === 'received',
@@ -755,9 +763,15 @@ const openEntryEdit = (entry: Entry) => {
         receiptUrl: entry.receiptUrl ?? null,
         receiptName: entry.receiptName ?? null,
         removeReceipt: false,
-        transferFrom: 'Banco Inter',
-        transferTo: 'Carteira',
+        transferFrom: transferChoices.from,
+        transferTo: transferChoices.to,
         transferDescription: '',
+        despesaFixa: Boolean(entry.isFixed),
+        repetir: Boolean(entry.isRecurring) && !Boolean(entry.isFixed),
+        recurrenceGroupId: entry.recurrenceGroupId ?? null,
+        isFixed: Boolean(entry.isFixed),
+        recurrenceEveryMonths: entry.recurrenceEveryMonths ?? null,
+        recurrenceEndsAt: entry.recurrenceEndsAt ?? null,
     };
 
     if (isMobile.value) {

@@ -34,13 +34,20 @@ class TransactionController extends Controller
             'isInstallment' => ['nullable', 'boolean'],
             'installmentCount' => ['nullable', 'integer', 'min:1', 'max:99'],
             'isRecorrente' => ['nullable', 'boolean'],
-            'periodicidade' => ['nullable', 'in:mensal,quinzenal,a_cada_x_dias'],
+            'periodicidade' => ['nullable', 'in:mensal,quinzenal,a_cada_x_dias,a_cada_x_meses'],
             'intervalo_dias' => ['nullable', 'integer', 'min:1', 'max:366'],
+            'intervalo_meses' => ['nullable', 'integer', 'min:1', 'max:120'],
             'data_fim' => ['nullable', 'date'],
+            'repetir' => ['nullable', 'boolean'],
+            'repetir_vezes' => ['nullable', 'integer', 'min:2', 'max:120'],
+            'repetir_meses' => ['nullable', 'integer', 'min:1', 'max:120'],
+            'despesa_fixa' => ['nullable', 'boolean'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['string', 'max:50'],
             'receipt' => ['nullable', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,webp,heic,heif'],
         ]);
+
+        $tags = $this->sanitizeTags($data['tags'] ?? []);
 
         $accountName = trim($data['account'] ?? 'Carteira');
         $account = Account::firstOrCreate(
@@ -58,17 +65,19 @@ class TransactionController extends Controller
             ? $data['dateOther']
             : now()->toDateString();
 
-        $isRecorrente = (bool) ($data['isRecorrente'] ?? false);
-        if ($isRecorrente && empty($data['periodicidade'])) {
-            return response()->json([
-                'message' => 'periodicidade é obrigatória para recorrência.',
-            ], 422);
-        }
+        $isFixa = (bool) ($data['despesa_fixa'] ?? false);
+        $isRepetir = (bool) ($data['repetir'] ?? false);
+        $isRecorrente = (bool) ($data['isRecorrente'] ?? false) || $isFixa || $isRepetir;
 
         $isParcelado = !empty($data['isInstallment']) && !empty($data['installmentCount']) && (int) $data['installmentCount'] > 1;
         if ($isRecorrente && $isParcelado) {
             return response()->json([
                 'message' => 'Não é possível usar parcelamento e recorrência ao mesmo tempo.',
+            ], 422);
+        }
+        if ($isFixa && $isRepetir) {
+            return response()->json([
+                'message' => 'Não é possível usar repetição e despesa fixa ao mesmo tempo.',
             ], 422);
         }
 
@@ -98,9 +107,41 @@ class TransactionController extends Controller
             $parcelaTotal = $installmentTotal;
         }
 
+        $periodicidade = null;
+        $intervaloDias = null;
+        $intervaloMeses = null;
+        $dataFim = null;
+
         $recorrenciaGrupoId = null;
         if ($isRecorrente) {
             $recorrenciaGrupoId = (string) Str::uuid();
+
+            $periodicidade = $data['periodicidade'] ?? null;
+            $intervaloDias = $periodicidade === 'a_cada_x_dias' ? ($data['intervalo_dias'] ?? null) : null;
+            $intervaloMeses = $periodicidade === 'a_cada_x_meses' ? ($data['intervalo_meses'] ?? null) : null;
+            $dataFim = $data['data_fim'] ?? null;
+
+            if ($isFixa) {
+                $periodicidade = 'a_cada_x_meses';
+                $intervaloMeses = 1;
+                $intervaloDias = null;
+                $dataFim = null;
+            }
+
+            if ($isRepetir) {
+                $periodicidade = 'a_cada_x_meses';
+                $intervaloMeses = max(1, (int) ($data['repetir_meses'] ?? 1));
+                $intervaloDias = null;
+
+                $vezes = max(2, (int) ($data['repetir_vezes'] ?? 2));
+                $dataFim = CarbonImmutable::parse($date)->addMonthsNoOverflow($intervaloMeses * ($vezes - 1))->toDateString();
+            }
+
+            if (empty($periodicidade)) {
+                return response()->json([
+                    'message' => 'Configuração de repetição é obrigatória.',
+                ], 422);
+            }
 
             RecorrenciaGrupo::create([
                 'id' => $recorrenciaGrupoId,
@@ -110,12 +151,13 @@ class TransactionController extends Controller
                 'kind' => $data['kind'],
                 'amount' => $data['amount'],
                 'descricao' => $data['description'],
-                'periodicidade' => $data['periodicidade'],
-                'intervalo_dias' => $data['periodicidade'] === 'a_cada_x_dias' ? ($data['intervalo_dias'] ?? null) : null,
+                'periodicidade' => $periodicidade,
+                'intervalo_dias' => $intervaloDias,
+                'intervalo_meses' => $intervaloMeses,
                 'data_inicio' => $date,
-                'data_fim' => $data['data_fim'] ?? null,
+                'data_fim' => $dataFim,
                 'is_active' => true,
-                'tags' => $data['tags'] ?? [],
+                'tags' => $tags,
             ]);
         }
 
@@ -136,12 +178,12 @@ class TransactionController extends Controller
             'is_parcelado' => $isParcelado,
             'parcela_atual' => $parcelaAtual,
             'parcela_total' => $parcelaTotal,
-            'recurrence_interval' => $isRecorrente ? $data['periodicidade'] : null,
-            'recurrence_end_at' => $isRecorrente ? ($data['data_fim'] ?? null) : null,
+            'recurrence_interval' => $isRecorrente ? $periodicidade : null,
+            'recurrence_end_at' => $isRecorrente ? $dataFim : null,
             'recorrencia_grupo_id' => $recorrenciaGrupoId,
             'parcelamento_grupo_id' => null,
             'data_pagamento' => in_array($status, ['paid', 'received'], true) ? now() : null,
-            'tags' => $data['tags'] ?? [],
+            'tags' => $tags,
         ]);
 
         if ($request->hasFile('receipt')) {
@@ -171,7 +213,7 @@ class TransactionController extends Controller
                 'valor_total' => $data['amount'],
                 'quantidade_parcelas' => (int) $data['installmentCount'],
                 'data_primeira_parcela' => $firstInstallmentDate->toDateString(),
-                'tags' => $data['tags'] ?? [],
+                'tags' => $tags,
             ]);
 
             $this->gerarParcelas($transaction, $parcelamentoGrupoId, $firstInstallmentDate, (int) $data['installmentCount']);
@@ -180,7 +222,7 @@ class TransactionController extends Controller
         }
 
         return response()->json([
-            'entry' => app(KitamoBootstrap::class)->entry($transaction->load(['category', 'account'])),
+            'entry' => app(KitamoBootstrap::class)->entry($transaction->load(['category', 'account', 'recorrenciaGrupo'])),
         ]);
     }
 
@@ -203,14 +245,21 @@ class TransactionController extends Controller
             'isInstallment' => ['nullable', 'boolean'],
             'installmentCount' => ['nullable', 'integer', 'min:1', 'max:99'],
             'editar_escopo' => ['nullable', 'in:este,proximos,todos'],
-            'periodicidade' => ['nullable', 'in:mensal,quinzenal,a_cada_x_dias'],
+            'periodicidade' => ['nullable', 'in:mensal,quinzenal,a_cada_x_dias,a_cada_x_meses'],
             'intervalo_dias' => ['nullable', 'integer', 'min:1', 'max:366'],
+            'intervalo_meses' => ['nullable', 'integer', 'min:1', 'max:120'],
             'data_fim' => ['nullable', 'date'],
+            'repetir' => ['nullable', 'boolean'],
+            'repetir_vezes' => ['nullable', 'integer', 'min:2', 'max:120'],
+            'repetir_meses' => ['nullable', 'integer', 'min:1', 'max:120'],
+            'despesa_fixa' => ['nullable', 'boolean'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['string', 'max:50'],
             'receipt' => ['nullable', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,webp,heic,heif'],
             'remove_receipt' => ['nullable', 'boolean'],
         ]);
+
+        $tags = $this->sanitizeTags($data['tags'] ?? []);
 
         $editarEscopo = $data['editar_escopo'] ?? null;
         $isRecorrenteEdit = !empty($transaction->recorrencia_grupo_id) && $editarEscopo !== null;
@@ -291,7 +340,7 @@ class TransactionController extends Controller
             'parcela_atual' => $parcelaAtual,
             'parcela_total' => $parcelaTotal,
             'data_pagamento' => in_array($status, ['paid', 'received'], true) ? ($transaction->data_pagamento ?? now()) : null,
-            'tags' => $data['tags'] ?? [],
+            'tags' => $tags,
         ];
 
         if ($request->boolean('remove_receipt')) {
@@ -319,16 +368,42 @@ class TransactionController extends Controller
                 'descricao' => $data['description'],
             ];
 
-            if (!empty($data['periodicidade'])) {
-                $grupoUpdate['periodicidade'] = $data['periodicidade'];
-                $grupoUpdate['intervalo_dias'] = $data['periodicidade'] === 'a_cada_x_dias' ? ($data['intervalo_dias'] ?? null) : null;
+            $isFixa = (bool) ($data['despesa_fixa'] ?? false);
+            $isRepetir = (bool) ($data['repetir'] ?? false);
+
+            if ($isFixa && $isRepetir) {
+                return response()->json([
+                    'message' => 'Não é possível usar repetição e despesa fixa ao mesmo tempo.',
+                ], 422);
             }
 
-            if (array_key_exists('data_fim', $data)) {
-                $grupoUpdate['data_fim'] = $data['data_fim'] ?? null;
+            if ($isFixa) {
+                $grupoUpdate['periodicidade'] = 'a_cada_x_meses';
+                $grupoUpdate['intervalo_meses'] = 1;
+                $grupoUpdate['intervalo_dias'] = null;
+                $grupoUpdate['data_fim'] = null;
+            } elseif ($isRepetir) {
+                $intervaloMeses = max(1, (int) ($data['repetir_meses'] ?? 1));
+                $vezes = max(2, (int) ($data['repetir_vezes'] ?? 2));
+                $dataFim = CarbonImmutable::parse($transaction->transaction_date)->addMonthsNoOverflow($intervaloMeses * ($vezes - 1))->toDateString();
+
+                $grupoUpdate['periodicidade'] = 'a_cada_x_meses';
+                $grupoUpdate['intervalo_meses'] = $intervaloMeses;
+                $grupoUpdate['intervalo_dias'] = null;
+                $grupoUpdate['data_fim'] = $dataFim;
+            } else {
+                if (!empty($data['periodicidade'])) {
+                    $grupoUpdate['periodicidade'] = $data['periodicidade'];
+                    $grupoUpdate['intervalo_dias'] = $data['periodicidade'] === 'a_cada_x_dias' ? ($data['intervalo_dias'] ?? null) : null;
+                    $grupoUpdate['intervalo_meses'] = $data['periodicidade'] === 'a_cada_x_meses' ? ($data['intervalo_meses'] ?? null) : null;
+                }
+
+                if (array_key_exists('data_fim', $data)) {
+                    $grupoUpdate['data_fim'] = $data['data_fim'] ?? null;
+                }
             }
 
-            $grupoUpdate['tags'] = $data['tags'] ?? [];
+            $grupoUpdate['tags'] = $tags;
 
             RecorrenciaGrupo::where('id', $grupoId)->where('user_id', $user->id)->update($grupoUpdate);
             $this->gerarRecorrenciasFuturas($grupoId, $scheduler, 12);
@@ -347,7 +422,7 @@ class TransactionController extends Controller
                 'category_id' => $category->id,
                 'descricao' => $data['description'],
                 'valor_total' => $data['amount'],
-                'tags' => $data['tags'] ?? [],
+                'tags' => $tags,
             ]);
 
             $transaction = Transaction::query()->findOrFail($transaction->id);
@@ -365,7 +440,7 @@ class TransactionController extends Controller
         $this->applyBalanceAdjustment($transaction->account, $transaction, 1);
 
         return response()->json([
-            'entry' => app(KitamoBootstrap::class)->entry($transaction->load(['category', 'account'])),
+            'entry' => app(KitamoBootstrap::class)->entry($transaction->load(['category', 'account', 'recorrenciaGrupo'])),
         ]);
     }
 
@@ -381,6 +456,34 @@ class TransactionController extends Controller
         $transaction->delete();
 
         return response()->json(['ok' => true]);
+    }
+
+    private function sanitizeTags(array $tags): array
+    {
+        $result = [];
+        $seen = [];
+
+        foreach ($tags as $raw) {
+            $value = trim((string) $raw);
+            $value = ltrim($value, "# \t\n\r\0\x0B");
+            $value = preg_replace('/\s+/', ' ', $value);
+            $value = trim((string) $value);
+            if ($value === '') {
+                continue;
+            }
+            if (mb_strtolower($value) === 'recorrente') {
+                continue;
+            }
+
+            $key = mb_strtolower($value);
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $result[] = $value;
+        }
+
+        return $result;
     }
 
     private function storeReceipt(int $userId, UploadedFile $file): array

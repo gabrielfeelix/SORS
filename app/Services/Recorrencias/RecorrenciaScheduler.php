@@ -12,6 +12,7 @@ class RecorrenciaScheduler
         return match ($grupo->periodicidade) {
             'mensal' => $from->addMonthNoOverflow(),
             'quinzenal' => $from->addDays(15),
+            'a_cada_x_meses' => $from->addMonthsNoOverflow(max(1, (int) ($grupo->intervalo_meses ?? 1))),
             'a_cada_x_dias' => $from->addDays(max(1, (int) ($grupo->intervalo_dias ?? 1))),
             default => $from->addMonthNoOverflow(),
         };
@@ -30,4 +31,3 @@ class RecorrenciaScheduler
         return true;
     }
 }
-

@@ -19,7 +19,7 @@ class TransactionsApiController extends Controller
         ]);
 
         $query = Transaction::query()
-            ->with(['category', 'account'])
+            ->with(['category', 'account', 'recorrenciaGrupo'])
             ->where('user_id', $user->id)
             ->orderByDesc('transaction_date')
             ->orderByDesc('id');
@@ -37,4 +37,3 @@ class TransactionsApiController extends Controller
         ]);
     }
 }
-

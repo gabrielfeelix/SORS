@@ -21,6 +21,8 @@ export type TransactionModalPayload = {
     account: string;
     dateKind: DateKind;
     dateOther?: string;
+    transactionDate?: string;
+    editarEscopo?: 'este' | 'proximos' | 'todos';
     isInstallment: boolean;
     installmentCount: number;
     isPaid: boolean;
@@ -32,10 +34,14 @@ export type TransactionModalPayload = {
     transferFrom: string;
     transferTo: string;
     transferDescription: string;
-    isRecorrente?: boolean;
-    periodicidade?: 'mensal' | 'quinzenal' | 'a_cada_x_dias';
-    intervalo_dias?: number | null;
-    data_fim?: string | null;
+    repetir?: boolean;
+    repetirVezes?: number;
+    repetirMeses?: number;
+    despesaFixa?: boolean;
+    recurrenceGroupId?: string | null;
+    isFixed?: boolean;
+    recurrenceEveryMonths?: number | null;
+    recurrenceEndsAt?: string | null;
 };
 
 const props = defineProps<{
@@ -70,7 +76,6 @@ const transferDescription = ref('');
 const dateKind = ref<DateKind>('today');
 const dateOther = ref<string>('');
 const dateSheetOpen = ref(false);
-const endDateSheetOpen = ref(false);
 const categorySheetOpen = ref(false);
 const newCategoryOpen = ref(false);
 const accountSheetOpen = ref(false);
@@ -79,28 +84,36 @@ const transferToSheetOpen = ref(false);
 const isInstallment = ref(false);
 const installmentCount = ref(1);
 const isPaid = ref(false);
-const isRecorrente = ref(false);
-	const periodicidade = ref<'mensal' | 'quinzenal' | 'a_cada_x_dias'>('mensal');
-	const intervalo_dias = ref<number | null>(null);
-	const data_fim = ref<string>('');
-	const fimMode = ref<'sempre' | 'ate'>('sempre');
-	const recurrenceError = ref<string>('');
+const despesaFixa = ref(false);
+const repetir = ref(false);
+const repetirVezes = ref(2);
+const repetirMeses = ref(1);
+
+const editScopeOpen = ref(false);
+const pendingSubmitScope = ref<'este' | 'proximos' | 'todos' | null>(null);
+const editScopeMessage = ref('');
+const pendingPayload = ref<TransactionModalPayload | null>(null);
 
 watch(isInstallment, (value) => {
-    if (value) isRecorrente.value = false;
+    if (value) {
+        despesaFixa.value = false;
+        repetir.value = false;
+    }
 });
 
-watch(isRecorrente, (value) => {
-    if (value) isInstallment.value = false;
+watch(despesaFixa, (value) => {
+    if (value) {
+        isInstallment.value = false;
+        repetir.value = false;
+    }
 });
 
-	watch(periodicidade, (value) => {
-	    if (value !== 'a_cada_x_dias') intervalo_dias.value = null;
-	});
-
-	watch(fimMode, (value) => {
-	    if (value !== 'ate') data_fim.value = '';
-	});
+watch(repetir, (value) => {
+    if (value) {
+        isInstallment.value = false;
+        despesaFixa.value = false;
+    }
+});
 
 	const isExpense = computed(() => localKind.value === 'expense');
 	const isTransfer = computed(() => localKind.value === 'transfer');
@@ -229,64 +242,6 @@ const installmentPreview = computed(() => {
     };
 });
 
-const recurrenceEndDate = computed(() => {
-    if (fimMode.value !== 'ate') return null;
-    return parseBRDate(data_fim.value) ?? null;
-});
-
-const recurrenceIntervalDays = computed(() => {
-    if (periodicidade.value === 'quinzenal') return 15;
-    if (periodicidade.value === 'a_cada_x_dias') return clampInt(intervalo_dias.value ?? '', 1, 999);
-    return null;
-});
-
-const recurrencePreview = computed(() => {
-    const maxUntilEnd = 5;
-    const base = baseDate.value;
-    const end = recurrenceEndDate.value;
-    const amountText = formatBRL2(amountNumber.value);
-
-    const nextDate = (date: Date) => {
-        if (periodicidade.value === 'mensal') return addMonthsClamp(date, 1);
-        const stepDays = recurrenceIntervalDays.value ?? 1;
-        return addDays(date, stepDays);
-    };
-
-    const rows: Array<{ date: string; amount: string }> = [];
-    let cursor = base;
-
-    if (fimMode.value === 'ate' && end) {
-        while (cursor.getTime() <= end.getTime() && rows.length < maxUntilEnd) {
-            rows.push({ date: formatBRDate(cursor), amount: amountText });
-            cursor = nextDate(cursor);
-        }
-        return { rows, hasMore: cursor.getTime() <= end.getTime(), amountText };
-    }
-
-    const limit = 3;
-    for (let i = 0; i < limit; i += 1) {
-        rows.push({ date: formatBRDate(cursor), amount: amountText });
-        cursor = nextDate(cursor);
-    }
-    return { rows, hasMore: true, amountText };
-});
-
-const recurrenceDescription = computed(() => {
-    if (periodicidade.value === 'mensal') return `Repete todo dia ${baseDate.value.getDate()}, mensalmente`;
-    if (periodicidade.value === 'quinzenal') return 'Repete a cada 15 dias';
-    const interval = recurrenceIntervalDays.value ?? 1;
-    return `Repete a cada ${interval} dias`;
-});
-
-const recurrenceEveryDaysHint = computed(() => {
-    if (periodicidade.value !== 'a_cada_x_dias') return '';
-    const raw = Number(intervalo_dias.value ?? 0);
-    if (!Number.isFinite(raw) || raw < 1) return 'ℹ️ Informe de quantos em quantos dias.';
-    const interval = clampInt(raw, 1, 999);
-    const next = formatBRDate(addDays(baseDate.value, interval));
-    return `ℹ️ Repetirá a cada ${interval} dias (próxima: ${next})`;
-});
-
 const normalizeTagName = (raw: unknown) =>
     String(raw ?? '')
         .trim()
@@ -327,7 +282,7 @@ const tagOptions = computed<UserTag[]>(() => {
         map.set(key, { id: tag.id, nome, cor: tag.cor || '#64748B' });
     };
 
-    for (const nome of ['Essencial', 'Recorrente', 'Urgente', 'Supérfluo']) {
+    for (const nome of ['Essencial', 'Urgente', 'Supérfluo']) {
         add({ id: `builtin:${nome}`, nome, cor: '#64748B' });
     }
 
@@ -430,12 +385,22 @@ const toBRDate = (isoDate: string) => {
     return `${dd}/${mm}/${yyyy}`;
 };
 
+const parseISODate = (isoDate: string) => {
+    const match = String(isoDate ?? '').trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return null;
+    const [, yyyy, mm, dd] = match;
+    const date = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    return Number.isFinite(date.getTime()) ? date : null;
+};
+
 const reset = () => {
     const draft = props.initial ?? null;
     const draftInstallment = draft?.isInstallment ?? false;
-    let draftRecorrente = draft?.isRecorrente ?? false;
-    if (draftInstallment && draftRecorrente) {
-        draftRecorrente = false;
+    let draftFixa = Boolean(draft?.despesaFixa ?? draft?.isFixed ?? false);
+    let draftRepetir = Boolean(draft?.repetir ?? (!draftFixa && Boolean(draft?.recurrenceEndsAt)));
+    if (draftInstallment && (draftFixa || draftRepetir)) {
+        draftFixa = false;
+        draftRepetir = false;
     }
 
     initialId.value = draft?.id;
@@ -443,7 +408,11 @@ const reset = () => {
     amount.value = draft ? numberToMoneyInput(draft.amount) : '';
     description.value = draft?.description ?? '';
     category.value = draft?.category ?? 'Alimentação';
-    account.value = draft?.account ?? 'Carteira';
+    {
+        const fallbackAccount = accounts.value[0]?.key ?? '';
+        const desired = (draft?.account ?? fallbackAccount).trim();
+        account.value = accounts.value.some((a) => a.key === desired) ? desired : fallbackAccount;
+    }
     dateKind.value = draft?.dateKind ?? 'today';
     dateOther.value = draft?.dateOther ? toBRDate(draft.dateOther) : '';
     isInstallment.value = draftInstallment;
@@ -456,7 +425,8 @@ const reset = () => {
     removeReceipt.value = false;
     showAdvanced.value = Boolean(
         draft?.isInstallment ||
-            draft?.isRecorrente ||
+            draftFixa ||
+            draftRepetir ||
             (draft?.tags?.length ?? 0) ||
             Boolean(draft?.receiptUrl),
     );
@@ -471,14 +441,27 @@ const reset = () => {
         transferTo.value = availableTransfers.find((k) => k !== transferFrom.value) ?? transferTo.value;
     }
     transferDescription.value = draft?.transferDescription ?? '';
-    isRecorrente.value = draftRecorrente;
-    periodicidade.value = draft?.periodicidade ?? 'mensal';
-    intervalo_dias.value = draft?.intervalo_dias ?? null;
-    data_fim.value = draft?.data_fim ? toBRDate(draft.data_fim) : '';
-    fimMode.value = draft?.data_fim ? 'ate' : 'sempre';
+    despesaFixa.value = !isTransfer.value && draftFixa;
+
+    const rawIntervalMonths = Number(draft?.repetirMeses ?? draft?.recurrenceEveryMonths ?? 1);
+    repetirMeses.value = Number.isFinite(rawIntervalMonths) && rawIntervalMonths > 0 ? Math.floor(rawIntervalMonths) : 1;
+
+    const draftStartsAt = draft?.dateOther ?? null;
+    const startIso = draftStartsAt && draftStartsAt !== '' ? draftStartsAt : null;
+    const startDate = startIso ? parseISODate(startIso) : (draft?.transactionDate ? parseISODate(draft.transactionDate) : null);
+    const endDate = draft?.recurrenceEndsAt ? parseISODate(draft.recurrenceEndsAt) : null;
+    const monthsDiff =
+        startDate && endDate
+            ? (endDate.getFullYear() - startDate.getFullYear()) * 12 + (endDate.getMonth() - startDate.getMonth())
+            : null;
+    const computedTimes =
+        monthsDiff != null ? Math.max(2, Math.floor(monthsDiff / Math.max(1, repetirMeses.value)) + 1) : 2;
+    const rawTimes = Number(draft?.repetirVezes ?? computedTimes);
+    repetirVezes.value = Number.isFinite(rawTimes) && rawTimes >= 2 ? Math.floor(rawTimes) : 2;
+
+    repetir.value = !isTransfer.value && !despesaFixa.value && draftRepetir;
 
     dateSheetOpen.value = false;
-    endDateSheetOpen.value = false;
     categorySheetOpen.value = false;
     accountSheetOpen.value = false;
     transferFromSheetOpen.value = false;
@@ -504,15 +487,6 @@ const setDateOther = (br: string) => {
     dateOther.value = br;
 };
 
-const openEndDateSheet = () => {
-    endDateSheetOpen.value = true;
-};
-
-const setEndDate = (br: string) => {
-    data_fim.value = br;
-    fimMode.value = 'ate';
-};
-
 const clampInt = (value: unknown, min: number, max: number) => {
     const digits = String(value ?? '').replace(/[^\d]/g, '');
     if (!digits) return min;
@@ -521,22 +495,17 @@ const clampInt = (value: unknown, min: number, max: number) => {
     return Math.min(max, Math.max(min, parsed));
 };
 
+const onRepetirVezesInput = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    repetirVezes.value = clampInt(target.value, 2, 120);
+};
+
 const decInstallments = () => {
     installmentCount.value = Math.max(1, Math.floor(installmentCount.value || 1) - 1);
 };
 
 const incInstallments = () => {
     installmentCount.value = Math.min(999, Math.floor(installmentCount.value || 1) + 1);
-};
-
-const decIntervalDays = () => {
-    const current = clampInt(intervalo_dias.value ?? 1, 1, 999);
-    intervalo_dias.value = Math.max(1, current - 1);
-};
-
-const incIntervalDays = () => {
-    const current = clampInt(intervalo_dias.value ?? 1, 1, 999);
-    intervalo_dias.value = Math.min(999, current + 1);
 };
 
 const normalizeCategoryKind = (kind: unknown): CategoryOption['kind'] => {
@@ -702,26 +671,9 @@ const createCategory = async (payload: { name: string; type: 'expense' | 'income
     }
 };
 
-	const save = () => {
-	    recurrenceError.value = '';
-	    const dateOtherISO = dateKind.value === 'other' ? toISODate(dateOther.value) : '';
-	    if (isRecorrente.value && periodicidade.value === 'a_cada_x_dias') {
-	        const interval = Number(intervalo_dias.value ?? 0);
-	        if (!Number.isFinite(interval) || interval < 1) {
-	            recurrenceError.value = 'Informe um intervalo válido (mínimo 1 dia).';
-	            return;
-	        }
-	    }
-	    if (isRecorrente.value && fimMode.value === 'ate') {
-	        const iso = toISODate(data_fim.value);
-	        if (!iso) {
-	            recurrenceError.value = 'Informe uma data final válida (dd/mm/aaaa).';
-	            return;
-	        }
-	    }
-	    const dataFimISO = isRecorrente.value && fimMode.value === 'ate' && data_fim.value ? toISODate(data_fim.value) : null;
-	    const intervaloDiasValue = isRecorrente.value && periodicidade.value === 'a_cada_x_dias' ? intervalo_dias.value : null;
-	    emit('save', {
+const buildPayload = (): TransactionModalPayload => {
+    const dateOtherISO = dateKind.value === 'other' ? toISODate(dateOther.value) : '';
+    return {
         id: initialId.value,
         kind: localKind.value,
         amount: amountNumber.value,
@@ -730,6 +682,7 @@ const createCategory = async (payload: { name: string; type: 'expense' | 'income
         account: account.value,
         dateKind: dateKind.value,
         dateOther: dateOtherISO,
+        transactionDate: dateOtherISO || undefined,
         isInstallment: isInstallment.value,
         installmentCount: installmentCount.value,
         isPaid: isPaid.value,
@@ -739,11 +692,47 @@ const createCategory = async (payload: { name: string; type: 'expense' | 'income
         transferFrom: transferFrom.value,
         transferTo: transferTo.value,
         transferDescription: transferDescription.value.trim(),
-        isRecorrente: isRecorrente.value,
-        periodicidade: periodicidade.value,
-        intervalo_dias: intervaloDiasValue,
-        data_fim: dataFimISO,
-    });
+        repetir: !isTransfer.value && repetir.value,
+        repetirVezes: !isTransfer.value && repetir.value ? clampInt(repetirVezes.value, 2, 120) : undefined,
+        repetirMeses: !isTransfer.value && repetir.value ? clampInt(repetirMeses.value, 1, 120) : undefined,
+        despesaFixa: !isTransfer.value && despesaFixa.value,
+        recurrenceGroupId: props.initial?.recurrenceGroupId ?? null,
+        isFixed: props.initial?.isFixed ?? false,
+        recurrenceEveryMonths: props.initial?.recurrenceEveryMonths ?? null,
+        recurrenceEndsAt: props.initial?.recurrenceEndsAt ?? null,
+    };
+};
+
+const requiresEditScope = computed(() => Boolean(initialId.value) && Boolean(props.initial?.recurrenceGroupId) && !isTransfer.value);
+
+const applyScopeAndSubmit = (scope: 'este' | 'proximos' | 'todos') => {
+    if (!pendingPayload.value) return;
+    emit('save', { ...pendingPayload.value, editarEscopo: scope });
+    pendingPayload.value = null;
+    editScopeOpen.value = false;
+    close();
+};
+
+const save = () => {
+    const payload = buildPayload();
+
+    if (payload.repetir) {
+        const vezes = clampInt(payload.repetirVezes ?? 2, 2, 120);
+        const meses = clampInt(payload.repetirMeses ?? 1, 1, 120);
+        if (!Number.isFinite(vezes) || vezes < 2 || !Number.isFinite(meses) || meses < 1) return;
+    }
+
+    if (requiresEditScope.value) {
+        pendingPayload.value = payload;
+        editScopeMessage.value =
+            (props.initial?.isFixed ?? false)
+                ? 'Essa é uma despesa/entrada fixa. Como você quer aplicar as alterações?'
+                : 'Essa movimentação faz parte de uma repetição. Como você quer aplicar as alterações?';
+        editScopeOpen.value = true;
+        return;
+    }
+
+    emit('save', payload);
     close();
 };
 
@@ -761,7 +750,8 @@ watch(
 watch(localKind, (value) => {
     if (value === 'transfer') {
         isInstallment.value = false;
-        isRecorrente.value = false;
+        despesaFixa.value = false;
+        repetir.value = false;
     }
 });
 
@@ -951,9 +941,31 @@ watch(
 	                        >
 	                            <path d="M6 9l6 6 6-6" />
 	                        </svg>
-	                    </button>
+                    </button>
 
                     <div v-if="showAdvanced" class="space-y-4 pb-4">
+                        <div v-if="!isTransfer" class="rounded-2xl bg-white p-4 ring-1 ring-slate-200/60">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-500" aria-hidden="true">📌</span>
+                                    <div class="text-sm font-semibold text-slate-900">Despesa fixa</div>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="relative inline-flex h-7 w-12 items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60"
+                                    :disabled="isInstallment || repetir"
+                                    :class="despesaFixa ? 'bg-[#14B8A6]' : 'bg-slate-300'"
+                                    @click="!(isInstallment || repetir) && (despesaFixa = !despesaFixa)"
+                                    aria-label="Despesa fixa"
+                                >
+                                    <span class="inline-block h-6 w-6 transform rounded-full bg-white transition" :class="despesaFixa ? 'translate-x-5' : 'translate-x-1'"></span>
+                                </button>
+                            </div>
+                            <div v-if="despesaFixa" class="mt-3 text-xs font-semibold text-slate-500">
+                                Vai aparecer em todos os meses a partir desta data.
+                            </div>
+                        </div>
+
                         <div v-if="!isTransfer" class="rounded-2xl bg-white p-4 ring-1 ring-slate-200/60">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
@@ -967,9 +979,10 @@ watch(
                                 </div>
                                 <button
                                     type="button"
-                                    class="relative inline-flex h-7 w-12 items-center rounded-full transition"
+                                    class="relative inline-flex h-7 w-12 items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60"
+                                    :disabled="despesaFixa || repetir"
                                     :class="isInstallment ? 'bg-[#14B8A6]' : 'bg-slate-300'"
-                                    @click="isInstallment = !isInstallment"
+                                    @click="!(despesaFixa || repetir) && (isInstallment = !isInstallment)"
                                     aria-label="Parcelado"
                                 >
                                     <span class="inline-block h-6 w-6 transform rounded-full bg-white transition" :class="isInstallment ? 'translate-x-5' : 'translate-x-1'"></span>
@@ -1045,102 +1058,49 @@ watch(
                                             <path d="M8 12h8" />
                                         </svg>
                                     </span>
-                                    <div class="text-sm font-semibold text-slate-900">Recorrência</div>
+                                    <div class="text-sm font-semibold text-slate-900">Repetir</div>
                                 </div>
                                 <button
                                     type="button"
-                                    class="relative inline-flex h-7 w-12 items-center rounded-full transition"
-                                    :class="isRecorrente ? 'bg-[#14B8A6]' : 'bg-slate-300'"
-                                    @click="isRecorrente = !isRecorrente"
-                                    aria-label="Recorrente"
+                                    class="relative inline-flex h-7 w-12 items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60"
+                                    :disabled="isInstallment || despesaFixa || isTransfer"
+                                    :class="repetir ? 'bg-[#14B8A6]' : 'bg-slate-300'"
+                                    @click="!(isInstallment || despesaFixa || isTransfer) && (repetir = !repetir)"
+                                    aria-label="Repetir"
                                 >
-                                    <span class="inline-block h-6 w-6 transform rounded-full bg-white transition" :class="isRecorrente ? 'translate-x-5' : 'translate-x-1'"></span>
+                                    <span class="inline-block h-6 w-6 transform rounded-full bg-white transition" :class="repetir ? 'translate-x-5' : 'translate-x-1'"></span>
                                 </button>
                             </div>
 
-                            <div v-if="isRecorrente" class="mt-4 grid grid-cols-2 gap-3">
-                                <div>
-                                    <div class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Frequência</div>
-                                    <select v-model="periodicidade" class="mt-2 h-11 w-full rounded-xl bg-slate-50 px-4 text-sm font-bold text-slate-700 ring-1 ring-slate-200/60 focus:outline-none">
-                                        <option value="mensal">Mensal</option>
-                                        <option value="quinzenal">Quinzenal</option>
-                                        <option value="a_cada_x_dias">A cada X dias</option>
-                                    </select>
-                                    <div v-if="periodicidade === 'a_cada_x_dias'" class="mt-2">
-                                        <div class="flex h-11 items-center overflow-hidden rounded-xl bg-slate-50 ring-1 ring-slate-200/60">
-                                            <span class="pl-4 text-sm font-semibold text-slate-500">A cada</span>
-                                            <input
-                                                :value="intervalo_dias ?? ''"
-                                                type="text"
-                                                inputmode="numeric"
-                                                pattern="[0-9]*"
-                                                placeholder="4"
-                                                class="w-16 appearance-none border-0 bg-transparent px-2 text-center text-sm font-bold text-slate-700 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none"
-                                                @keydown="preventNonDigitKeydown"
-                                                @input="(e) => { intervalo_dias = clampInt((e.target as HTMLInputElement).value, 1, 999) }"
-                                                aria-label="Intervalo em dias"
-                                            />
-                                            <span class="text-sm font-semibold text-slate-500">dias</span>
-                                            <div class="ml-auto grid h-full w-12 grid-rows-2 border-l border-slate-200/70">
-                                                <button type="button" class="flex items-center justify-center text-slate-500" aria-label="Aumentar" @click="incIntervalDays">
-                                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <path d="M6 15l6-6 6 6" />
-                                                    </svg>
-                                                </button>
-                                                <button type="button" class="flex items-center justify-center text-slate-500" aria-label="Diminuir" @click="decIntervalDays">
-                                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <path d="M6 9l6 6 6-6" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div v-if="recurrenceEveryDaysHint" class="mt-2 text-xs font-semibold text-slate-500">
-                                            {{ recurrenceEveryDaysHint }}
-                                        </div>
+                            <div v-if="repetir" class="mt-4">
+                                <div class="grid grid-cols-2 items-end gap-4">
+                                    <div>
+                                        <div class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Vezes</div>
+                                        <input
+                                            :value="repetirVezes"
+                                            type="text"
+                                            inputmode="numeric"
+                                            pattern="[0-9]*"
+                                            class="mt-2 h-10 w-full border-b border-slate-200 bg-transparent text-left text-2xl font-semibold text-slate-900 outline-none focus:border-[#14B8A6]"
+                                            @keydown="preventNonDigitKeydown"
+                                            @input="onRepetirVezesInput"
+                                            aria-label="Repetir vezes"
+                                        />
                                     </div>
-                                </div>
-                                <div>
-                                    <div class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Duração</div>
-                                    <select v-model="fimMode" class="mt-2 h-11 w-full rounded-xl bg-slate-50 px-4 text-sm font-bold text-slate-700 ring-1 ring-slate-200/60 focus:outline-none">
-                                        <option value="sempre">Sempre</option>
-                                        <option value="ate">Até data</option>
-                                    </select>
-                                    <button
-                                        v-if="fimMode === 'ate'"
-                                        type="button"
-                                        class="mt-2 flex h-11 w-full items-center justify-between rounded-xl bg-white px-4 text-left text-sm font-semibold ring-1 ring-slate-200/60"
-                                        @click="openEndDateSheet"
-                                        aria-label="Selecionar data final"
-                                    >
-                                        <span :class="data_fim ? 'text-slate-900' : 'text-slate-400'">
-                                            {{ data_fim || 'Selecionar data' }}
-                                        </span>
-                                        <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                            <path d="M6 9l6 6 6-6" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div v-if="isRecorrente" class="mt-4 rounded-xl bg-slate-50 p-3 text-slate-600 ring-1 ring-slate-200/60">
-                                <div class="flex items-center gap-2 text-xs font-semibold">
-                                    <span aria-hidden="true">📋</span>
-                                    <span>Próximas ocorrências:</span>
-                                </div>
-                                <div class="mt-3 space-y-2 text-sm">
-                                    <div v-if="recurrencePreview.rows.length === 0" class="text-xs font-semibold text-slate-400">Nenhuma ocorrência no período.</div>
-                                    <div v-for="row in recurrencePreview.rows" :key="row.date" class="flex items-center justify-between gap-3 font-semibold">
-                                        <span class="tabular-nums">{{ row.date }}</span>
-                                        <span class="tabular-nums">{{ row.amount }}</span>
+                                    <div>
+                                        <div class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Meses</div>
+                                        <select
+                                            v-model="repetirMeses"
+                                            class="mt-2 h-10 w-full border-b border-slate-200 bg-transparent text-left text-lg font-semibold text-slate-900 outline-none focus:border-[#14B8A6]"
+                                            aria-label="Intervalo em meses"
+                                        >
+                                            <option v-for="m in 24" :key="m" :value="m">{{ m }}</option>
+                                        </select>
                                     </div>
-                                    <div v-if="fimMode === 'sempre' && recurrencePreview.hasMore" class="text-xs font-semibold text-slate-400">…</div>
                                 </div>
                                 <div class="mt-3 text-xs font-semibold text-slate-500">
-                                    ℹ️ {{ recurrenceDescription }}
+                                    Vai repetir a cada {{ repetirMeses }} {{ repetirMeses === 1 ? 'mês' : 'meses' }}.
                                 </div>
-                            </div>
-                            <div v-if="recurrenceError" class="mt-3 text-xs font-semibold text-red-500">
-                                {{ recurrenceError }}
                             </div>
                         </div>
 
@@ -1373,14 +1333,6 @@ watch(
             @update:model-value="(v) => { setDateOther(v); dateSheetOpen = false; }"
         />
 
-        <DatePickerSheet
-            :open="endDateSheetOpen"
-            :model-value="data_fim"
-            @close="endDateSheetOpen = false"
-            @select-today="() => { setEndDate(toBRDate(new Date().toISOString().slice(0, 10))); endDateSheetOpen = false; }"
-            @update:model-value="(v) => { setEndDate(v); endDateSheetOpen = false; }"
-        />
-
         <CategoryPickerSheet
             :open="categorySheetOpen"
             :options="categories"
@@ -1419,6 +1371,45 @@ watch(
 	            @close="transferToSheetOpen = false"
 	            @select="setTransferTo"
 	        />
+
+            <div v-if="editScopeOpen" class="fixed inset-0 z-[90]">
+                <button class="absolute inset-0 bg-black/50 backdrop-blur-sm" type="button" @click="editScopeOpen = false" aria-label="Fechar"></button>
+                <div
+                    class="absolute left-1/2 top-1/2 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl"
+                    role="dialog"
+                    aria-modal="true"
+                >
+                    <div class="text-center">
+                        <div class="text-4xl">🧩</div>
+                        <h2 class="mt-4 text-lg font-semibold text-slate-900">Aplicar alterações</h2>
+                        <p class="mt-2 text-sm text-slate-600">{{ editScopeMessage }}</p>
+                    </div>
+
+                    <div class="mt-6 space-y-3">
+                        <button
+                            type="button"
+                            class="w-full rounded-xl border border-slate-200 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                            @click="applyScopeAndSubmit('este')"
+                        >
+                            Só esta movimentação
+                        </button>
+                        <button
+                            type="button"
+                            class="w-full rounded-xl border border-slate-200 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                            @click="applyScopeAndSubmit('proximos')"
+                        >
+                            Esta e as próximas
+                        </button>
+                        <button
+                            type="button"
+                            class="w-full rounded-xl bg-[#14B8A6] py-3 text-sm font-semibold text-white shadow-lg shadow-teal-600/20"
+                            @click="applyScopeAndSubmit('todos')"
+                        >
+                            Todas (antes e depois)
+                        </button>
+                    </div>
+                </div>
+            </div>
 	    </div>
 	</template>
 

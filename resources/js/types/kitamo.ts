@@ -1,4 +1,4 @@
-export type EntryTag = 'Essencial' | 'Recorrente' | 'Urgente' | 'Supérfluo' | string;
+export type EntryTag = 'Essencial' | 'Urgente' | 'Supérfluo' | string;
 
 export type UserTag = {
     id: string;
@@ -22,6 +22,12 @@ export type Entry = {
     categoryLabel: string;
     categoryKey: 'food' | 'home' | 'car' | 'other' | string;
     accountLabel: string;
+    isRecurring?: boolean;
+    isFixed?: boolean;
+    recurrenceGroupId?: string | null;
+    recurrenceInterval?: string | null;
+    recurrenceEveryMonths?: number | null;
+    recurrenceEndsAt?: string | null;
     tags: EntryTag[];
     receiptUrl?: string | null;
     receiptName?: string | null;

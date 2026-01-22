@@ -136,7 +136,7 @@ const toastOpen = ref(false);
 	    toastOpen.value = true;
 	};
 
-const isRecurringEntry = (entry: Entry) => Boolean(entry.tags?.includes('Recorrente')) && !Boolean(entry.installment);
+const isRecurringEntry = (entry: Entry) => Boolean(entry.isRecurring) && !Boolean(entry.installment);
 
 const replaceEntry = (entry: Entry) => {
     const idx = entries.value.findIndex((item) => item.id === entry.id);
@@ -325,6 +325,13 @@ const parseInstallmentCount = (installment?: string | null) => {
     return Number.isFinite(count) && count > 0 ? count : 3;
 };
 
+const formatLongDate = (iso?: string) => {
+    if (!iso) return '';
+    const date = parseISODate(iso);
+    if (!date) return iso;
+    return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).format(date);
+};
+
 const openDetail = (entry: Entry) => {
     detailTransaction.value = {
         id: entry.id,
@@ -345,7 +352,7 @@ const openDetail = (entry: Entry) => {
                       : 'heart',
         accountLabel: entry.accountLabel,
         accountIcon: 'wallet',
-        dateLabel: `20 de janeiro de 2026`,
+        dateLabel: formatLongDate(entry.transactionDate),
         installmentLabel: entry.installment ? entry.installment.replace('Parcela ', '') : undefined,
         receiptUrl: entry.receiptUrl ?? null,
         receiptName: entry.receiptName ?? null,
@@ -363,6 +370,13 @@ const openEdit = (id: string, options?: { mode?: 'edit' | 'duplicate' }) => {
     const entry = entries.value.find((e) => e.id === id);
     if (!entry) return;
 
+    const transferChoices = (() => {
+        const keys = pickerAccounts.value.filter((a) => a.type !== 'credit_card').map((a) => a.key);
+        const from = keys[0] ?? entry.accountLabel ?? '';
+        const to = keys.find((k) => k !== from) ?? from;
+        return { from, to };
+    })();
+
     transactionKind.value = entry.kind;
     transactionInitial.value = {
         id: options?.mode === 'duplicate' ? undefined : entry.id,
@@ -371,7 +385,9 @@ const openEdit = (id: string, options?: { mode?: 'edit' | 'duplicate' }) => {
         description: entry.title,
         category: entry.categoryLabel,
         account: entry.accountLabel,
-        dateKind: 'today',
+        dateKind: entry.transactionDate ? 'other' : 'today',
+        dateOther: entry.transactionDate ?? '',
+        transactionDate: entry.transactionDate ?? '',
         isInstallment: Boolean(entry.installment),
         installmentCount: parseInstallmentCount(entry.installment),
         isPaid: entry.status === 'paid' || entry.status === 'received',
@@ -380,9 +396,15 @@ const openEdit = (id: string, options?: { mode?: 'edit' | 'duplicate' }) => {
         receiptUrl: entry.receiptUrl ?? null,
         receiptName: entry.receiptName ?? null,
         removeReceipt: false,
-        transferFrom: 'Banco Inter',
-        transferTo: 'Carteira',
+        transferFrom: transferChoices.from,
+        transferTo: transferChoices.to,
         transferDescription: '',
+        despesaFixa: Boolean(entry.isFixed),
+        repetir: Boolean(entry.isRecurring) && !Boolean(entry.isFixed),
+        recurrenceGroupId: entry.recurrenceGroupId ?? null,
+        isFixed: Boolean(entry.isFixed),
+        recurrenceEveryMonths: entry.recurrenceEveryMonths ?? null,
+        recurrenceEndsAt: entry.recurrenceEndsAt ?? null,
     };
     transactionOpen.value = true;
 };
@@ -473,7 +495,7 @@ const onDetailDuplicate = () => {
 
 const filterOpen = ref(false);
 const filterState = ref<TransactionFilterState>({
-    categories: ['food', 'home', 'car'],
+    categories: [],
     tags: [],
     period: 'month',
     rangeStart: '',
@@ -679,6 +701,13 @@ const openDesktopDetail = (entry: Entry) => {
 };
 
 const openDesktopEdit = (entry: Entry) => {
+    const transferChoices = (() => {
+        const keys = pickerAccounts.value.filter((a) => a.type !== 'credit_card').map((a) => a.key);
+        const from = keys[0] ?? entry.accountLabel ?? '';
+        const to = keys.find((k) => k !== from) ?? from;
+        return { from, to };
+    })();
+
     desktopTransactionKind.value = entry.kind;
     desktopTransactionInitial.value = {
         id: entry.id,
@@ -687,13 +716,26 @@ const openDesktopEdit = (entry: Entry) => {
         description: entry.title,
         category: entry.categoryLabel,
         account: entry.accountLabel,
-        dateKind: 'today',
+        dateKind: entry.transactionDate ? 'other' : 'today',
+        dateOther: entry.transactionDate ?? '',
+        transactionDate: entry.transactionDate ?? '',
         isInstallment: Boolean(entry.installment),
         installmentCount: parseInstallmentCount(entry.installment),
         isPaid: entry.status === 'paid' || entry.status === 'received',
-        transferFrom: 'Banco Inter',
-        transferTo: 'Carteira',
+        tags: entry.tags ?? [],
+        receiptFile: null,
+        receiptUrl: entry.receiptUrl ?? null,
+        receiptName: entry.receiptName ?? null,
+        removeReceipt: false,
+        transferFrom: transferChoices.from,
+        transferTo: transferChoices.to,
         transferDescription: '',
+        despesaFixa: Boolean(entry.isFixed),
+        repetir: Boolean(entry.isRecurring) && !Boolean(entry.isFixed),
+        recurrenceGroupId: entry.recurrenceGroupId ?? null,
+        isFixed: Boolean(entry.isFixed),
+        recurrenceEveryMonths: entry.recurrenceEveryMonths ?? null,
+        recurrenceEndsAt: entry.recurrenceEndsAt ?? null,
     };
     desktopTransactionOpen.value = true;
 };
@@ -948,27 +990,20 @@ onMounted(() => {
                                 </div>
                                 <div class="truncate text-xs text-slate-400">{{ entry.installment ?? entry.subtitle }}</div>
                                 <div v-if="entry.tags.length || isRecurringEntry(entry)" class="mt-2 flex flex-wrap gap-2">
-                                    <span v-if="isRecurringEntry(entry)" class="group relative inline-flex items-center">
-                                        <span class="inline-flex items-center gap-1 rounded bg-[#DBEAFE] px-2 py-0.5 text-[12px] font-semibold text-[#3B82F6]">
-                                            🔁 Recorrente
-                                        </span>
-                                        <span
-                                            class="absolute bottom-full left-0 mb-2 hidden w-64 rounded-lg bg-slate-800 px-3 py-2 text-xs font-medium text-white shadow-lg group-hover:block"
-                                        >
-                                            Despesa recorrente - repete todo mês
-                                            <span
-                                                class="absolute top-full left-4 h-0 w-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"
-                                            ></span>
-                                        </span>
+                                    <span
+                                        v-if="isRecurringEntry(entry)"
+                                        class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-[#E6FFFB] text-[#0D9488]"
+                                    >
+                                        {{ entry.isFixed ? '📌 Fixa' : '🔁 Repetir' }}
                                     </span>
                                     <span
-                                        v-for="tag in entry.tags.filter((t) => t !== 'Recorrente')"
+                                        v-for="tag in entry.tags"
                                         :key="tag"
                                         class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold"
                                         :class="
                                             tag === 'Essencial'
                                                 ? 'bg-emerald-50 text-emerald-600'
-                                                : tag === 'Urgente'
+                                            : tag === 'Urgente'
                                                   ? 'bg-red-50 text-red-500'
                                                   : 'bg-slate-100 text-slate-600'
                                         "

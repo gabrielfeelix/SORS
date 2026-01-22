@@ -14,10 +14,11 @@ export const buildTransactionRequest = (payload: TransactionModalPayload) => ({
     installmentCount: payload.installmentCount,
     tags: payload.tags ?? [],
     remove_receipt: payload.removeReceipt ?? false,
-    isRecorrente: payload.isRecorrente ?? false,
-    periodicidade: payload.isRecorrente ? payload.periodicidade : null,
-    intervalo_dias: payload.isRecorrente ? payload.intervalo_dias : null,
-    data_fim: payload.isRecorrente ? payload.data_fim : null,
+    repetir: payload.repetir ?? false,
+    repetir_vezes: payload.repetir ? payload.repetirVezes ?? null : null,
+    repetir_meses: payload.repetir ? payload.repetirMeses ?? null : null,
+    despesa_fixa: payload.despesaFixa ?? false,
+    editar_escopo: payload.editarEscopo ?? null,
 });
 
 export const hasTransactionReceipt = (payload: TransactionModalPayload) => Boolean(payload.receiptFile);
@@ -37,10 +38,11 @@ export const buildTransactionFormData = (payload: TransactionModalPayload) => {
     data.set('isInstallment', payload.isInstallment ? '1' : '0');
     data.set('installmentCount', String(payload.installmentCount ?? 1));
 
-    data.set('isRecorrente', payload.isRecorrente ? '1' : '0');
-    if (payload.isRecorrente && payload.periodicidade) data.set('periodicidade', payload.periodicidade);
-    if (payload.isRecorrente && payload.intervalo_dias != null) data.set('intervalo_dias', String(payload.intervalo_dias));
-    if (payload.isRecorrente && payload.data_fim) data.set('data_fim', payload.data_fim);
+    data.set('repetir', payload.repetir ? '1' : '0');
+    if (payload.repetir && payload.repetirVezes != null) data.set('repetir_vezes', String(payload.repetirVezes));
+    if (payload.repetir && payload.repetirMeses != null) data.set('repetir_meses', String(payload.repetirMeses));
+    data.set('despesa_fixa', payload.despesaFixa ? '1' : '0');
+    if (payload.editarEscopo) data.set('editar_escopo', payload.editarEscopo);
 
     data.set('remove_receipt', payload.removeReceipt ? '1' : '0');
 

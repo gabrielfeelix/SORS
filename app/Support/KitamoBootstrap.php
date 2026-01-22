@@ -20,6 +20,13 @@ class KitamoBootstrap
         return (string) Str::of($name)->trim()->lower()->ascii()->replaceMatches('/\s+/', ' ');
     }
 
+    private function normalizeTagName(string $name): string
+    {
+        $value = (string) Str::of($name)->trim()->replaceMatches('/\s+/', ' ');
+        $value = ltrim($value, "# \t\n\r\0\x0B");
+        return trim($value);
+    }
+
     private function categoriesForUser(User $user): array
     {
         $categoryModels = Category::query()
@@ -58,7 +65,7 @@ class KitamoBootstrap
 
     public function forUser(User $user): array
     {
-        $transactions = Transaction::with(['category', 'account'])
+        $transactions = Transaction::with(['category', 'account', 'recorrenciaGrupo'])
             ->where('user_id', $user->id)
             ->orderByDesc('transaction_date')
             ->orderByDesc('id')
@@ -76,16 +83,70 @@ class KitamoBootstrap
 
         $categories = $this->categoriesForUser($user);
 
-        $tags = Tag::where('user_id', $user->id)
+        $tagModels = Tag::where('user_id', $user->id)
             ->orderBy('nome')
             ->get();
+
+        $tagMap = [];
+        foreach ($tagModels as $tag) {
+            $nome = $this->normalizeTagName((string) $tag->nome);
+            if ($nome === '' || mb_strtolower($nome) === 'recorrente') {
+                continue;
+            }
+            $key = mb_strtolower($nome);
+            $tagMap[$key] = [
+                'id' => (string) $tag->id,
+                'nome' => $nome,
+                'cor' => $tag->cor ?: '#64748B',
+            ];
+        }
+
+        foreach ($transactions as $transaction) {
+            foreach (($transaction->tags ?? []) as $raw) {
+                $nome = $this->normalizeTagName((string) $raw);
+                if ($nome === '' || mb_strtolower($nome) === 'recorrente') {
+                    continue;
+                }
+                $key = mb_strtolower($nome);
+                if (array_key_exists($key, $tagMap)) {
+                    continue;
+                }
+                $tagMap[$key] = [
+                    'id' => "derived:{$key}",
+                    'nome' => $nome,
+                    'cor' => '#64748B',
+                ];
+            }
+
+            if ($transaction->relationLoaded('recorrenciaGrupo') && $transaction->recorrenciaGrupo) {
+                foreach (($transaction->recorrenciaGrupo->tags ?? []) as $raw) {
+                    $nome = $this->normalizeTagName((string) $raw);
+                    if ($nome === '' || mb_strtolower($nome) === 'recorrente') {
+                        continue;
+                    }
+                    $key = mb_strtolower($nome);
+                    if (array_key_exists($key, $tagMap)) {
+                        continue;
+                    }
+                    $tagMap[$key] = [
+                        'id' => "derived:{$key}",
+                        'nome' => $nome,
+                        'cor' => '#64748B',
+                    ];
+                }
+            }
+        }
+
+        $tags = collect(array_values($tagMap))
+            ->sortBy(fn ($t) => $t['nome'])
+            ->values();
 
         return [
             'entries' => $transactions->map(fn (Transaction $t) => $this->entry($t))->values(),
             'goals' => $goals->map(fn (Goal $g) => $this->goal($g))->values(),
             'accounts' => $accounts->map(fn (Account $a) => $this->account($a))->values(),
             'categories' => $categories,
-            'tags' => $tags->map(fn (Tag $t) => $this->tag($t))->values(),
+            'tags' => $tags,
         ];
     }
 
@@ -98,11 +159,26 @@ class KitamoBootstrap
         $categoryName = $transaction->category?->name ?? 'Outros';
         $categoryKey = $this->categoryKey($categoryName);
 
-        $tags = $transaction->tags ?? [];
-        if ($transaction->is_recurring && !in_array('Recorrente', $tags, true)) {
-            $tags[] = 'Recorrente';
+        $tags = array_values(
+            array_unique(
+                array_values(
+                    array_filter(
+                        array_map(fn ($t) => $this->normalizeTagName((string) $t), $transaction->tags ?? []),
+                        fn ($t) => $t !== '' && mb_strtolower($t) !== 'recorrente'
+                    )
+                )
+            )
+        );
+
+        $grupo = $transaction->relationLoaded('recorrenciaGrupo') ? $transaction->recorrenciaGrupo : null;
+        $isRecurring = (bool) $transaction->is_recurring;
+        $recurrenceInterval = $grupo?->periodicidade ?? $transaction->recurrence_interval;
+        $recurrenceEveryMonths = null;
+        if ($recurrenceInterval === 'a_cada_x_meses') {
+            $recurrenceEveryMonths = (int) ($grupo?->intervalo_meses ?? 1);
         }
-        $tags = array_values(array_unique($tags));
+        $recurrenceEndsAt = $grupo?->data_fim?->toDateString() ?? ($transaction->recurrence_end_at?->toDateString() ?? null);
+        $isFixed = $isRecurring && $recurrenceEndsAt === null;
 
         return [
             'id' => (string) $transaction->id,
@@ -120,6 +196,12 @@ class KitamoBootstrap
             'categoryLabel' => $categoryName,
             'categoryKey' => $categoryKey,
             'accountLabel' => $transaction->account?->name ?? 'Conta',
+            'isRecurring' => $isRecurring,
+            'isFixed' => $isFixed,
+            'recurrenceGroupId' => $transaction->recorrencia_grupo_id ? (string) $transaction->recorrencia_grupo_id : null,
+            'recurrenceInterval' => $recurrenceInterval,
+            'recurrenceEveryMonths' => $recurrenceEveryMonths,
+            'recurrenceEndsAt' => $recurrenceEndsAt,
             'tags' => $tags,
             'receiptUrl' => $transaction->receipt_path ? Storage::disk('public')->url($transaction->receipt_path) : null,
             'receiptName' => $transaction->receipt_original_name,

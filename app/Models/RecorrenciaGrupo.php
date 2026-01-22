@@ -27,6 +27,7 @@ class RecorrenciaGrupo extends Model
         'descricao',
         'periodicidade',
         'intervalo_dias',
+        'intervalo_meses',
         'data_inicio',
         'data_fim',
         'is_active',
@@ -38,6 +39,7 @@ class RecorrenciaGrupo extends Model
         return [
             'amount' => 'decimal:2',
             'intervalo_dias' => 'integer',
+            'intervalo_meses' => 'integer',
             'data_inicio' => 'date',
             'data_fim' => 'date',
             'is_active' => 'boolean',
@@ -65,4 +67,3 @@ class RecorrenciaGrupo extends Model
         return $this->hasMany(Transaction::class, 'recorrencia_grupo_id');
     }
 }
-

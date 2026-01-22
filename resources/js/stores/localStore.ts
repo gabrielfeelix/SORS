@@ -24,7 +24,7 @@ export type Goal = {
 
 export type EntryStatus = 'paid' | 'pending' | 'received';
 export type EntryKind = 'expense' | 'income';
-export type EntryTag = 'Essencial' | 'Recorrente' | 'Urgente' | 'Supérfluo';
+export type EntryTag = 'Essencial' | 'Urgente' | 'Supérfluo';
 export type Entry = {
     id: string;
     dateLabel: string;
@@ -191,7 +191,7 @@ const seedEntries = (): Entry[] => [
         categoryLabel: 'Assinaturas',
         categoryKey: 'other',
         accountLabel: 'Nubank',
-        tags: ['Supérfluo', 'Recorrente'],
+        tags: ['Supérfluo'],
     },
     {
         id: 'rent',
@@ -207,7 +207,7 @@ const seedEntries = (): Entry[] => [
         categoryLabel: 'Moradia',
         categoryKey: 'home',
         accountLabel: 'Banco Inter',
-        tags: ['Essencial', 'Recorrente'],
+        tags: ['Essencial'],
     },
     {
         id: 'groceries',

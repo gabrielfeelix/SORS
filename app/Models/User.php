@@ -91,7 +91,6 @@ class User extends Authenticatable
         static::created(function (self $user) {
             $defaults = [
                 ['nome' => 'Essencial', 'cor' => '#EF4444'],
-                ['nome' => 'Recorrente', 'cor' => '#3B82F6'],
                 ['nome' => 'Urgente', 'cor' => '#F59E0B'],
             ];
 
