@@ -406,17 +406,17 @@ const handleCreateCreditCardFlowSave = () => {
                                     </span>
                                     <span
                                         v-if="card.fechamentoDia"
-                                        class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-slate-500"
+                                        class="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-blue-700"
                                         :title="`Fechamento dia ${card.fechamentoDia}`"
                                     >
-                                        F {{ card.fechamentoDia }}
+                                        Fech. {{ card.fechamentoDia }}
                                     </span>
                                     <span
                                         v-if="card.vencimentoDia"
-                                        class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-slate-500"
+                                        class="inline-flex items-center rounded-md bg-orange-50 px-2 py-0.5 text-orange-700"
                                         :title="`Vencimento dia ${card.vencimentoDia}`"
                                     >
-                                        V {{ card.vencimentoDia }}
+                                        Venc. {{ card.vencimentoDia }}
                                     </span>
                                 </div>
                             </div>
@@ -433,10 +433,24 @@ const handleCreateCreditCardFlowSave = () => {
                             </div>
                         </div>
 
-                        <!-- Stats - Single Line -->
-                        <div class="mt-3 flex items-center justify-between text-[11px] font-medium text-slate-500">
-                            <span>LIMITE USADO: {{ Math.round(card.percentualUsado) }}%</span>
-                            <span>DISP: {{ formatBRL(card.disponivel) }}</span>
+                        <!-- Progress Bar and Stats -->
+                        <div class="mt-3 space-y-2">
+                            <!-- Progress Bar -->
+                            <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                                <div
+                                    class="h-full rounded-full transition-all duration-300"
+                                    :style="{
+                                        width: `${Math.min(card.percentualUsado, 100)}%`,
+                                        backgroundColor: card.cor
+                                    }"
+                                ></div>
+                            </div>
+
+                            <!-- Stats -->
+                            <div class="flex items-center justify-between text-[11px] font-medium text-slate-500">
+                                <span>LIMITE USADO: {{ Math.round(card.percentualUsado) }}%</span>
+                                <span>DISP: {{ formatBRL(card.disponivel) }}</span>
+                            </div>
                         </div>
                     </div>
                 </Link>
