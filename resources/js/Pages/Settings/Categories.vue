@@ -14,7 +14,7 @@ const shellProps = computed(() =>
     isMobile.value ? { showNav: false } : { title: 'Categorias', showSearch: false, showNewAction: false },
 );
 type CategoryType = 'expense' | 'income';
-type IconKey = 'home' | 'food' | 'car' | 'game' | 'heart' | 'money' | 'trend';
+type IconKey = 'food' | 'home' | 'car' | 'game' | 'pill' | 'briefcase' | 'heart' | 'shirt' | 'bolt' | 'money' | 'trend';
 
 interface Category {
     id: string;
@@ -52,7 +52,7 @@ const filteredCategories = computed(() =>
     categories.value.filter((c) => c.type === categoryType.value),
 );
 
-const iconOptions: IconKey[] = ['home', 'food', 'car', 'game', 'heart'];
+const iconOptions: IconKey[] = ['food', 'home', 'car', 'game', 'pill', 'briefcase', 'heart', 'shirt', 'bolt', 'money', 'trend'];
 
 const colorOptions = [
     '#6B7280', // slate
@@ -65,12 +65,16 @@ const colorOptions = [
 
 const renderIcon = (icon: IconKey) => {
     const icons: Record<IconKey, string> = {
-        home: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
-        food: 'M3 2v7c0 1.1 1 2 2 2h14c1 0 2-.9 2-2V2M7 2v4M12 2v4M17 2v4',
-        car: 'M5 11l2-6h10l2 6M3 11h18v7H3zM7 15h2M15 15h2',
-        game: 'M6 7h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zM8 13h2M14 13h2',
-        heart: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z',
-        money: 'M2 7h20M2 17h20M6 2v20M18 2v20',
+        food: 'M4 3v7M8 3v7M6 3v7M14 3v7c0 2 1 3 3 3v8M20 3v7',
+        home: 'M3 10.5L12 3l9 7.5M5 10v10h14V10',
+        car: 'M5 16l1-5 1-3h10l1 3 1 5M7 16h10M8 17a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0M16 17a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0',
+        game: 'M6 7h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2ZM8 13h2M9 12v2M15 13h2',
+        pill: 'M10 14 8 16a4 4 0 0 1-6-6l2-2a4 4 0 0 1 6 6ZM14 10l2-2a4 4 0 0 1 6 6l-2 2a4 4 0 0 1-6-6ZM8 16l8-8',
+        briefcase: 'M3 10h18M5 10V8l7-5 7 5v2M6 10v9M18 10v9',
+        heart: 'M20 8c0 5-8 10-8 10S4 13 4 8a4 4 0 0 1 8 0 4 4 0 0 1 8 0Z',
+        shirt: 'M15 3H9l-2 4h10l-2-4ZM7 7v14M17 7v14',
+        bolt: 'M13 2 3 14h8l-1 8 10-12h-8l1-8Z',
+        money: 'M3 6h18v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6ZM7 10h0M17 14h0M12 10a2 2 0 1 0 0 4a2 2 0 1 0 0-4',
         trend: 'M3 17l6-6 4 4 8-8M17 7h4v4',
     };
     return icons[icon] || icons.home;
