@@ -35,17 +35,26 @@ const emit = defineEmits<{
 }>();
 
 const institutions = [
-    { nome: 'Nubank', logo: '🟣', cor: '#8B10AE' },
-    { nome: 'Banco Inter', logo: '🟢', cor: '#FF7A00' },
-    { nome: 'Itaú', logo: '🟠', cor: '#EC7000' },
-    { nome: 'Bradesco', logo: '🔴', cor: '#CC092F' },
-    { nome: 'Banco do Brasil', logo: '🟡', cor: '#FFDD00' },
-    { nome: 'Caixa', logo: '🔵', cor: '#0066B3' },
-    { nome: 'Santander', logo: '🔴', cor: '#EC0000' },
-    { nome: 'C6 Bank', logo: '⚫', cor: '#000000' },
-    { nome: 'PicPay', logo: '🟢', cor: '#21C25E' },
-    { nome: 'Neon', logo: '🔵', cor: '#00D9E1' },
-    { nome: 'Outro', logo: '⚪', cor: '#64748B' },
+    { nome: 'Banco Inter S.A', logo: '🟢', cor: '#FF7A00', svgFile: 'Banco Inter S.A/inter.svg' },
+    { nome: 'Bradesco S.A', logo: '🔴', cor: '#CC092F', svgFile: 'Bradesco S.A/bradesco com nome.svg' },
+    { nome: 'Banco do Brasil S.A', logo: '🟡', cor: '#FFDD00', svgFile: 'Banco do Brasil S.A/banco-do-brasil-com-fundo.svg' },
+    { nome: 'Caixa Econômica Federal', logo: '🔵', cor: '#0066B3', svgFile: 'Caixa Econômica Federal/caixa-economica-federal-1.svg' },
+    { nome: 'Banco Santander Brasil S.A', logo: '🔴', cor: '#EC0000', svgFile: 'Banco Santander Brasil S.A/banco-santander-logo.svg' },
+    { nome: 'Banco C6 S.A', logo: '⚫', cor: '#000000', svgFile: 'Banco C6 S.A/c6 bank- branco.svg' },
+    { nome: 'PicPay', logo: '🟢', cor: '#21C25E', svgFile: 'PicPay/Logo-PicPay -nome .svg' },
+    { nome: 'Neon', logo: '🔵', cor: '#00D9E1', svgFile: 'Neon/header-logo-neon.svg' },
+    { nome: 'Banco Safra S.A', logo: '🟠', cor: '#EC7000', svgFile: 'Banco Safra S.A/logo-safra-nome.svg' },
+    { nome: 'Banco Votorantim', logo: '🟡', cor: '#FFD700', svgFile: 'Banco Votorantim/banco-bv-logo.svg' },
+    { nome: 'Banco BTG Pacutal', logo: '🟣', cor: '#8B10AE', svgFile: 'Banco BTG Pacutal/btg-pactual-nome .svg' },
+    { nome: 'Banco Original S.A', logo: '🟣', cor: '#7D3FF2', svgFile: 'Banco Original S.A/banco-original-logo-branco-nome.svg' },
+    { nome: 'Banco Sofisa', logo: '🟡', cor: '#FFB81C', svgFile: 'Banco Sofisa/logo-banco-sofisa-verde.svg' },
+    { nome: 'Banco Mercantil do Brasil S.A', logo: '🟠', cor: '#EA5F1A', svgFile: 'Banco Mercantil do Brasil S.A/banco-mercantil-novo-azul.svg' },
+    { nome: 'Banco Daycoval', logo: '🟦', cor: '#0066CC', svgFile: 'Banco Daycoval/logo-Daycoval- maior.svg' },
+    { nome: 'Banco Paulista', logo: '🟢', cor: '#00AA00', svgFile: 'Banco Paulista/banco-paulista-nome.svg' },
+    { nome: 'BRB - Banco de Brasilia', logo: '🟦', cor: '#0051BA', svgFile: 'BRB - Banco de Brasilia/brb-logo-abreviado.svg' },
+    { nome: 'Banco da Amazônia S.A', logo: '🟩', cor: '#009639', svgFile: 'Banco da Amazônia S.A/banco-da-amazonia.svg' },
+    { nome: 'Banco do Nordeste do Brasil S.A', logo: '🟥', cor: '#E71930', svgFile: 'Banco do Nordeste do Brasil S.A/Logo_BNB.svg' },
+    { nome: 'Outro', logo: '⚪', cor: '#64748B', svgFile: null },
 ] as const;
 
 const colors = ['#14B8A6', '#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444'];
@@ -340,7 +349,15 @@ watch(
                     class="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-4 text-left ring-1 ring-slate-200/70"
                     @click="() => { selectedInstitution = banco.nome; institutionSheetOpen = false; }"
                 >
-                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl text-lg" :style="{ backgroundColor: `${banco.cor}22`, color: banco.cor }">{{ banco.logo }}</span>
+                    <div v-if="banco.svgFile" class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white">
+                        <img
+                            :src="`/Bancos-em-SVG-main/${banco.svgFile}`"
+                            :alt="banco.nome"
+                            class="h-8 w-8 object-contain"
+                            @error="($event.target as HTMLImageElement).style.display = 'none'"
+                        />
+                    </div>
+                    <span v-else class="flex h-10 w-10 items-center justify-center rounded-2xl text-lg" :style="{ backgroundColor: `${banco.cor}22`, color: banco.cor }">{{ banco.logo }}</span>
                     <div class="min-w-0 flex-1">
                         <div class="truncate text-sm font-semibold text-slate-900">{{ banco.nome }}</div>
                     </div>
