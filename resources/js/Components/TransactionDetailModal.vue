@@ -165,9 +165,11 @@ const statusPillClass = computed(() => {
                                 stroke="currentColor"
                                 stroke-width="2"
                             >
-                                <rect x="2" y="5" width="20" height="12" rx="2" />
-                                <path d="M12 9v2" />
+                                <rect x="2" y="7" width="20" height="10" rx="2" />
+                                <path d="M12 11v2" />
                                 <path d="M2 17h20" />
+                                <path d="M6 7V5h3V7" />
+                                <path d="M15 7V5h3V7" />
                             </svg>
                             <svg
                                 v-else-if="transaction?.accountIcon === 'card'"
@@ -181,8 +183,8 @@ const statusPillClass = computed(() => {
                                 <path d="M2 10h20" />
                             </svg>
                             <svg v-else class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="1" />
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2Z" />
+                                <circle cx="12" cy="12" r="9" />
+                                <path d="M12 7v5l3 3" />
                             </svg>
                             {{ transaction?.accountLabel ?? '' }}
                         </div>

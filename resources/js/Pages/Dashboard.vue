@@ -572,15 +572,20 @@ const toAccountIcon = (label: string): TransactionDetail['accountIcon'] => {
 };
 
 const toCategoryIcon = (entry: Entry): TransactionDetail['categoryIcon'] => {
-    const key = (entry.categoryKey ?? '').toLowerCase();
-    if (key === 'food') return 'food';
-    if (key === 'home') return 'home';
-    if (key === 'car') return 'car';
-
     const icon = (entry.icon ?? '').toLowerCase();
-    if (icon.includes('home')) return 'home';
-    if (icon.includes('car')) return 'car';
-    if (icon.includes('cart')) return 'cart';
+    // Use icon directly if it's a known value
+    if (['food', 'home', 'car', 'game', 'heart', 'briefcase', 'pill', 'money', 'trend', 'bolt', 'cart', 'shirt'].includes(icon)) {
+        return icon as TransactionDetail['categoryIcon'];
+    }
+    // Fallback: try to match by name
+    const label = (entry.categoryLabel ?? '').toLowerCase();
+    if (label.includes('alimentação') || label.includes('comida')) return 'food';
+    if (label.includes('moradia') || label.includes('home')) return 'home';
+    if (label.includes('transporte') || label.includes('carro')) return 'car';
+    if (label.includes('lazer') || label.includes('game')) return 'game';
+    if (label.includes('saúde') || label.includes('health')) return 'heart';
+    if (label.includes('salário') || label.includes('renda')) return 'money';
+    if (label.includes('trabalho') || label.includes('freelance')) return 'briefcase';
     return 'bolt';
 };
 
