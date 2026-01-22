@@ -18,6 +18,8 @@ import CreateAccountFlowModal from '@/Components/CreateAccountFlowModal.vue';
 import CreateCreditCardFlowModal from '@/Components/CreateCreditCardFlowModal.vue';
 import Modal from '@/Components/Modal.vue';
 import HomeWidgetsManager from '@/Components/HomeWidgetsManager.vue';
+import InstitutionMissingAlert from '@/Components/InstitutionMissingAlert.vue';
+import FixInstitutionModal, { type PendingItem } from '@/Components/FixInstitutionModal.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
 
 type ProjecaoResponse = {
@@ -133,6 +135,10 @@ const homeWidgetsModalOpen = ref(false);
 const accountMenuOpen = ref(false);
 const onboardingOpen = ref(false);
 const ONBOARDING_STORAGE_KEY = 'kitamo:onboarding:v1';
+
+const fixInstitutionModalOpen = ref(false);
+const institutionAlertDismissed = ref(false);
+const INSTITUTION_ALERT_KEY = 'kitamo:institution_alert_dismissed:v1';
 
 const computeSaldoTotal = () => {
     return (bootstrap.value.accounts ?? [])
@@ -902,6 +908,55 @@ const openAccountMenuOption = (option: 'bank' | 'wallet' | 'card') => {
     }
 };
 
+const itemsWithoutInstitution = computed<PendingItem[]>(() => {
+    const items: PendingItem[] = [];
+
+    // Check accounts
+    for (const account of bootstrap.value.accounts ?? []) {
+        if (account.type !== 'credit_card' && account.type !== 'wallet' && !account.institution) {
+            items.push({
+                id: account.id,
+                name: account.name,
+                type: 'account',
+            });
+        }
+    }
+
+    // Check credit cards
+    for (const account of bootstrap.value.accounts ?? []) {
+        if (account.type === 'credit_card' && !account.institution) {
+            items.push({
+                id: account.id,
+                name: account.name,
+                type: 'card',
+            });
+        }
+    }
+
+    return items;
+});
+
+const showInstitutionAlert = computed(() => {
+    return itemsWithoutInstitution.value.length > 0 && !institutionAlertDismissed.value;
+});
+
+const openFixInstitutionModal = () => {
+    fixInstitutionModalOpen.value = true;
+};
+
+const dismissInstitutionAlert = () => {
+    institutionAlertDismissed.value = true;
+    try {
+        localStorage.setItem(INSTITUTION_ALERT_KEY, '1');
+    } catch {
+        // ignore
+    }
+};
+
+const handleInstitutionUpdated = () => {
+    router.reload();
+};
+
 onMounted(() => {
     loadHomeWidgets();
     loadCreditCardsApi();
@@ -910,6 +965,11 @@ onMounted(() => {
         const alreadyDone = window.localStorage.getItem(ONBOARDING_STORAGE_KEY) === '1';
         const hasAccounts = (bootstrap.value.accounts ?? []).length > 0;
         if (!alreadyDone && !hasAccounts) onboardingOpen.value = true;
+    } catch {
+        // ignore
+    }
+    try {
+        institutionAlertDismissed.value = localStorage.getItem(INSTITUTION_ALERT_KEY) === '1';
     } catch {
         // ignore
     }
@@ -1014,6 +1074,15 @@ onMounted(() => {
             </section>
 
 	        <!-- Alertas de saldo removidos do mobile -->
+
+            <!-- Institution Missing Alert -->
+            <section v-if="showInstitutionAlert" class="mt-5">
+                <InstitutionMissingAlert
+                    :items="itemsWithoutInstitution"
+                    @fix-items="openFixInstitutionModal"
+                    @dismiss="dismissInstitutionAlert"
+                />
+            </section>
 
 	        <section v-if="showProjectionSection" class="mt-5 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200/60">
 	            <div class="flex items-center justify-between">
@@ -1435,5 +1504,11 @@ onMounted(() => {
 
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
         <OnboardingModal :open="onboardingOpen" @close="onboardingOpen = false" @done="onboardingOpen = false" />
+        <FixInstitutionModal
+            :open="fixInstitutionModalOpen"
+            :items="itemsWithoutInstitution"
+            @close="fixInstitutionModalOpen = false"
+            @updated="handleInstitutionUpdated"
+        />
     </component>
 </template>
