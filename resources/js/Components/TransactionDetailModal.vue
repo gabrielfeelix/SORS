@@ -53,6 +53,26 @@ const statusPillClass = computed(() => {
     if (status === 'paid' || status === 'received') return 'bg-emerald-50 text-emerald-600';
     return 'bg-slate-100 text-slate-500';
 });
+
+const getAccountEmoji = computed(() => {
+    const icon = props.transaction?.accountIcon ?? 'wallet';
+    if (icon === 'bank') return '🏦';
+    if (icon === 'card') return '💳';
+    return '💰'; // wallet
+});
+
+const getCategoryEmoji = computed(() => {
+    const icon = props.transaction?.categoryIcon ?? 'bolt';
+    if (icon === 'food' || icon === 'cart') return '🍴';
+    if (icon === 'home') return '🏠';
+    if (icon === 'car') return '🚗';
+    if (icon === 'bolt') return '⚡';
+    if (icon === 'pill') return '💊';
+    if (icon === 'briefcase') return '💼';
+    if (icon === 'heart') return '❤️';
+    if (icon === 'shirt') return '👕';
+    return '🏷️';
+});
 </script>
 
 <template>
@@ -149,14 +169,14 @@ const statusPillClass = computed(() => {
                     <div class="flex items-center justify-between">
                         <div class="text-slate-400">Categoria</div>
                         <div class="flex items-center gap-2 font-semibold text-slate-700">
-                            <span class="text-lg leading-none">🍴</span>
+                            <span class="text-lg leading-none">{{ getCategoryEmoji }}</span>
                             {{ transaction?.categoryLabel ?? '' }}
                         </div>
                     </div>
                     <div class="flex items-center justify-between">
                         <div class="text-slate-400">Conta</div>
                         <div class="flex items-center gap-2 font-semibold text-slate-700">
-                            <span class="text-lg leading-none">💳</span>
+                            <span class="text-lg leading-none">{{ getAccountEmoji }}</span>
                             {{ transaction?.accountLabel ?? '' }}
                         </div>
                     </div>

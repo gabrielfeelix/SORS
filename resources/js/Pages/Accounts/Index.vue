@@ -339,6 +339,26 @@ const formatLongDate = (iso?: string) => {
     return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).format(date);
 };
 
+const toAccountIcon = (label: string): TransactionDetail['accountIcon'] => {
+    const normalized = label.toLowerCase();
+    if (normalized.includes('carteira') || normalized.includes('wallet')) return 'wallet';
+    if (normalized.includes('card') || normalized.includes('crédito') || normalized.includes('credito')) return 'card';
+    return 'bank';
+};
+
+const toCategoryIcon = (entry: Entry): TransactionDetail['categoryIcon'] => {
+    const key = (entry.categoryKey ?? '').toLowerCase();
+    if (key === 'food') return 'food';
+    if (key === 'home') return 'home';
+    if (key === 'car') return 'car';
+
+    const icon = (entry.icon ?? '').toLowerCase();
+    if (icon.includes('home')) return 'home';
+    if (icon.includes('car')) return 'car';
+    if (icon.includes('cart')) return 'cart';
+    return 'bolt';
+};
+
 const openDetail = (entry: Entry) => {
     detailTransaction.value = {
         id: entry.id,
@@ -347,18 +367,9 @@ const openDetail = (entry: Entry) => {
         kind: entry.kind,
         status: entry.status,
         categoryLabel: entry.categoryLabel,
-        categoryIcon:
-            entry.categoryKey === 'food'
-                ? 'cart'
-                : entry.categoryKey === 'home'
-                  ? 'home'
-                  : entry.categoryKey === 'car'
-                    ? 'car'
-                    : entry.kind === 'income'
-                      ? 'briefcase'
-                      : 'heart',
+        categoryIcon: toCategoryIcon(entry),
         accountLabel: entry.accountLabel,
-        accountIcon: 'wallet',
+        accountIcon: toAccountIcon(entry.accountLabel),
         dateLabel: formatLongDate(entry.transactionDate),
         installmentLabel: entry.installment ? entry.installment.replace('Parcela ', '') : undefined,
         receiptUrl: entry.receiptUrl ?? null,
