@@ -389,15 +389,15 @@ const handleCreateCreditCardFlowSave = () => {
                     <div class="p-4">
                         <div class="flex items-start gap-3">
                             <!-- Icon -->
-                            <InstitutionAvatar
-                                :institution="card.banco"
-                                :svg-path="card.svgPath"
-                                fallback-icon="credit-card"
-                                container-class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white"
-                                img-class="h-10 w-10 object-contain"
-                                fallback-icon-class="h-6 w-6 text-white"
-                                :style="card.svgPath ? undefined : { backgroundColor: card.cor }"
-                            />
+	                            <InstitutionAvatar
+	                                :institution="card.banco ?? card.displayName"
+	                                :svg-path="card.svgPath"
+	                                fallback-icon="credit-card"
+	                                container-class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white"
+	                                img-class="h-10 w-10 object-contain"
+	                                fallback-icon-class="h-6 w-6 text-white"
+	                                :style="card.svgPath ? undefined : { backgroundColor: card.cor }"
+	                            />
 
                             <!-- Card Info -->
                             <div class="flex-1 min-w-0">

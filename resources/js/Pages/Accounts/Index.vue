@@ -11,8 +11,9 @@ import { buildTransactionFormData, buildTransactionRequest, executeTransfer, has
 	import TransactionDetailModal, { type TransactionDetail } from '@/Components/TransactionDetailModal.vue';
 	import TransactionFilterModal, { type TransactionFilterState } from '@/Components/TransactionFilterModal.vue';
 	import ImportInvoiceModal from '@/Components/ImportInvoiceModal.vue';
-    import ExportReportModal from '@/Components/ExportReportModal.vue';
-import MonthNavigator from '@/Components/MonthNavigator.vue';
+	    import ExportReportModal from '@/Components/ExportReportModal.vue';
+	import MonthNavigator from '@/Components/MonthNavigator.vue';
+	import CategoryIcon from '@/Components/CategoryIcon.vue';
 	import { useIsMobile } from '@/composables/useIsMobile';
 	
 import type { AccountOption } from '@/Components/AccountPickerSheet.vue';
@@ -66,13 +67,21 @@ const entryKindFilter = ref<'all' | 'income' | 'expense'>('all');
 const accountFilter = ref<'all' | string>('all');
 
 const entries = ref<Entry[]>(bootstrap.value.entries ?? []);
+const categoriesByName = computed(() => new Map((bootstrap.value.categories ?? []).map((c) => [c.name, c] as const)));
 const pickerCategories = computed<CategoryOption[]>(() => {
     const unique = new Map<string, CategoryOption>();
     for (const c of bootstrap.value.categories ?? []) {
         const kind = c.type === 'income' ? 'income' : c.type === 'expense' ? 'expense' : undefined;
         const current = unique.get(c.name);
         const mergedKind = current?.kind && kind && current.kind !== kind ? undefined : (current?.kind ?? kind);
-        unique.set(c.name, { key: c.name, label: c.name, icon: 'other', tone: 'slate', kind: mergedKind });
+        unique.set(c.name, {
+            key: c.name,
+            label: c.name,
+            icon: (c.icon ?? 'other') as any,
+            tone: 'slate',
+            customColor: c.color ?? undefined,
+            kind: mergedKind,
+        });
     }
     return Array.from(unique.values());
 });
@@ -172,6 +181,7 @@ const toggleEntryPaid = async (id: string) => {
     replaceEntry(response.entry);
     if (response.entry.status === 'paid') showToast('Conta marcada como paga');
     router.reload({ only: ['bootstrap'] });
+    void loadMonthCashBalance(selectedMonthKey.value);
 };
 
 const filteredEntries = computed(() => {
@@ -365,7 +375,19 @@ const toCategoryIcon = (entry: Entry): TransactionDetail['categoryIcon'] => {
     return 'bolt';
 };
 
+const listCategoryIcon = (entry: Entry) => {
+    const fromCategory = categoriesByName.value.get(entry.categoryLabel)?.icon ?? null;
+    return (fromCategory || toCategoryIcon(entry)) as string;
+};
+
+const listCategoryStyle = (entry: Entry) => {
+    const color = categoriesByName.value.get(entry.categoryLabel)?.color ?? null;
+    return color ? { color } : undefined;
+};
+
 const openDetail = (entry: Entry) => {
+    const category = (bootstrap.value.categories ?? []).find((c) => c.name === entry.categoryLabel) ?? null;
+    const account = (bootstrap.value.accounts ?? []).find((a) => a.name === entry.accountLabel) ?? null;
     detailTransaction.value = {
         id: entry.id,
         title: entry.title,
@@ -373,9 +395,13 @@ const openDetail = (entry: Entry) => {
         kind: entry.kind,
         status: entry.status,
         categoryLabel: entry.categoryLabel,
-        categoryIcon: toCategoryIcon(entry),
+        categoryIcon: (category?.icon ?? null) || toCategoryIcon(entry),
         accountLabel: entry.accountLabel,
         accountIcon: toAccountIcon(entry.accountLabel),
+        accountType: (account?.type ?? null) as any,
+        accountInstitution: (account as any)?.institution ?? null,
+        accountSvgPath: (account as any)?.svgPath ?? null,
+        accountColor: (account as any)?.color ?? null,
         dateLabel: formatLongDate(entry.transactionDate),
         installmentLabel: entry.installment ? entry.installment.replace('Parcela ', '') : undefined,
         receiptUrl: entry.receiptUrl ?? null,
@@ -391,7 +417,7 @@ const openCreate = () => {
 };
 
 const openEdit = (id: string, options?: { mode?: 'edit' | 'duplicate' }) => {
-    const entry = entries.value.find((e) => e.id === id);
+    const entry = entries.value.find((e) => String(e.id) === String(id));
     if (!entry) return;
 
     const transferChoices = (() => {
@@ -478,6 +504,7 @@ const onTransactionSave = async (payload: TransactionModalPayload) => {
             await executeTransfer(payload);
             showToast('Transferência realizada');
             router.reload({ only: ['bootstrap'] });
+            void loadMonthCashBalance(selectedMonthKey.value);
         } catch {
             showToast('Não foi possível realizar a transferência');
         }
@@ -492,6 +519,7 @@ const onTransactionSave = async (payload: TransactionModalPayload) => {
     });
     replaceEntry(response.entry);
     showToast(payload.id ? 'Lançamento atualizado' : 'Lançamento criado');
+    void loadMonthCashBalance(selectedMonthKey.value);
 };
 
 const onDetailDelete = async () => {
@@ -501,6 +529,7 @@ const onDetailDelete = async () => {
     entries.value = entries.value.filter((entry) => entry.id !== id);
     detailOpen.value = false;
     showToast('Lançamento excluído');
+    void loadMonthCashBalance(selectedMonthKey.value);
 };
 
 const onDetailEdit = () => {
@@ -764,15 +793,15 @@ onMounted(() => {
     }
 
     if (open) {
-        const found = entries.value.find((e) => e.id === open);
-        if (found) openDesktopDetail(found);
+        const found = entries.value.find((e) => String(e.id) === String(open));
+        if (found) openDetail(found);
         url.searchParams.delete('open');
         window.history.replaceState({}, '', url.toString());
     }
 
     if (edit) {
-        const found = entries.value.find((e) => e.id === edit);
-        if (found) openDesktopEdit(found);
+        const found = entries.value.find((e) => String(e.id) === String(edit));
+        if (found) openEdit(String(found.id), { mode: 'edit' });
         url.searchParams.delete('edit');
         window.history.replaceState({}, '', url.toString());
     }
@@ -919,36 +948,9 @@ onMounted(() => {
                         ></div>
 
                         <div class="flex items-center gap-4">
-                            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-500 ring-1 ring-slate-200/60">
-                                <svg v-if="entry.icon === 'gym'" class="h-6 w-6 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M6 8v8" />
-                                    <path d="M18 8v8" />
-                                    <path d="M8 10h8" />
-                                    <path d="M8 14h8" />
-                                    <path d="M4 10v4" />
-                                    <path d="M20 10v4" />
-                                </svg>
-                                <svg v-else-if="entry.icon === 'home'" class="h-6 w-6 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M3 10.5L12 3l9 7.5" />
-                                    <path d="M5 10v10h14V10" />
-                                </svg>
-                                <svg v-else-if="entry.icon === 'car'" class="h-6 w-6 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M5 16l1-5 1-3h10l1 3 1 5" />
-                                    <path d="M7 16h10" />
-                                    <circle cx="8" cy="17" r="1.5" />
-                                    <circle cx="16" cy="17" r="1.5" />
-                                </svg>
-                                <svg v-else-if="entry.icon === 'cart'" class="h-6 w-6 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M6 6h15l-2 7H7L6 6Z" />
-                                    <path d="M6 6l-2-2H2" />
-                                    <circle cx="9" cy="18" r="1.5" />
-                                    <circle cx="17" cy="18" r="1.5" />
-                                </svg>
-                                <svg v-else class="h-6 w-6 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 3v18" />
-                                    <path d="M7 7h5a3 3 0 1 1 0 6H7" />
-                                </svg>
-                            </div>
+	                            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-500 ring-1 ring-slate-200/60">
+	                                <CategoryIcon :icon="listCategoryIcon(entry)" class="h-6 w-6" :style="listCategoryStyle(entry)" />
+	                            </div>
 
                             <div class="min-w-0 flex-1">
                                 <div class="flex flex-wrap items-center gap-2">

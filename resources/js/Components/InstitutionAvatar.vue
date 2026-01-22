@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { getBankSvgPath } from '@/lib/bankLogos';
 
 type FallbackIcon = 'account' | 'credit-card' | 'wallet';
 
@@ -26,12 +27,37 @@ const props = withDefaults(
 );
 
 const logoFailed = ref(false);
+const effectiveSvgPath = ref<string | null>(null);
 
-const shouldShowLogo = computed(() => !props.isWallet && Boolean(props.svgPath) && !logoFailed.value);
+const resolvedByInstitution = computed(() => getBankSvgPath(props.institution));
 
-const src = computed(() => (props.svgPath ? `/Bancos-em-SVG-main/${props.svgPath}` : ''));
+const candidates = computed(() => {
+    const list = [props.svgPath ?? null, resolvedByInstitution.value ?? null].filter(Boolean) as string[];
+    // unique
+    return Array.from(new Set(list));
+});
+
+watch(
+    () => [props.svgPath, props.institution],
+    () => {
+        logoFailed.value = false;
+        effectiveSvgPath.value = candidates.value[0] ?? null;
+    },
+    { immediate: true },
+);
+
+const shouldShowLogo = computed(() => !props.isWallet && Boolean(effectiveSvgPath.value) && !logoFailed.value);
+
+const src = computed(() => (effectiveSvgPath.value ? `/Bancos-em-SVG-main/${effectiveSvgPath.value}` : ''));
 
 const onImgError = () => {
+    const idx = candidates.value.findIndex((p) => p === effectiveSvgPath.value);
+    const next = candidates.value[idx + 1] ?? null;
+    if (next) {
+        effectiveSvgPath.value = next;
+        logoFailed.value = false;
+        return;
+    }
     logoFailed.value = true;
 };
 </script>
@@ -86,4 +112,3 @@ const onImgError = () => {
         </div>
     </div>
 </template>
-

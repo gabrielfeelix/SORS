@@ -530,13 +530,13 @@ watch(
                     class="flex items-center justify-between rounded-3xl bg-white px-4 py-4 shadow-sm ring-1 ring-slate-200/60"
                 >
                     <div class="flex items-center gap-3">
-                        <InstitutionAvatar
-                            :institution="account.institution"
-                            :svg-path="account.svgPath"
-                            :is-wallet="account.icon === 'wallet'"
-                            :fallback-icon="account.icon === 'wallet' ? 'wallet' : 'account'"
-                            container-class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-white"
-                            img-class="h-10 w-10 object-contain"
+	                        <InstitutionAvatar
+	                            :institution="account.institution ?? account.name"
+	                            :svg-path="account.svgPath"
+	                            :is-wallet="account.icon === 'wallet'"
+	                            :fallback-icon="account.icon === 'wallet' ? 'wallet' : 'account'"
+	                            container-class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-white"
+	                            img-class="h-10 w-10 object-contain"
                             :fallback-bg-class="'rounded-2xl text-white'"
                             :fallback-icon-class="'h-5 w-5'"
                             :style="account.svgPath ? undefined : { backgroundColor: account.color }"

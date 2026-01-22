@@ -415,15 +415,15 @@ const accountOptions = computed<AccountOption[]>(() => {
 
             <div class="text-center">
                 <div class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Cartão de crédito</div>
-                <div class="mt-1 flex items-center justify-center gap-2">
-                    <InstitutionAvatar
-                        :institution="institution"
-                        :svg-path="svgPath"
-                        fallback-icon="credit-card"
-                        container-class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/60"
-                        img-class="h-6 w-6 object-contain"
-                        fallback-icon-class="h-5 w-5 text-slate-500"
-                    />
+	                <div class="mt-1 flex items-center justify-center gap-2">
+	                    <InstitutionAvatar
+	                        :institution="institution ?? accountName"
+	                        :svg-path="svgPath"
+	                        fallback-icon="credit-card"
+	                        container-class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/60"
+	                        img-class="h-6 w-6 object-contain"
+	                        fallback-icon-class="h-5 w-5 text-slate-500"
+	                    />
                     <div class="text-lg font-semibold text-slate-900">{{ accountName }}</div>
                 </div>
             </div>

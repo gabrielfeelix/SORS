@@ -8,9 +8,11 @@ import MobileToast from '@/Components/MobileToast.vue';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import NewAccountModal from '@/Components/NewAccountModal.vue';
 import WalletEditModal from '@/Components/WalletEditModal.vue';
-import MonthNavigator from '@/Components/MonthNavigator.vue';
-import { requestJson } from '@/lib/kitamoApi';
-import { useIsMobile } from '@/composables/useIsMobile';
+	import MonthNavigator from '@/Components/MonthNavigator.vue';
+	import { requestJson } from '@/lib/kitamoApi';
+	import InstitutionAvatar from '@/Components/InstitutionAvatar.vue';
+	import { getBankSvgPath } from '@/lib/bankLogos';
+	import { useIsMobile } from '@/composables/useIsMobile';
 
 type AccountType = 'wallet' | 'bank' | 'card';
 
@@ -24,8 +26,11 @@ const bootstrap = computed(
     () => (page.props.bootstrap ?? { entries: [], goals: [], accounts: [], categories: [], tags: [] }) as BootstrapData,
 );
 
-const account = computed(() => bootstrap.value.accounts.find((item) => item.id === props.accountKey));
-const accountName = computed(() => account.value?.name ?? 'Conta');
+	const account = computed(() => bootstrap.value.accounts.find((item) => item.id === props.accountKey));
+	const accountName = computed(() => account.value?.name ?? 'Conta');
+	const institution = computed(() => (account.value as any)?.institution ?? null);
+	const svgPath = computed(() => ((account.value as any)?.svgPath ?? getBankSvgPath(institution.value ?? accountName.value ?? null)) as string | null);
+	const isWallet = computed(() => account.value?.type === 'wallet' || account.value?.icon === 'wallet');
 const balancesByMonth = ref<Map<string, number>>(new Map());
 const modeByMonth = ref<Map<string, string>>(new Map());
 const isLoadingMonth = ref<Map<string, boolean>>(new Map());
@@ -330,11 +335,22 @@ const toastOpen = ref(false);
                         </svg>
                     </Link>
     
-	                    <div class="text-center">
-	                        <div v-if="account?.type !== 'wallet'" class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Conta</div>
-	                        <div v-else class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Carteira</div>
-	                        <div class="text-lg font-semibold text-slate-900">{{ accountName }}</div>
-	                    </div>
+		                    <div class="text-center">
+		                        <div v-if="account?.type !== 'wallet'" class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Conta</div>
+		                        <div v-else class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Carteira</div>
+		                        <div class="mt-1 flex items-center justify-center gap-2">
+		                            <InstitutionAvatar
+		                                :institution="institution ?? accountName"
+		                                :svg-path="svgPath"
+		                                :is-wallet="isWallet"
+		                                :fallback-icon="isWallet ? 'wallet' : 'account'"
+		                                container-class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/60"
+		                                img-class="h-6 w-6 object-contain"
+		                                fallback-icon-class="h-5 w-5 text-slate-500"
+		                            />
+		                            <div class="text-lg font-semibold text-slate-900">{{ accountName }}</div>
+		                        </div>
+		                    </div>
     
                     <div class="relative">
                         <button
@@ -518,25 +534,38 @@ const toastOpen = ref(false);
 		        />
 		    </MobileShell>
 
-	    <DesktopShell v-else :title="accountName" subtitle="Detalhes da conta" :show-search="false" :show-new-action="false">
-	        <div class="space-y-8">
-	            <div class="flex items-center justify-between">
-	                <Link
-	                    :href="route('accounts.index')"
-	                    class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50"
-	                    aria-label="Voltar"
-	                >
-	                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                        <path d="M15 18l-6-6 6-6" />
-	                    </svg>
-	                </Link>
+		    <DesktopShell v-else :title="accountName" subtitle="Detalhes da conta" :show-search="false" :show-new-action="false">
+		        <div class="space-y-8">
+		            <div class="flex items-center gap-4">
+		                <Link
+		                    :href="route('accounts.index')"
+		                    class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50"
+		                    aria-label="Voltar"
+		                >
+		                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+		                        <path d="M15 18l-6-6 6-6" />
+		                    </svg>
+		                </Link>
 
-	                <div class="flex items-center gap-3">
-	                    <button
-	                        type="button"
-	                        class="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50"
-	                        @click="editOpen = true"
-	                    >
+		                <div class="flex flex-1 items-center justify-center gap-2">
+		                    <InstitutionAvatar
+		                        :institution="institution ?? accountName"
+		                        :svg-path="svgPath"
+		                        :is-wallet="isWallet"
+		                        :fallback-icon="isWallet ? 'wallet' : 'account'"
+		                        container-class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/60"
+		                        img-class="h-7 w-7 object-contain"
+		                        fallback-icon-class="h-5 w-5 text-slate-500"
+		                    />
+		                    <div class="text-xl font-semibold text-slate-900">{{ accountName }}</div>
+		                </div>
+
+		                <div class="flex items-center gap-3">
+		                    <button
+		                        type="button"
+		                        class="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+		                        @click="editOpen = true"
+		                    >
 	                        Editar
 	                    </button>
 	                    <button

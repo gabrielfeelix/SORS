@@ -35,6 +35,24 @@ const normalizedIcon = computed(() => {
         <circle cx="16" cy="17" r="1.5" />
     </svg>
 
+    <!-- Cart/Shopping icon -->
+    <svg v-else-if="normalizedIcon === 'cart'" :class="props.class || 'h-6 w-6'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 6h15l-2 7H7L6 6Z" />
+        <path d="M6 6l-2-2H2" />
+        <circle cx="9" cy="18" r="1.5" />
+        <circle cx="17" cy="18" r="1.5" />
+    </svg>
+
+    <!-- Gym/Fitness icon -->
+    <svg v-else-if="normalizedIcon === 'gym'" :class="props.class || 'h-6 w-6'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 8v8" />
+        <path d="M18 8v8" />
+        <path d="M8 10h8" />
+        <path d="M8 14h8" />
+        <path d="M4 10v4" />
+        <path d="M20 10v4" />
+    </svg>
+
     <!-- Game icon -->
     <svg v-else-if="normalizedIcon === 'game'" :class="props.class || 'h-6 w-6'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M6 7h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z" />

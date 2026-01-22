@@ -1248,13 +1248,13 @@ onMounted(() => {
 	                    class="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm ring-1 ring-slate-200/60"
 	                >
 	                    <div class="flex items-center gap-3">
-	                        <InstitutionAvatar
-	                            :institution="account.institution"
-	                            :svg-path="account.svgPath"
-	                            :is-wallet="account.type === 'wallet' || account.icon === 'wallet'"
-	                            :fallback-icon="account.type === 'wallet' || account.icon === 'wallet' ? 'wallet' : 'account'"
-	                            container-class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white"
-	                            img-class="h-8 w-8 object-contain"
+		                        <InstitutionAvatar
+		                            :institution="account.institution ?? account.label"
+		                            :svg-path="account.svgPath"
+		                            :is-wallet="account.type === 'wallet' || account.icon === 'wallet'"
+		                            :fallback-icon="account.type === 'wallet' || account.icon === 'wallet' ? 'wallet' : 'account'"
+		                            container-class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white"
+		                            img-class="h-8 w-8 object-contain"
 	                            fallback-icon-class="h-5 w-5 text-white"
 	                            :style="account.svgPath ? undefined : { backgroundColor: account.color }"
 	                        />
@@ -1333,14 +1333,14 @@ onMounted(() => {
                                 <!-- Header -->
                                 <div class="flex items-start justify-between">
                                     <div class="flex items-center gap-3">
-                                        <InstitutionAvatar
-                                            :institution="card.institution"
-                                            :svg-path="card.svgPath"
-                                            fallback-icon="credit-card"
-                                            container-class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white"
-                                            img-class="h-7 w-7 object-contain"
-                                            fallback-icon-class="h-5 w-5 text-slate-600"
-                                        />
+	                                        <InstitutionAvatar
+	                                            :institution="card.institution ?? card.label"
+	                                            :svg-path="card.svgPath"
+	                                            fallback-icon="credit-card"
+	                                            container-class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white"
+	                                            img-class="h-7 w-7 object-contain"
+	                                            fallback-icon-class="h-5 w-5 text-slate-600"
+	                                        />
                                         <span class="text-sm font-semibold">{{ card.label }}</span>
                                     </div>
                                     <span v-if="card.is_primary" class="rounded bg-white/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide">

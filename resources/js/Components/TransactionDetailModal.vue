@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import CategoryIcon from '@/Components/CategoryIcon.vue';
+import InstitutionAvatar from '@/Components/InstitutionAvatar.vue';
 
 export type TransactionDetail = {
     id?: string;
@@ -9,9 +10,13 @@ export type TransactionDetail = {
     kind: 'expense' | 'income';
     status: 'paid' | 'pending' | 'received';
     categoryLabel: string;
-    categoryIcon: 'food' | 'home' | 'car' | 'bolt' | 'pill' | 'briefcase' | 'heart' | 'shirt' | 'cart' | 'game' | 'money' | 'trend';
+    categoryIcon: string;
     accountLabel: string;
     accountIcon: 'wallet' | 'bank' | 'card';
+    accountType?: string | null;
+    accountInstitution?: string | null;
+    accountSvgPath?: string | null;
+    accountColor?: string | null;
     dateLabel: string;
     installmentLabel?: string;
     receiptUrl?: string | null;
@@ -54,6 +59,8 @@ const statusPillClass = computed(() => {
     if (status === 'paid' || status === 'received') return 'bg-emerald-50 text-emerald-600';
     return 'bg-slate-100 text-slate-500';
 });
+
+const isWallet = computed(() => (props.transaction?.accountType ?? '') === 'wallet' || props.transaction?.accountIcon === 'wallet');
 </script>
 
 <template>
@@ -132,41 +139,21 @@ const statusPillClass = computed(() => {
                             {{ transaction?.categoryLabel ?? '' }}
                         </div>
                     </div>
-                    <div class="flex items-center justify-between">
-                        <div class="text-slate-400">Conta</div>
-                        <div class="flex items-center gap-2 font-semibold text-slate-700">
-                            <svg
-                                v-if="transaction?.accountIcon === 'bank'"
-                                class="h-5 w-5"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                            >
-                                <rect x="2" y="7" width="20" height="10" rx="2" />
-                                <path d="M12 11v2" />
-                                <path d="M2 17h20" />
-                                <path d="M6 7V5h3V7" />
-                                <path d="M15 7V5h3V7" />
-                            </svg>
-                            <svg
-                                v-else-if="transaction?.accountIcon === 'card'"
-                                class="h-5 w-5"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                            >
-                                <rect x="2" y="5" width="20" height="14" rx="2" />
-                                <path d="M2 10h20" />
-                            </svg>
-                            <svg v-else class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="9" />
-                                <path d="M12 7v5l3 3" />
-                            </svg>
-                            {{ transaction?.accountLabel ?? '' }}
-                        </div>
-                    </div>
+	                    <div class="flex items-center justify-between">
+	                        <div class="text-slate-400">Conta</div>
+	                        <div class="flex items-center gap-2 font-semibold text-slate-700">
+	                            <InstitutionAvatar
+	                                :institution="transaction?.accountInstitution ?? transaction?.accountLabel ?? null"
+	                                :svg-path="transaction?.accountSvgPath ?? null"
+	                                :is-wallet="isWallet"
+	                                :fallback-icon="isWallet ? 'wallet' : transaction?.accountIcon === 'card' ? 'credit-card' : 'account'"
+	                                container-class="flex h-6 w-6 items-center justify-center overflow-hidden rounded-md bg-white"
+	                                img-class="h-5 w-5 object-contain"
+	                                fallback-icon-class="h-5 w-5 text-slate-500"
+	                            />
+	                            {{ transaction?.accountLabel ?? '' }}
+	                        </div>
+	                    </div>
                     <div class="flex items-center justify-between">
                         <div class="text-slate-400">Data</div>
                         <div class="font-semibold text-slate-700">{{ transaction?.dateLabel ?? '' }}</div>
