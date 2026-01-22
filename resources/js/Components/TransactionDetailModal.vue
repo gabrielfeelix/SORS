@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import CategoryIcon from '@/Components/CategoryIcon.vue';
 
 export type TransactionDetail = {
     id?: string;
@@ -52,26 +53,6 @@ const statusPillClass = computed(() => {
     const status = props.transaction?.status ?? 'pending';
     if (status === 'paid' || status === 'received') return 'bg-emerald-50 text-emerald-600';
     return 'bg-slate-100 text-slate-500';
-});
-
-const getAccountEmoji = computed(() => {
-    const icon = props.transaction?.accountIcon ?? 'wallet';
-    if (icon === 'bank') return '🏦';
-    if (icon === 'card') return '💳';
-    return '💰'; // wallet
-});
-
-const getCategoryEmoji = computed(() => {
-    const icon = props.transaction?.categoryIcon ?? 'bolt';
-    if (icon === 'food' || icon === 'cart') return '🍴';
-    if (icon === 'home') return '🏠';
-    if (icon === 'car') return '🚗';
-    if (icon === 'bolt') return '⚡';
-    if (icon === 'pill') return '💊';
-    if (icon === 'briefcase') return '💼';
-    if (icon === 'heart') return '❤️';
-    if (icon === 'shirt') return '👕';
-    return '🏷️';
 });
 </script>
 
@@ -169,14 +150,40 @@ const getCategoryEmoji = computed(() => {
                     <div class="flex items-center justify-between">
                         <div class="text-slate-400">Categoria</div>
                         <div class="flex items-center gap-2 font-semibold text-slate-700">
-                            <span class="text-lg leading-none">{{ getCategoryEmoji }}</span>
+                            <CategoryIcon :icon="transaction?.categoryIcon ?? 'bolt'" class="h-5 w-5" />
                             {{ transaction?.categoryLabel ?? '' }}
                         </div>
                     </div>
                     <div class="flex items-center justify-between">
                         <div class="text-slate-400">Conta</div>
                         <div class="flex items-center gap-2 font-semibold text-slate-700">
-                            <span class="text-lg leading-none">{{ getAccountEmoji }}</span>
+                            <svg
+                                v-if="transaction?.accountIcon === 'bank'"
+                                class="h-5 w-5"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <rect x="2" y="5" width="20" height="12" rx="2" />
+                                <path d="M12 9v2" />
+                                <path d="M2 17h20" />
+                            </svg>
+                            <svg
+                                v-else-if="transaction?.accountIcon === 'card'"
+                                class="h-5 w-5"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <rect x="2" y="5" width="20" height="14" rx="2" />
+                                <path d="M2 10h20" />
+                            </svg>
+                            <svg v-else class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="1" />
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2Z" />
+                            </svg>
                             {{ transaction?.accountLabel ?? '' }}
                         </div>
                     </div>
