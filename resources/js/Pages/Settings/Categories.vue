@@ -14,7 +14,7 @@ const shellProps = computed(() =>
     isMobile.value ? { showNav: false } : { title: 'Categorias', showSearch: false, showNewAction: false },
 );
 type CategoryType = 'expense' | 'income';
-type IconKey = 'food' | 'home' | 'car' | 'game' | 'pill' | 'briefcase' | 'heart' | 'shirt' | 'bolt' | 'money' | 'trend';
+type IconKey = 'food' | 'cart' | 'home' | 'car' | 'game' | 'pill' | 'briefcase' | 'heart' | 'shirt' | 'bolt' | 'money' | 'trend' | 'gym';
 
 interface Category {
     id: string;
@@ -52,7 +52,7 @@ const filteredCategories = computed(() =>
     categories.value.filter((c) => c.type === categoryType.value),
 );
 
-const iconOptions: IconKey[] = ['food', 'home', 'car', 'game', 'pill', 'briefcase', 'heart', 'shirt', 'bolt', 'money', 'trend'];
+const iconOptions: IconKey[] = ['cart', 'food', 'home', 'car', 'game', 'pill', 'briefcase', 'heart', 'shirt', 'bolt', 'money', 'trend', 'gym'];
 
 const colorOptions = [
     '#6B7280', // slate
@@ -66,6 +66,7 @@ const colorOptions = [
 const renderIcon = (icon: IconKey) => {
     const icons: Record<IconKey, string> = {
         food: 'M4 3v7M8 3v7M6 3v7M14 3v7c0 2 1 3 3 3v8M20 3v7',
+        cart: 'M6 6h15l-2 7H7L6 6ZM6 6l-2-2H2M9 18a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0M17 18a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0',
         home: 'M3 10.5L12 3l9 7.5M5 10v10h14V10',
         car: 'M5 16l1-5 1-3h10l1 3 1 5M7 16h10M8 17a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0M16 17a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0',
         game: 'M6 7h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2ZM8 13h2M9 12v2M15 13h2',
@@ -76,6 +77,7 @@ const renderIcon = (icon: IconKey) => {
         bolt: 'M13 2 3 14h8l-1 8 10-12h-8l1-8Z',
         money: 'M3 6h18v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6ZM7 10h0M17 14h0M12 10a2 2 0 1 0 0 4a2 2 0 1 0 0-4',
         trend: 'M3 17l6-6 4 4 8-8M17 7h4v4',
+        gym: 'M6 8v8M18 8v8M8 10h8M8 14h8M4 10v4M20 10v4',
     };
     return icons[icon] || icons.home;
 };

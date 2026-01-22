@@ -174,6 +174,16 @@ try {
     // ignore
 }
 
+const parseISODateLocal = (iso?: string | null) => {
+    if (!iso) return null;
+    const parts = String(iso).split('-').map((v) => Number(v));
+    if (parts.length !== 3) return null;
+    const [yyyy, mm, dd] = parts;
+    if (!Number.isFinite(yyyy) || !Number.isFinite(mm) || !Number.isFinite(dd)) return null;
+    const date = new Date(yyyy, mm - 1, dd);
+    return Number.isFinite(date.getTime()) ? date : null;
+};
+
 const cashflowSeries = computed(() => {
     const entries = desktopEntries.value;
     if (!entries.length) return [];
@@ -192,7 +202,7 @@ const cashflowSeries = computed(() => {
 
     for (const entry of entries) {
         if (!entry.transactionDate) continue;
-        const date = new Date(entry.transactionDate);
+        const date = parseISODateLocal(entry.transactionDate) ?? new Date(entry.transactionDate);
         const key = `${date.getFullYear()}-${date.getMonth() + 1}`;
         const target = months.find((m) => m.key === key);
         if (!target) continue;
@@ -233,7 +243,7 @@ const buildUpcomingBills = (entries: Entry[]): UpcomingBill[] => {
         .filter((entry) => Boolean(entry.transactionDate))
         .filter((entry) => entry.status !== 'paid') // Excluir contas pagas
         .map((entry) => {
-            const date = entry.transactionDate ? new Date(entry.transactionDate) : new Date();
+            const date = parseISODateLocal(entry.transactionDate) ?? new Date();
             const month = formatter.format(date).replace('.', '').toLowerCase();
             const day = String(date.getDate()).padStart(2, '0');
             return {
@@ -244,9 +254,11 @@ const buildUpcomingBills = (entries: Entry[]): UpcomingBill[] => {
                 subtitle: entry.categoryLabel,
                 amountLabel: formatBRL(entry.amount),
                 paid: entry.status === 'paid',
+                // used only for sorting
+                _date: date,
             };
         })
-        .sort((a, b) => (a.day > b.day ? 1 : -1))
+        .sort((a, b) => ((a as any)._date as Date).getTime() - ((b as any)._date as Date).getTime())
         .slice(0, 3);
 };
 
@@ -256,8 +268,8 @@ const recentEntries = computed(() => {
     return desktopEntries.value
         .filter((entry) => Boolean(entry.transactionDate))
         .sort((a, b) => {
-            const dateA = new Date(a.transactionDate!);
-            const dateB = new Date(b.transactionDate!);
+            const dateA = parseISODateLocal(a.transactionDate) ?? new Date();
+            const dateB = parseISODateLocal(b.transactionDate) ?? new Date();
             return dateB.getTime() - dateA.getTime();
         })
         .slice(0, 5);
@@ -265,7 +277,7 @@ const recentEntries = computed(() => {
 
 const formatEntryDate = (date?: string) => {
     if (!date) return '';
-    const entryDate = new Date(date);
+    const entryDate = parseISODateLocal(date) ?? new Date(date);
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
@@ -589,7 +601,8 @@ const mobileSelectedEntry = ref<Entry | null>(null);
 
 const formatDetailDate = (date?: string) => {
     if (!date) return '';
-    return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(date));
+    const parsed = parseISODateLocal(date) ?? new Date(date);
+    return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(parsed);
 };
 
 const toAccountIcon = (label: string): TransactionDetail['accountIcon'] => {
@@ -607,7 +620,7 @@ const toCategoryIcon = (entry: Entry): TransactionDetail['categoryIcon'] => {
     }
     // Fallback: try to match by name
     const label = (entry.categoryLabel ?? '').toLowerCase();
-    if (label.includes('alimentação') || label.includes('comida')) return 'food';
+    if (label.includes('alimentação') || label.includes('comida')) return 'cart';
     if (label.includes('moradia') || label.includes('home')) return 'home';
     if (label.includes('transporte') || label.includes('carro')) return 'car';
     if (label.includes('lazer') || label.includes('game')) return 'game';

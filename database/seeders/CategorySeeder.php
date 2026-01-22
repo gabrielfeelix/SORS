@@ -13,7 +13,7 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            ['name' => 'Alimentação', 'type' => 'expense', 'color' => '#27AE60', 'icon' => 'food'],
+            ['name' => 'Alimentação', 'type' => 'expense', 'color' => '#27AE60', 'icon' => 'cart'],
             ['name' => 'Transporte', 'type' => 'expense', 'color' => '#3498DB', 'icon' => 'car'],
             ['name' => 'Moradia', 'type' => 'expense', 'color' => '#9B59B6', 'icon' => 'home'],
             ['name' => 'Lazer', 'type' => 'expense', 'color' => '#E67E22', 'icon' => 'game'],

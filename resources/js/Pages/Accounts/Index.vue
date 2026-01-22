@@ -67,7 +67,12 @@ const entryKindFilter = ref<'all' | 'income' | 'expense'>('all');
 const accountFilter = ref<'all' | string>('all');
 
 const entries = ref<Entry[]>(bootstrap.value.entries ?? []);
-const categoriesByName = computed(() => new Map((bootstrap.value.categories ?? []).map((c) => [c.name, c] as const)));
+const categoriesByKey = computed(() => new Map((bootstrap.value.categories ?? []).map((c) => [`${c.type}|${c.name}`, c] as const)));
+
+const categoryForEntry = (entry: Entry) => {
+    const type = entry.kind === 'income' ? 'income' : 'expense';
+    return categoriesByKey.value.get(`${type}|${entry.categoryLabel}`) ?? categoriesByKey.value.get(`expense|${entry.categoryLabel}`) ?? null;
+};
 const pickerCategories = computed<CategoryOption[]>(() => {
     const unique = new Map<string, CategoryOption>();
     for (const c of bootstrap.value.categories ?? []) {
@@ -365,7 +370,7 @@ const toCategoryIcon = (entry: Entry): TransactionDetail['categoryIcon'] => {
     }
     // Fallback: try to match by name
     const label = (entry.categoryLabel ?? '').toLowerCase();
-    if (label.includes('alimentação') || label.includes('comida')) return 'food';
+    if (label.includes('alimentação') || label.includes('comida')) return 'cart';
     if (label.includes('moradia') || label.includes('home')) return 'home';
     if (label.includes('transporte') || label.includes('carro')) return 'car';
     if (label.includes('lazer') || label.includes('game')) return 'game';
@@ -376,17 +381,17 @@ const toCategoryIcon = (entry: Entry): TransactionDetail['categoryIcon'] => {
 };
 
 const listCategoryIcon = (entry: Entry) => {
-    const fromCategory = categoriesByName.value.get(entry.categoryLabel)?.icon ?? null;
+    const fromCategory = categoryForEntry(entry)?.icon ?? null;
     return (fromCategory || toCategoryIcon(entry)) as string;
 };
 
 const listCategoryStyle = (entry: Entry) => {
-    const color = categoriesByName.value.get(entry.categoryLabel)?.color ?? null;
+    const color = categoryForEntry(entry)?.color ?? null;
     return color ? { color } : undefined;
 };
 
 const openDetail = (entry: Entry) => {
-    const category = (bootstrap.value.categories ?? []).find((c) => c.name === entry.categoryLabel) ?? null;
+    const category = categoryForEntry(entry);
     const account = (bootstrap.value.accounts ?? []).find((a) => a.name === entry.accountLabel) ?? null;
     detailTransaction.value = {
         id: entry.id,
