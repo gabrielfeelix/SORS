@@ -5,6 +5,7 @@ type Format = 'pdf' | 'excel' | 'csv';
 
 const props = defineProps<{
     open: boolean;
+    defaultMonthKey?: string;
 }>();
 
 const emit = defineEmits<{
@@ -14,15 +15,53 @@ const emit = defineEmits<{
 
 const close = () => emit('close');
 
-const month = ref('Janeiro 2026');
 const format = ref<Format>('pdf');
 
 const includeSummary = ref(true);
 const includeCharts = ref(true);
 const includeTransactions = ref(true);
 
+const buildMonthKey = (date: Date) => `${date.getFullYear()}-${date.getMonth()}`;
+const monthKey = ref(buildMonthKey(new Date()));
+const monthPickerOpen = ref(false);
+
+const months = computed(() => {
+    const now = new Date();
+    const items: Array<{ key: string; label: string; date: Date }> = [];
+    for (let i = -120; i <= 120; i += 1) {
+        const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+        const label = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(d);
+        items.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label: `${label.charAt(0).toUpperCase() + label.slice(1)}`, date: d });
+    }
+    return items;
+});
+
+const monthLabel = computed(() => months.value.find((m) => m.key === monthKey.value)?.label ?? '');
+
+const toISODate = (date: Date) => {
+    const yyyy = String(date.getFullYear());
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+};
+
+const rangeForMonthKey = (key: string) => {
+    const [yyyyRaw, mmRaw] = String(key).split('-');
+    const yyyy = Number(yyyyRaw);
+    const mm0 = Number(mmRaw);
+    if (!Number.isFinite(yyyy) || !Number.isFinite(mm0)) {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), 1);
+        const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        return { startISO: toISODate(start), endISO: toISODate(end) };
+    }
+    const start = new Date(yyyy, mm0, 1);
+    const end = new Date(yyyy, mm0 + 1, 0);
+    return { startISO: toISODate(start), endISO: toISODate(end) };
+};
+
 const fileName = computed(() => {
-    const safeMonth = month.value.replace(/\s+/g, '_');
+    const safeMonth = (monthLabel.value || 'Relatorio').replace(/\s+/g, '_');
     const ext = format.value === 'excel' ? 'xlsx' : format.value;
     return `Relatório_${safeMonth}.${ext}`;
 });
@@ -31,11 +70,12 @@ watch(
     () => props.open,
     (isOpen) => {
         if (!isOpen) return;
-        month.value = 'Janeiro 2026';
+        monthKey.value = props.defaultMonthKey && months.value.some((m) => m.key === props.defaultMonthKey) ? props.defaultMonthKey : buildMonthKey(new Date());
         format.value = 'pdf';
         includeSummary.value = true;
         includeCharts.value = true;
         includeTransactions.value = true;
+        monthPickerOpen.value = false;
     },
 );
 
@@ -43,6 +83,58 @@ const formatCardClass = (value: Format) =>
     format.value === value ? 'border-[#14B8A6] bg-[#E6FFFB]' : 'border-slate-200 bg-white';
 
 const selectFormat = (value: Format) => (format.value = value);
+
+const exportBusy = ref(false);
+const exportReport = async (channel: 'download' | 'email') => {
+    if (channel === 'email') {
+        window.alert('Em breve: envio por email.');
+        return;
+    }
+
+    exportBusy.value = true;
+    try {
+        const { startISO, endISO } = rangeForMonthKey(monthKey.value);
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+        const response = await fetch(route('api.relatorios.exportar'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/octet-stream',
+                ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+            },
+            body: JSON.stringify({
+                formato: format.value,
+                periodo_inicio: startISO,
+                periodo_fim: endISO,
+                incluir_resumo: includeSummary.value,
+                incluir_graficos: includeCharts.value,
+                incluir_transacoes: includeTransactions.value,
+            }),
+        });
+        if (!response.ok) {
+            throw new Error('Falha ao exportar relatório');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const disposition = response.headers.get('content-disposition') ?? '';
+        const filenameMatch = disposition.match(/filename=\"?([^\";]+)\"?/i);
+        a.href = url;
+        a.download = filenameMatch?.[1] ?? fileName.value;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+        emit('exported', { channel: 'download', format: format.value });
+        close();
+    } catch {
+        window.alert('Não foi possível exportar o relatório.');
+    } finally {
+        exportBusy.value = false;
+    }
+};
 </script>
 
 <template>
@@ -61,8 +153,12 @@ const selectFormat = (value: Format) => (format.value = value);
             <div class="mt-2 space-y-6">
                 <div>
                     <div class="text-xs font-bold uppercase tracking-wide text-slate-400">Período do relatório</div>
-                    <button type="button" class="mt-3 flex h-12 w-full items-center justify-between rounded-2xl bg-white px-4 shadow-sm ring-1 ring-slate-200/60">
-                        <div class="text-sm font-semibold text-slate-900">{{ month }}</div>
+                    <button
+                        type="button"
+                        class="mt-3 flex h-12 w-full items-center justify-between rounded-2xl bg-white px-4 shadow-sm ring-1 ring-slate-200/60"
+                        @click="monthPickerOpen = true"
+                    >
+                        <div class="text-sm font-semibold text-slate-900">{{ monthLabel }}</div>
                         <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M6 9l6 6 6-6" />
                         </svg>
@@ -170,7 +266,9 @@ const selectFormat = (value: Format) => (format.value = value);
                 <button
                     type="button"
                     class="flex h-[52px] flex-1 items-center justify-center gap-2 rounded-2xl border border-[#14B8A6] bg-white text-sm font-semibold text-[#14B8A6]"
-                    @click="emit('exported', { channel: 'email', format }); close();"
+                    :disabled="exportBusy"
+                    :class="exportBusy ? 'opacity-60' : ''"
+                    @click="exportReport('email')"
                 >
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M4 6h16v12H4V6Z" />
@@ -181,17 +279,43 @@ const selectFormat = (value: Format) => (format.value = value);
                 <button
                     type="button"
                     class="flex h-[52px] flex-1 items-center justify-center gap-2 rounded-2xl bg-[#14B8A6] text-sm font-semibold text-white shadow-[0_2px_8px_rgba(20,184,166,0.25)]"
-                    @click="emit('exported', { channel: 'download', format }); close();"
+                    :disabled="exportBusy"
+                    :class="exportBusy ? 'opacity-60' : ''"
+                    @click="exportReport('download')"
                 >
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 3v12" />
                         <path d="M8 11l4 4 4-4" />
                         <path d="M4 21h16" />
                     </svg>
-                    Baixar
+                    {{ exportBusy ? 'Gerando…' : 'Baixar' }}
                 </button>
             </div>
         </footer>
+
+        <div v-if="monthPickerOpen" class="fixed inset-0 z-[90]">
+            <button class="absolute inset-0 bg-black/50 backdrop-blur-sm" type="button" @click="monthPickerOpen = false" aria-label="Fechar"></button>
+            <div class="absolute inset-x-0 bottom-0 max-h-[70vh] w-full overflow-hidden rounded-t-[24px] bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.25)]">
+                <div class="flex items-center justify-between px-5 pb-3 pt-4">
+                    <div class="text-sm font-bold text-slate-900">Escolha o mês</div>
+                    <button type="button" class="text-sm font-semibold text-[#14B8A6]" @click="monthPickerOpen = false">Fechar</button>
+                </div>
+                <div class="max-h-[calc(70vh-56px)] overflow-y-auto px-3 pb-4">
+                    <button
+                        v-for="m in months"
+                        :key="m.key"
+                        type="button"
+                        class="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm font-semibold"
+                        :class="m.key === monthKey ? 'bg-[#E6FFFB] text-[#14B8A6]' : 'text-slate-700 hover:bg-slate-50'"
+                        @click="() => { monthKey = m.key; monthPickerOpen = false; }"
+                    >
+                        <span>{{ m.label }}</span>
+                        <svg v-if="m.key === monthKey" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
-

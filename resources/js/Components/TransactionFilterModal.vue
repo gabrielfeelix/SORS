@@ -12,6 +12,7 @@ export type TransactionFilterState = {
     rangeStart: string;
     rangeEnd: string;
     status: 'all' | 'paid' | 'to_pay';
+    recurrence: 'all' | 'recurring' | 'non_recurring';
     min: string;
     max: string;
 };
@@ -39,6 +40,7 @@ const local = ref<TransactionFilterState>({
     rangeStart: '',
     rangeEnd: '',
     status: 'all',
+    recurrence: 'all',
     min: '0,00',
     max: '10.000,00',
 });
@@ -150,6 +152,9 @@ const periodButtonClass = (value: TransactionFilterState['period']) =>
 const statusButtonClass = (value: TransactionFilterState['status']) =>
     local.value.status === value ? 'border-[#14B8A6] text-[#14B8A6] bg-[#E6FFFB]' : 'border-slate-200 text-slate-600 bg-white';
 
+const recurrenceButtonClass = (value: TransactionFilterState['recurrence']) =>
+    local.value.recurrence === value ? 'border-[#14B8A6] text-[#14B8A6] bg-[#E6FFFB]' : 'border-slate-200 text-slate-600 bg-white';
+
 const canApply = computed(() => {
     if (local.value.period !== 'range') return true;
     return isValidBRDate(local.value.rangeStart) && isValidBRDate(local.value.rangeEnd);
@@ -244,6 +249,29 @@ const canApply = computed(() => {
                         </button>
                         <button type="button" class="rounded-full border px-4 py-2 text-sm font-semibold" :class="statusButtonClass('to_pay')" @click="local.status = 'to_pay'">
                             A pagar
+                        </button>
+                    </div>
+
+                    <div class="mt-6 text-sm font-bold text-slate-900">Recorrência</div>
+                    <div class="mt-3 flex flex-wrap gap-3">
+                        <button type="button" class="rounded-full border px-4 py-2 text-sm font-semibold" :class="recurrenceButtonClass('all')" @click="local.recurrence = 'all'">
+                            Todas
+                        </button>
+                        <button
+                            type="button"
+                            class="rounded-full border px-4 py-2 text-sm font-semibold"
+                            :class="recurrenceButtonClass('recurring')"
+                            @click="local.recurrence = 'recurring'"
+                        >
+                            Só recorrentes
+                        </button>
+                        <button
+                            type="button"
+                            class="rounded-full border px-4 py-2 text-sm font-semibold"
+                            :class="recurrenceButtonClass('non_recurring')"
+                            @click="local.recurrence = 'non_recurring'"
+                        >
+                            Só não recorrentes
                         </button>
                     </div>
 

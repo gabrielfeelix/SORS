@@ -360,10 +360,10 @@ watch(
                     @click="openQuickTransfer"
                 >
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M16 3h5v5" />
-                        <path d="M21 3l-7 7" />
-                        <path d="M8 21H3v-5" />
-                        <path d="M3 21l7-7" />
+                        <path d="M4 8h11" />
+                        <path d="M12 5l3 3-3 3" />
+                        <path d="M20 16H9" />
+                        <path d="M12 13l-3 3 3 3" />
                     </svg>
                 </button>
 
@@ -429,10 +429,10 @@ watch(
                     @click="openQuickTransfer"
                 >
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M16 3h5v5" />
-                        <path d="M21 3l-7 7" />
-                        <path d="M8 21H3v-5" />
-                        <path d="M3 21l7-7" />
+                        <path d="M4 8h11" />
+                        <path d="M12 5l3 3-3 3" />
+                        <path d="M20 16H9" />
+                        <path d="M12 13l-3 3 3 3" />
                     </svg>
                 </button>
 
