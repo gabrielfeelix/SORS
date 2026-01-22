@@ -46,7 +46,7 @@ jobs:
           SSH_OPTS="-i ~/.ssh/key -p 65002 -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=30 -o ServerAliveCountMax=6"
           ssh $SSH_OPTS \
             u626119115@147.79.84.203 \
-            'cd ~/domains/kitamo.com.br/public_html && chmod -R 775 storage bootstrap/cache && rm -f public/storage && ln -s ../storage/app/public public/storage'
+            'cd ~/domains/kitamo.com.br/public_html && chmod -R 775 storage bootstrap/cache && mkdir -p storage/app/public/receipts && rm -f public/storage && ln -s ../storage/app/public public/storage && ls -la public/storage && echo "Storage setup complete"'
       - name: Run migrations + cache (Hostinger)
         run: |
           SSH_OPTS="-i ~/.ssh/key -p 65002 -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=30 -o ServerAliveCountMax=6"
