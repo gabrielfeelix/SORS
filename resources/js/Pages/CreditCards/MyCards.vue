@@ -7,6 +7,7 @@ import { useIsMobile } from '@/composables/useIsMobile';
 import CreateCreditCardFlowModal from '@/Components/CreateCreditCardFlowModal.vue';
 import MonthNavigator from '@/Components/MonthNavigator.vue';
 import { requestJson } from '@/lib/kitamoApi';
+import { getBankSvgPath } from '@/lib/bankLogos';
 
 const isMobile = useIsMobile();
 const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
@@ -107,6 +108,7 @@ const creditCards = computed(() => {
         if (usado >= limite) status = 'ATRASADA';
         else if (usado > 0) status = 'ABERTA';
 
+        const banco = a.institution ?? null;
         return {
             id: a.id,
             nome: a.name || a.nome,
@@ -114,6 +116,8 @@ const creditCards = computed(() => {
             fechamentoDia: Number(a.dia_fechamento ?? a.closing_day ?? 0) || null,
             vencimentoDia: Number(a.dia_vencimento ?? a.due_day ?? 0) || null,
             cor: ((a as any).color || a.cor) ?? '#8B5CF6',
+            banco,
+            svgPath: banco ? getBankSvgPath(banco) : null,
             limite,
             usado,
             disponivel: Math.max(0, disponivel),
@@ -385,13 +389,25 @@ const handleCreateCreditCardFlowSave = () => {
                         <div class="flex items-start gap-3">
                             <!-- Icon -->
                             <div
-                                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
-                                :style="{ backgroundColor: card.cor }"
+                                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white"
                             >
-                                <svg class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="2" y="5" width="20" height="14" rx="2" />
-                                    <line x1="2" y1="10" x2="22" y2="10" />
-                                </svg>
+                                <img
+                                    v-if="card.svgPath"
+                                    :src="`/Bancos-em-SVG-main/${card.svgPath}`"
+                                    :alt="card.banco ?? ''"
+                                    class="h-10 w-10 object-contain"
+                                    @error="($event.target as HTMLImageElement).style.display = 'none'"
+                                />
+                                <div
+                                    v-else
+                                    class="flex h-12 w-12 items-center justify-center rounded-2xl"
+                                    :style="{ backgroundColor: card.cor }"
+                                >
+                                    <svg class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="2" y="5" width="20" height="14" rx="2" />
+                                        <line x1="2" y1="10" x2="22" y2="10" />
+                                    </svg>
+                                </div>
                             </div>
 
                             <!-- Card Info -->

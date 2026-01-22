@@ -11,6 +11,7 @@ import CreditCardModal, { type CreditCardModalPayload } from '@/Components/Credi
 import MobileToast from '@/Components/MobileToast.vue';
 import MonthNavigator from '@/Components/MonthNavigator.vue';
 import { requestJson } from '@/lib/kitamoApi';
+import { getBankSvgPath } from '@/lib/bankLogos';
 import TransactionModal, { type TransactionModalPayload } from '@/Components/TransactionModal.vue';
 import { executeTransfer } from '@/lib/transactions';
 import type { AccountOption } from '@/Components/AccountPickerSheet.vue';
@@ -188,6 +189,7 @@ const bankAccounts = computed(() => {
         .filter((a: any) => (a.type ?? a.tipo) !== 'credit_card')
         .map((a: any) => {
             const type = (a.type ?? a.tipo) as string | undefined;
+            const institution = a.institution ?? null;
             return {
                 id: a.id,
                 name: a.name ?? a.nome,
@@ -197,6 +199,8 @@ const bankAccounts = computed(() => {
                 icon: a.icon ?? a.icone ?? (type === 'wallet' ? 'wallet' : 'bank'),
                 hasData: Boolean(a.has_data ?? true),
                 balanceKind: String(a.balance_kind ?? ''),
+                institution,
+                svgPath: institution ? getBankSvgPath(institution) : null,
             };
         });
 });
@@ -524,19 +528,28 @@ watch(
                     class="flex items-center justify-between rounded-3xl bg-white px-4 py-4 shadow-sm ring-1 ring-slate-200/60"
                 >
                     <div class="flex items-center gap-3">
-                        <span class="flex h-12 w-12 items-center justify-center rounded-2xl text-white" :style="{ backgroundColor: account.color }">
-                            <svg v-if="account.icon === 'wallet'" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 7h16v12H4z" />
-                                <path d="M4 7V5h12v2" />
-                                <path d="M16 12h4" />
-                            </svg>
-                            <svg v-else class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M3 10h18" />
-                                <path d="M5 10V8l7-5 7 5v2" />
-                                <path d="M6 10v9" />
-                                <path d="M18 10v9" />
-                            </svg>
-                        </span>
+                        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white">
+                            <img
+                                v-if="account.svgPath"
+                                :src="`/Bancos-em-SVG-main/${account.svgPath}`"
+                                :alt="account.institution ?? ''"
+                                class="h-10 w-10 object-contain"
+                                @error="($event.target as HTMLImageElement).style.display = 'none'"
+                            />
+                            <span v-else class="flex h-12 w-12 items-center justify-center rounded-2xl text-white" :style="{ backgroundColor: account.color }">
+                                <svg v-if="account.icon === 'wallet'" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 7h16v12H4z" />
+                                    <path d="M4 7V5h12v2" />
+                                    <path d="M16 12h4" />
+                                </svg>
+                                <svg v-else class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 10h18" />
+                                    <path d="M5 10V8l7-5 7 5v2" />
+                                    <path d="M6 10v9" />
+                                    <path d="M18 10v9" />
+                                </svg>
+                            </span>
+                        </div>
                         <div>
                             <div class="text-sm font-semibold text-slate-900">{{ account.name }}</div>
                             <div class="flex flex-wrap items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">

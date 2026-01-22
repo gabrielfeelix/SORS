@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { requestFormData, requestJson } from '@/lib/kitamoApi';
 import { buildTransactionFormData, buildTransactionRequest, executeTransfer, hasTransactionReceipt } from '@/lib/transactions';
+import { getBankSvgPath } from '@/lib/bankLogos';
 import type { BootstrapData, CreditCard, Entry, Goal } from '@/types/kitamo';
 import MobileShell from '@/Layouts/MobileShell.vue';
 import DesktopShell from '@/Layouts/DesktopShell.vue';
@@ -271,15 +272,20 @@ const formatEntryDate = (date?: string) => {
 const bankAccounts = computed(() =>
     (bootstrap.value.accounts ?? [])
         .filter((account) => account.type !== 'credit_card')
-        .map((account) => ({
-            id: account.id,
-            label: account.name,
-            subtitle: 'Saldo atual',
-            amount: account.current_balance,
-            color:
-                account.color ??
-                (account.type === 'wallet' ? '#14B8A6' : '#3B82F6'),
-        })),
+        .map((account) => {
+            const institution = account.institution ?? null;
+            return {
+                id: account.id,
+                label: account.name,
+                subtitle: 'Saldo atual',
+                amount: account.current_balance,
+                color:
+                    account.color ??
+                    (account.type === 'wallet' ? '#14B8A6' : '#3B82F6'),
+                institution,
+                svgPath: institution ? getBankSvgPath(institution) : null,
+            };
+        }),
 );
 
 const creditCards = computed(() =>
@@ -1155,7 +1161,15 @@ onMounted(() => {
 	                    class="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm ring-1 ring-slate-200/60"
 	                >
 	                    <div class="flex items-center gap-3">
-	                        <span
+	                        <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white">
+	                            <img
+	                                v-if="account.svgPath"
+	                                :src="`/Bancos-em-SVG-main/${account.svgPath}`"
+	                                :alt="account.institution ?? ''"
+	                                class="h-8 w-8 object-contain"
+	                                @error="($event.target as HTMLImageElement).style.display = 'none'"
+	                            />
+	                            <span
                                 class="flex h-11 w-11 items-center justify-center rounded-2xl text-white"
                                 :style="{ backgroundColor: account.color }"
                             >
@@ -1165,7 +1179,8 @@ onMounted(() => {
 	                                <path d="M6 10v9" />
 	                                <path d="M18 10v9" />
 	                            </svg>
-	                        </span>
+	                            </span>
+	                        </div>
 	                        <div>
 	                            <div class="text-sm font-semibold text-slate-900">{{ account.label }}</div>
 	                            <div class="text-xs text-slate-500">{{ account.subtitle }}</div>

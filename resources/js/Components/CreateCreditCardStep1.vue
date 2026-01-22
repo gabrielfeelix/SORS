@@ -5,6 +5,7 @@ export type BancoSelecionado = {
   nome: string;
   logo: string;
   cor: string;
+  svgFile?: string | null;
 };
 
 const props = defineProps<{
@@ -19,15 +20,15 @@ const emit = defineEmits<{
 const search = ref('');
 
 const bancos = [
-  { nome: 'Nubank', logo: '🟣', cor: '#8B10AE' },
-  { nome: 'Banco Inter', logo: '🟢', cor: '#FF7A00' },
-  { nome: 'Itaú', logo: '🟠', cor: '#EC7000' },
-  { nome: 'Bradesco', logo: '🔴', cor: '#CC092F' },
-  { nome: 'Banco do Brasil', logo: '🟡', cor: '#FFDD00' },
-  { nome: 'Caixa', logo: '🔵', cor: '#0066B3' },
-  { nome: 'Santander', logo: '🔴', cor: '#EC0000' },
-  { nome: 'C6 Bank', logo: '⚫', cor: '#000000' },
-  { nome: 'Outro', logo: '⋯', cor: '#64748B' },
+  { nome: 'Nubank', logo: '🟣', cor: '#8B10AE', svgFile: 'Nubank/nubank-logo.svg' },
+  { nome: 'Banco Inter', logo: '🟢', cor: '#FF7A00', svgFile: 'Banco Inter S.A/inter.svg' },
+  { nome: 'Itaú', logo: '🟠', cor: '#EC7000', svgFile: null },
+  { nome: 'Bradesco', logo: '🔴', cor: '#CC092F', svgFile: 'Bradesco S.A/bradesco com nome.svg' },
+  { nome: 'Banco do Brasil', logo: '🟡', cor: '#FFDD00', svgFile: 'Banco do Brasil S.A/banco-do-brasil-com-fundo.svg' },
+  { nome: 'Caixa', logo: '🔵', cor: '#0066B3', svgFile: 'Caixa Econômica Federal/caixa-economica-federal-1.svg' },
+  { nome: 'Santander', logo: '🔴', cor: '#EC0000', svgFile: 'Banco Santander Brasil S.A/banco-santander-logo.svg' },
+  { nome: 'C6 Bank', logo: '⚫', cor: '#000000', svgFile: 'Banco C6 S.A/c6 bank- branco.svg' },
+  { nome: 'Outro', logo: '⋯', cor: '#64748B', svgFile: null },
 ];
 
 const bancosFiltrados = computed(() => {
@@ -82,7 +83,15 @@ const selectBanco = (banco: typeof bancos[0]) => {
               class="relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-6 text-center transition hover:bg-slate-50 hover:border-slate-300"
               @click="selectBanco(banco)"
             >
-              <div class="text-4xl">{{ banco.logo }}</div>
+              <div v-if="banco.svgFile" class="flex h-12 w-12 items-center justify-center">
+                <img
+                  :src="`/Bancos-em-SVG-main/${banco.svgFile}`"
+                  :alt="banco.nome"
+                  class="h-10 w-10 object-contain"
+                  @error="($event.target as HTMLImageElement).style.display = 'none'"
+                />
+              </div>
+              <div v-else class="text-4xl">{{ banco.logo }}</div>
               <div class="text-sm font-semibold text-slate-900">{{ banco.nome }}</div>
             </button>
           </div>
