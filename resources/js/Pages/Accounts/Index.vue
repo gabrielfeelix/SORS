@@ -37,7 +37,9 @@ const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
 
 type FilterKind = 'all' | 'paid' | 'to_pay';
 
-const activeMonth = ref(new Date(2026, 0, 1));
+type MonthMode = 'current' | 'past' | 'future';
+
+const activeMonth = ref(new Date());
 const months = computed(() => {
     const now = new Date();
     const items: Array<{ key: string; label: string; date: Date }> = [];
@@ -55,10 +57,6 @@ const monthLabel = computed(() => {
     const month = new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(selectedMonth.value.date);
     const year = selectedMonth.value.date.getFullYear();
     return `${month.charAt(0).toUpperCase() + month.slice(1)} ${year}`;
-});
-watch(selectedMonthKey, (key) => {
-    const m = months.value.find((month) => month.key === key);
-    if (m) activeMonth.value = m.date;
 });
 
 const filter = ref<FilterKind>('all');
@@ -240,6 +238,67 @@ const formatMoney = (value: number) =>
         style: 'currency',
         currency: 'BRL',
     }).format(value);
+
+const monthSummaryLoading = ref(false);
+const monthMode = ref<MonthMode>('current');
+const monthCashBalance = ref<number | null>(null);
+
+const fallbackCashBalance = () =>
+    (bootstrap.value.accounts ?? [])
+        .filter((a) => a.type !== 'credit_card' && a.incluir_soma !== false)
+        .reduce((acc, a) => acc + Number(a.current_balance ?? 0), 0);
+
+const loadMonthCashBalance = async (key: string) => {
+    if (!key) return;
+    const [year, month] = key.split('-').map(Number);
+    if (!Number.isFinite(year) || !Number.isFinite(month)) return;
+
+    monthSummaryLoading.value = true;
+    try {
+        const response = await requestJson<{ mode?: MonthMode; accounts?: Array<{ current_balance?: number | string }> }>(
+            `/api/contas-by-month?year=${year}&month=${month}`,
+            { method: 'GET' },
+        );
+        const mode = (response as any)?.mode as MonthMode | undefined;
+        if (mode) monthMode.value = mode;
+
+        const accounts = ((response as any)?.accounts ?? []) as Array<{ current_balance?: number | string }>;
+        monthCashBalance.value = accounts.reduce((acc, a) => acc + Number(a.current_balance ?? 0), 0);
+    } catch (error) {
+        console.error('Failed to load month cash balance', error);
+        monthMode.value = 'current';
+        monthCashBalance.value = null;
+    } finally {
+        monthSummaryLoading.value = false;
+    }
+};
+
+watch(
+    selectedMonthKey,
+    (key) => {
+        const m = months.value.find((month) => month.key === key);
+        if (m) activeMonth.value = m.date;
+        void loadMonthCashBalance(key);
+    },
+    { immediate: true },
+);
+
+const saldoTitle = computed(() => (monthMode.value === 'past' ? 'Final do mês' : monthMode.value === 'future' ? 'Saldo previsto' : 'Saldo atual'));
+const saldoValue = computed(() => monthCashBalance.value ?? fallbackCashBalance());
+
+const scopedMonthEntries = computed(() => {
+    const year = activeMonth.value.getFullYear();
+    const month = activeMonth.value.getMonth();
+    return entries.value.filter((entry) => {
+        if (!entry.transactionDate) return false;
+        const date = new Date(entry.transactionDate);
+        return date.getFullYear() === year && date.getMonth() === month;
+    });
+});
+
+const balancoMensal = computed(() =>
+    scopedMonthEntries.value.reduce((acc, entry) => acc + (entry.kind === 'income' ? entry.amount : -entry.amount), 0),
+);
 
 const transactionOpen = ref(false);
 const transactionKind = ref<'expense' | 'income'>('expense');
@@ -657,6 +716,23 @@ onMounted(() => {
 
         <div class="mt-5">
             <MonthNavigator v-model="selectedMonthKey" :months="months" />
+        </div>
+
+        <div class="mt-4 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200/60" :class="monthSummaryLoading ? 'opacity-70' : ''">
+            <div class="grid grid-cols-2 divide-x divide-slate-100">
+                <div class="px-4 py-4 text-center">
+                    <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ saldoTitle }}</div>
+                    <div class="mt-2 text-lg font-semibold" :class="saldoValue >= 0 ? 'text-emerald-600' : 'text-red-500'">
+                        {{ formatMoney(saldoValue) }}
+                    </div>
+                </div>
+                <div class="px-4 py-4 text-center">
+                    <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Balanço mensal</div>
+                    <div class="mt-2 text-lg font-semibold" :class="balancoMensal >= 0 ? 'text-emerald-600' : 'text-red-500'">
+                        {{ balancoMensal >= 0 ? '+' : '-' }} {{ formatMoney(Math.abs(balancoMensal)) }}
+                    </div>
+                </div>
+            </div>
         </div>
 
 	        <div class="mt-3 flex flex-wrap items-center gap-2">

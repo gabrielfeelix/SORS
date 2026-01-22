@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\RecorrenciaGrupo;
 use App\Models\Transferencia;
+use App\Models\Transaction;
+use App\Services\Recorrencias\RecorrenciaScheduler;
 use App\Support\KitamoBootstrap;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 
 class AccountController extends Controller
 {
@@ -157,7 +161,61 @@ class AccountController extends Controller
             ->where('type', '!=', 'credit_card')
             ->get();
 
-        $result = $accounts->map(function (Account $account) use ($startOfMonth, $endOfMonth, $user, $mode, $now) {
+        $recurringDeltaByAccount = [];
+        if ($mode === 'future') {
+            $rangeStart = CarbonImmutable::parse($now->toDateString());
+            $rangeEnd = CarbonImmutable::parse($endOfMonth->toDateString());
+
+            $accountIds = $accounts->pluck('id')->map(fn ($id) => (string) $id)->all();
+
+            $grupos = RecorrenciaGrupo::query()
+                ->where('user_id', $user->id)
+                ->where('is_active', true)
+                ->whereIn('account_id', $accountIds)
+                ->where(function ($q) use ($rangeStart) {
+                    $q->whereNull('data_fim')->orWhere('data_fim', '>=', $rangeStart->toDateString());
+                })
+                ->get();
+
+            if ($grupos->isNotEmpty()) {
+                $existing = Transaction::query()
+                    ->where('user_id', $user->id)
+                    ->whereNotNull('recorrencia_grupo_id')
+                    ->whereBetween('transaction_date', [$rangeStart->toDateString(), $rangeEnd->toDateString()])
+                    ->get(['recorrencia_grupo_id', 'transaction_date'])
+                    ->groupBy('recorrencia_grupo_id')
+                    ->map(fn ($items) => $items->map(fn ($i) => CarbonImmutable::parse($i->transaction_date)->toDateString())->all())
+                    ->all();
+
+                $scheduler = app(RecorrenciaScheduler::class);
+
+                foreach ($grupos as $grupo) {
+                    $knownDates = $existing[$grupo->id] ?? [];
+
+                    $cursor = CarbonImmutable::parse($grupo->data_inicio);
+                    if ($cursor->lessThan($rangeStart)) {
+                        while ($cursor->lessThan($rangeStart)) {
+                            $cursor = $scheduler->nextDate($cursor, $grupo);
+                            if (!$scheduler->isActiveOn($grupo, $cursor)) {
+                                break;
+                            }
+                        }
+                    }
+
+                    while ($cursor->lessThanOrEqualTo($rangeEnd) && $scheduler->isActiveOn($grupo, $cursor)) {
+                        $key = $cursor->toDateString();
+                        if ($cursor->greaterThanOrEqualTo($rangeStart) && !in_array($key, $knownDates, true)) {
+                            $delta = $grupo->kind === 'income' ? (float) $grupo->amount : -((float) $grupo->amount);
+                            $accountId = (string) $grupo->account_id;
+                            $recurringDeltaByAccount[$accountId] = ($recurringDeltaByAccount[$accountId] ?? 0.0) + $delta;
+                        }
+                        $cursor = $scheduler->nextDate($cursor, $grupo);
+                    }
+                }
+            }
+        }
+
+        $result = $accounts->map(function (Account $account) use ($startOfMonth, $endOfMonth, $user, $mode, $now, $recurringDeltaByAccount) {
             $accountCreatedAt = $account->created_at ? Carbon::parse($account->created_at) : null;
             if ($accountCreatedAt && $accountCreatedAt->greaterThan($endOfMonth)) {
                 return [
@@ -318,16 +376,37 @@ class AccountController extends Controller
                 ];
             }
 
-            $projectionBase = (float) ($account->current_balance ?? 0);
-            $futureTransactions = $account->transactions()
-                ->where('user_id', $user->id)
-                ->where('transaction_date', '>', $now->toDateString())
-                ->whereBetween('transaction_date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
-                ->where('status', 'pending')
-                ->get();
+            if ($mode === 'future') {
+                $projectionBase = (float) ($account->current_balance ?? 0);
 
-            foreach ($futureTransactions as $transaction) {
-                $projectionBase += $transaction->kind === 'income' ? (float) $transaction->amount : -(float) $transaction->amount;
+                $futureTransactions = $account->transactions()
+                    ->where('user_id', $user->id)
+                    ->whereBetween('transaction_date', [$now->toDateString(), $endOfMonth->toDateString()])
+                    ->where('status', 'pending')
+                    ->get();
+
+                foreach ($futureTransactions as $transaction) {
+                    $projectionBase += $transaction->kind === 'income' ? (float) $transaction->amount : -(float) $transaction->amount;
+                }
+
+                $accountId = (string) $account->id;
+                $projectionBase += $recurringDeltaByAccount[$accountId] ?? 0.0;
+
+                return [
+                    'id' => $account->id,
+                    'name' => $account->name,
+                    'type' => $account->type,
+                    'icon' => $account->icon,
+                    'color' => $account->color,
+                    'current_balance' => (float) $projectionBase,
+                    'initial_balance' => (float) $account->initial_balance,
+                    'credit_limit' => $account->credit_limit,
+                    'closing_day' => $account->closing_day,
+                    'due_day' => $account->due_day,
+                    'subtitle' => $account->type === 'wallet' ? 'Projeção' : 'Projeção',
+                    'has_data' => true,
+                    'balance_kind' => 'projection',
+                ];
             }
 
             return [
@@ -336,14 +415,14 @@ class AccountController extends Controller
                 'type' => $account->type,
                 'icon' => $account->icon,
                 'color' => $account->color,
-                'current_balance' => (float) $projectionBase,
+                'current_balance' => (float) ($account->current_balance ?? 0),
                 'initial_balance' => (float) $account->initial_balance,
                 'credit_limit' => $account->credit_limit,
                 'closing_day' => $account->closing_day,
                 'due_day' => $account->due_day,
-                'subtitle' => $account->type === 'wallet' ? 'Projeção' : 'Projeção',
+                'subtitle' => $account->type === 'wallet' ? 'Dinheiro físico' : 'Conta',
                 'has_data' => true,
-                'balance_kind' => 'projection',
+                'balance_kind' => 'real',
             ];
         });
 
