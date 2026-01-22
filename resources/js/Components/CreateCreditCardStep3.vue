@@ -89,6 +89,7 @@ const save = async () => {
         dia_vencimento: dia_vencimento.value,
         cor: cor.value,
         icone: 'credit-card',
+        institution: props.banco?.nome ?? null,
         is_primary: is_primary.value,
       }),
     });

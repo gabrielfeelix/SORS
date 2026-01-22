@@ -20,14 +20,14 @@ const emit = defineEmits<{
 const search = ref('');
 
 const bancos = [
-  { nome: 'Nubank', logo: '🟣', cor: '#8B10AE', svgFile: 'Nu Pagamentos S.A/nubank-branco.svg' },
+  { nome: 'Nubank', logo: '🟣', cor: '#8B10AE', svgFile: 'nubank-logo-svg.png' },
   { nome: 'Banco Inter', logo: '🟢', cor: '#FF7A00', svgFile: 'Banco Inter S.A/inter.svg' },
   { nome: 'Itaú', logo: '🟠', cor: '#EC7000', svgFile: null },
   { nome: 'Bradesco', logo: '🔴', cor: '#CC092F', svgFile: 'Bradesco S.A/bradesco com nome.svg' },
   { nome: 'Banco do Brasil', logo: '🟡', cor: '#FFDD00', svgFile: 'Banco do Brasil S.A/banco-do-brasil-com-fundo.svg' },
   { nome: 'Caixa', logo: '🔵', cor: '#0066B3', svgFile: 'Caixa Econômica Federal/caixa-economica-federal-1.svg' },
   { nome: 'Santander', logo: '🔴', cor: '#EC0000', svgFile: 'Banco Santander Brasil S.A/banco-santander-logo.svg' },
-  { nome: 'C6 Bank', logo: '⚫', cor: '#000000', svgFile: 'Banco C6 S.A/c6 bank- branco.svg' },
+  { nome: 'C6 Bank', logo: '⚫', cor: '#000000', svgFile: 'C6 Bank/c6-bank-logo-oficial-vector.png' },
   { nome: 'Outro', logo: '⋯', cor: '#64748B', svgFile: null },
 ];
 

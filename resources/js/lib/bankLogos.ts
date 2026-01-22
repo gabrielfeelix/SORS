@@ -1,7 +1,7 @@
 // Mapping of bank names to SVG file paths
 const bankLogoMap: Record<string, { svgFile: string | null; color: string }> = {
-  'Nubank': { svgFile: 'Nu Pagamentos S.A/nubank-branco.svg', color: '#8B10AE' },
-  'Nu Pagamentos S.A': { svgFile: 'Nu Pagamentos S.A/nubank-branco.svg', color: '#8B10AE' },
+  'Nubank': { svgFile: 'nubank-logo-svg.png', color: '#8B10AE' },
+  'Nu Pagamentos S.A': { svgFile: 'nubank-logo-svg.png', color: '#8B10AE' },
   'Banco Inter S.A': { svgFile: 'Banco Inter S.A/inter.svg', color: '#FF7A00' },
   'Banco Inter': { svgFile: 'Banco Inter S.A/inter.svg', color: '#FF7A00' },
   'Inter': { svgFile: 'Banco Inter S.A/inter.svg', color: '#FF7A00' },
@@ -16,8 +16,8 @@ const bankLogoMap: Record<string, { svgFile: string | null; color: string }> = {
   'Santander': { svgFile: 'Banco Santander Brasil S.A/banco-santander-logo.svg', color: '#EC0000' },
   'Banco Santander Brasil S.A': { svgFile: 'Banco Santander Brasil S.A/banco-santander-logo.svg', color: '#EC0000' },
   'Banco Santander': { svgFile: 'Banco Santander Brasil S.A/banco-santander-logo.svg', color: '#EC0000' },
-  'C6 Bank': { svgFile: 'Banco C6 S.A/c6 bank- branco.svg', color: '#000000' },
-  'Banco C6 S.A': { svgFile: 'Banco C6 S.A/c6 bank- branco.svg', color: '#000000' },
+  'C6 Bank': { svgFile: 'C6 Bank/c6-bank-logo-oficial-vector.png', color: '#000000' },
+  'Banco C6 S.A': { svgFile: 'C6 Bank/c6-bank-logo-oficial-vector.png', color: '#000000' },
   'PicPay': { svgFile: 'PicPay/Logo-PicPay -nome .svg', color: '#21C25E' },
   'Neon': { svgFile: 'Neon/header-logo-neon.svg', color: '#00D9E1' },
   'Banco Safra S.A': { svgFile: 'Banco Safra S.A/logo-safra-nome.svg', color: '#EC7000' },

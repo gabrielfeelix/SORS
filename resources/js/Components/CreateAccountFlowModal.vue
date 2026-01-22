@@ -70,6 +70,7 @@ const createAccount = async (payload: AccountPayload) => {
       name: buildName(payload),
       type,
       icon,
+      institution: isWallet ? null : banco.value?.nome ?? null,
       initial_balance: payload.saldo_inicial,
       color: payload.cor,
       incluir_soma: payload.incluir_soma_inicial,
