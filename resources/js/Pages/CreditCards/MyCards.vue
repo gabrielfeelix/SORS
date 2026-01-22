@@ -109,7 +109,7 @@ const creditCards = computed(() => {
         if (usado >= limite) status = 'ATRASADA';
         else if (usado > 0) status = 'ABERTA';
 
-        const banco = a.institution ?? null;
+        const banco = a.banco ?? a.institution ?? null;
         return {
             id: a.id,
             nome: a.name || a.nome,
@@ -118,7 +118,7 @@ const creditCards = computed(() => {
             vencimentoDia: Number(a.dia_vencimento ?? a.due_day ?? 0) || null,
             cor: ((a as any).color || a.cor) ?? '#8B5CF6',
             banco,
-            svgPath: (a as any).svgPath ?? (banco ? getBankSvgPath(banco) : null),
+            svgPath: a.svgPath ?? (banco ? getBankSvgPath(banco) : null),
             limite,
             usado,
             disponivel: Math.max(0, disponivel),

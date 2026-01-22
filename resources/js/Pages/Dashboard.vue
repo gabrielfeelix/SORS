@@ -1329,14 +1329,14 @@ onMounted(() => {
                             <div class="relative z-10 flex h-full flex-col justify-between text-white" style="min-height: 180px">
                                 <!-- Header -->
                                 <div class="flex items-start justify-between">
-                                    <div class="flex items-center gap-2">
+                                    <div class="flex items-center gap-3">
                                         <InstitutionAvatar
                                             :institution="card.institution"
                                             :svg-path="card.svgPath"
                                             fallback-icon="credit-card"
-                                            container-class="flex h-6 w-6 items-center justify-center overflow-hidden rounded bg-white"
-                                            img-class="h-4 w-4 object-contain"
-                                            fallback-icon-class="h-4 w-4 text-slate-600"
+                                            container-class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white"
+                                            img-class="h-7 w-7 object-contain"
+                                            fallback-icon-class="h-5 w-5 text-slate-600"
                                         />
                                         <span class="text-sm font-semibold">{{ card.label }}</span>
                                     </div>

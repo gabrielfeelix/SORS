@@ -16,6 +16,8 @@ import { requestFormData, requestJson } from '@/lib/kitamoApi';
 import { buildTransactionFormData, buildTransactionRequest, hasTransactionReceipt } from '@/lib/transactions';
 import type { CategoryOption } from '@/Components/CategoryPickerSheet.vue';
 import type { AccountOption } from '@/Components/AccountPickerSheet.vue';
+import InstitutionAvatar from '@/Components/InstitutionAvatar.vue';
+import { getBankSvgPath } from '@/lib/bankLogos';
 
 const props = defineProps<{
     accountId: string;
@@ -39,6 +41,8 @@ const cardColor = computed(() => String((account.value as any)?.color ?? '#8B5CF
 const limit = computed(() => Number(account.value?.credit_limit ?? 0));
 const closingDay = computed(() => Number(account.value?.closing_day ?? 0) || null);
 const dueDay = computed(() => Number(account.value?.due_day ?? 0) || null);
+const institution = computed(() => (account.value as any)?.institution ?? null);
+const svgPath = computed(() => ((account.value as any)?.svgPath ?? (institution.value ? getBankSvgPath(institution.value) : null)) as string | null);
 
 const months = computed(() => {
     const now = new Date();
@@ -407,7 +411,17 @@ const accountOptions = computed<AccountOption[]>(() => {
 
             <div class="text-center">
                 <div class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Cartão de crédito</div>
-                <div class="text-lg font-semibold text-slate-900">{{ accountName }}</div>
+                <div class="mt-1 flex items-center justify-center gap-2">
+                    <InstitutionAvatar
+                        :institution="institution"
+                        :svg-path="svgPath"
+                        fallback-icon="credit-card"
+                        container-class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/60"
+                        img-class="h-6 w-6 object-contain"
+                        fallback-icon-class="h-5 w-5 text-slate-500"
+                    />
+                    <div class="text-lg font-semibold text-slate-900">{{ accountName }}</div>
+                </div>
             </div>
 
             <div class="relative">
