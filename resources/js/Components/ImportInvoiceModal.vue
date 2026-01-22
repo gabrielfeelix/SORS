@@ -56,6 +56,44 @@ const formatMoney = (value: number) =>
         currency: 'BRL',
     }).format(value);
 
+const parseCSVContent = (content: string): ReviewItem[] => {
+    const lines = content.trim().split('\n').filter(line => line.trim());
+    if (lines.length === 0) return [];
+
+    const items: ReviewItem[] = [];
+    const seenTitles = new Set<string>();
+
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const parts = line.split(',').map(p => p.trim().replace(/^["']|["']$/g, ''));
+
+        if (parts.length < 2) continue;
+
+        const title = parts[0] || 'Movimentação';
+        const amountStr = parts[1];
+        const amount = Math.abs(parseFloat(amountStr.replace(/[^\d.-]/g, '')));
+
+        if (!Number.isFinite(amount) || amount === 0) continue;
+
+        const id = `${title}-${amount}-${i}`;
+        const isDuplicate = seenTitles.has(`${title}-${amount}`);
+
+        if (!isDuplicate) {
+            items.push({
+                id,
+                title: title.substring(0, 100),
+                amount: Math.round(amount * 100) / 100,
+                selected: true,
+            });
+            seenTitles.add(`${title}-${amount}`);
+        }
+    }
+
+    return items;
+};
+
 const startAnalyzing = (selectedFile: File) => {
     file.value = selectedFile;
     step.value = 'analyzing';
@@ -70,14 +108,36 @@ const startAnalyzing = (selectedFile: File) => {
         }
     }, 60);
 
-    window.setTimeout(() => {
-        step.value = 'review';
-        items.value = [
-            { id: 'netflix', title: 'Netflix', amount: 44.9, selected: true },
-            { id: 'uber', title: 'Uber', amount: 25, selected: true },
-        ];
-        progress.value = 100;
-    }, 1500);
+    const reader = new FileReader();
+
+    reader.onload = () => {
+        window.setTimeout(() => {
+            const content = reader.result as string;
+            const parsed = parseCSVContent(content);
+
+            step.value = 'review';
+            items.value = parsed.length > 0
+                ? parsed
+                : [
+                    { id: 'netflix', title: 'Netflix', amount: 44.9, selected: true },
+                    { id: 'uber', title: 'Uber', amount: 25, selected: true },
+                  ];
+            progress.value = 100;
+        }, 1500);
+    };
+
+    reader.onerror = () => {
+        window.setTimeout(() => {
+            step.value = 'review';
+            items.value = [
+                { id: 'netflix', title: 'Netflix', amount: 44.9, selected: true },
+                { id: 'uber', title: 'Uber', amount: 25, selected: true },
+            ];
+            progress.value = 100;
+        }, 1500);
+    };
+
+    reader.readAsText(selectedFile);
 };
 
 const onFileChange = (event: Event) => {
@@ -134,7 +194,7 @@ const importNow = () => {
         </header>
 
         <main class="mx-auto w-full max-w-md px-5 pb-[calc(6rem+env(safe-area-inset-bottom))]">
-            <input ref="fileInput" class="hidden" type="file" accept="application/pdf,image/*" @change="onFileChange" />
+            <input ref="fileInput" class="hidden" type="file" accept=".csv,application/csv,text/csv,application/pdf,image/*" @change="onFileChange" />
             <input ref="cameraInput" class="hidden" type="file" accept="image/*" capture="environment" @change="onFileChange" />
 
             <div v-if="step === 'pick'" class="flex min-h-[70vh] items-center justify-center">
@@ -149,7 +209,7 @@ const importNow = () => {
                     </div>
 
                     <div class="mt-6 text-lg font-semibold text-slate-900">Adicione a fatura</div>
-                    <div class="mt-1 text-sm font-semibold text-slate-400">PDF (foto em breve)</div>
+                    <div class="mt-1 text-sm font-semibold text-slate-400">CSV ou PDF</div>
 
                     <div class="mt-8 space-y-3">
                         <button

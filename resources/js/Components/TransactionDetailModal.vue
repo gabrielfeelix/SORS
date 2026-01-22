@@ -79,29 +79,7 @@ const statusPillClass = computed(() => {
 
                 <div class="mt-6 flex flex-col items-center">
                     <div class="flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-                        <svg v-if="transaction?.categoryIcon === 'cart' || transaction?.categoryIcon === 'food'" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M6 6h15l-2 7H7L6 6Z" />
-                            <path d="M6 6l-2-2H2" />
-                            <circle cx="9" cy="18" r="1.5" />
-                            <circle cx="17" cy="18" r="1.5" />
-                        </svg>
-                        <svg v-else-if="transaction?.categoryIcon === 'home'" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 10.5L12 3l9 7.5" />
-                            <path d="M5 10v10h14V10" />
-                        </svg>
-                        <svg v-else-if="transaction?.categoryIcon === 'car'" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M5 16l1-5 1-3h10l1 3 1 5" />
-                            <path d="M7 16h10" />
-                            <circle cx="8" cy="17" r="1.5" />
-                            <circle cx="16" cy="17" r="1.5" />
-                        </svg>
-                        <svg v-else class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 3v7" />
-                            <path d="M8 3v7" />
-                            <path d="M6 3v7" />
-                            <path d="M14 3v7c0 2 1 3 3 3v8" />
-                            <path d="M20 3v7" />
-                        </svg>
+                        <CategoryIcon :icon="transaction?.categoryIcon ?? 'bolt'" class="h-7 w-7" />
                     </div>
 
                     <div class="mt-4 text-lg font-semibold text-slate-900">{{ transaction?.title ?? '' }}</div>
