@@ -860,6 +860,7 @@ const handleDetailMarkPaid = async () => {
     replaceEntry(response.entry);
     desktopSelectedEntry.value = response.entry;
     showToast(nextStatus === 'paid' ? 'Conta marcada como paga' : 'Conta marcada como pendente');
+    router.reload({ only: ['bootstrap'] });
 };
 
 const onTransactionSave = async (payload: TransactionModalPayload) => {
@@ -899,6 +900,7 @@ const toggleBillPaid = async (id: string) => {
 
     replaceEntry(response.entry);
     if (nextStatus === 'paid') showToast('Conta marcada como paga');
+    router.reload({ only: ['bootstrap'] });
 };
 
 const openBillDetails = (id: string) => {

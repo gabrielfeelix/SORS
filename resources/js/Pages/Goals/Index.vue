@@ -15,7 +15,7 @@ import { useIsMobile } from '@/composables/useIsMobile';
 const isMobile = useIsMobile();
 const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
 const shellProps = computed(() =>
-    isMobile.value ? { showNav: true } : { title: 'Metas', showSearch: false, showNewAction: true },
+    isMobile.value ? { showNav: true } : { title: 'Metas', showSearch: false, showNewAction: false },
 );
 
 const page = usePage();
@@ -166,9 +166,7 @@ const transactionKind = ref<'expense' | 'income' | 'transfer'>('expense');
 const transactionInitial = ref<TransactionModalPayload | null>(null);
 
 const openNewTransaction = () => {
-    transactionKind.value = 'expense';
-    transactionInitial.value = null;
-    transactionOpen.value = true;
+    router.visit(route('goals.create'));
 };
 
 const toastOpen = ref(false);
@@ -205,16 +203,7 @@ const onTransactionSave = async (payload: TransactionModalPayload) => {
     <component :is="Shell" v-bind="shellProps" @add="openNewTransaction">
         <header class="flex items-center justify-between pt-2">
             <div v-if="isMobile" class="text-2xl font-semibold tracking-tight text-slate-900">Metas</div>
-            <Link
-                :href="route('goals.create')"
-                class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[#14B8A6] shadow-sm ring-1 ring-slate-200/60"
-                aria-label="Nova meta"
-            >
-                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 5v14" />
-                    <path d="M5 12h14" />
-                </svg>
-            </Link>
+            <div v-else class="text-lg font-semibold text-slate-900">Metas</div>
         </header>
 
         <div v-if="goals.length === 0" class="mt-6 rounded-3xl border border-dashed border-slate-200 bg-white px-5 py-8 text-center shadow-sm">
@@ -291,19 +280,6 @@ const onTransactionSave = async (payload: TransactionModalPayload) => {
                 </div>
             </Link>
         </div>
-
-        <template v-if="isMobile" #fab>
-            <Link
-                :href="route('goals.create')"
-                class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom)+1rem)] right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-teal-500 text-white shadow-xl shadow-teal-500/30"
-                aria-label="Criar meta"
-            >
-                <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 5v14" />
-                    <path d="M5 12h14" />
-                </svg>
-            </Link>
-        </template>
 
         <TransactionModal
             :open="transactionOpen"

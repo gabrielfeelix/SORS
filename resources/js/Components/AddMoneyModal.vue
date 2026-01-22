@@ -2,10 +2,12 @@
 import { computed, ref, watch } from 'vue';
 import { formatMoneyInputCentsShift } from '@/lib/moneyInput';
 import { preventNonDigitKeydown } from '@/lib/inputGuards';
+import AccountPickerSheet, { type AccountOption } from '@/Components/AccountPickerSheet.vue';
 
 const props = defineProps<{
     open: boolean;
     accent?: 'teal' | 'blue';
+    accounts?: AccountOption[];
 }>();
 
 const emit = defineEmits<{
@@ -16,15 +18,17 @@ const emit = defineEmits<{
 const close = () => emit('close');
 
 const amount = ref('');
-const from = ref('Banco Inter');
+const from = ref<string>('');
 const repeat = ref(false);
+const pickerOpen = ref(false);
 
 watch(
     () => props.open,
     (isOpen) => {
         if (!isOpen) return;
         amount.value = '';
-        from.value = 'Banco Inter';
+        const first = (props.accounts ?? []).find((a) => a.type !== 'credit_card')?.key ?? (props.accounts ?? [])[0]?.key ?? '';
+        from.value = first;
         repeat.value = false;
     },
 );
@@ -49,6 +53,21 @@ const canConfirm = computed(() => {
     // Amount must be greater than 0
     const numAmount = parseFloat(amount.value.replace(/[^0-9,-]/g, '').replace(',', '.'));
     return !isNaN(numAmount) && numAmount > 0;
+});
+
+const selectedAccount = computed(() => (props.accounts ?? []).find((a) => a.key === from.value) ?? null);
+const formatBRL = (value: number) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+const selectedBalanceLabel = computed(() => {
+    const acc = selectedAccount.value;
+    if (!acc) return '';
+    if (acc.type === 'credit_card') {
+        const available = acc.available ?? (acc.limit != null ? Number(acc.limit) - Number(acc.used ?? 0) : null);
+        if (available == null) return '';
+        return `Disponível: ${formatBRL(Math.max(0, available))}`;
+    }
+    if (acc.balance == null) return '';
+    return `Saldo: ${formatBRL(Number(acc.balance))}`;
 });
 </script>
 
@@ -95,10 +114,14 @@ const canConfirm = computed(() => {
                     <div class="mt-2 space-y-4">
                         <div>
                             <div class="mb-2 text-sm font-bold text-[#374151]">Retirar de</div>
-                            <button type="button" class="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left shadow-sm">
+                            <button
+                                type="button"
+                                class="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left shadow-sm"
+                                @click="pickerOpen = true"
+                            >
                                 <div>
-                                    <div class="text-sm font-semibold text-slate-900">{{ from }}</div>
-                                    <div class="mt-1 text-xs font-semibold text-slate-400">Saldo: R$ 1.450,00</div>
+                                    <div class="text-sm font-semibold text-slate-900">{{ selectedAccount?.label ?? 'Selecione' }}</div>
+                                    <div v-if="selectedBalanceLabel" class="mt-1 text-xs font-semibold text-slate-400">{{ selectedBalanceLabel }}</div>
                                 </div>
                                 <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M9 18l6-6-6-6" />
@@ -139,6 +162,14 @@ const canConfirm = computed(() => {
             </div>
         </div>
     </div>
+
+    <AccountPickerSheet
+        :open="pickerOpen"
+        :options="props.accounts ?? []"
+        title="Retirar de"
+        @close="pickerOpen = false"
+        @select="(key) => { from = key; pickerOpen = false; }"
+    />
 </template>
 
 <style scoped>

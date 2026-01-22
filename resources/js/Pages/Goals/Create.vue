@@ -29,8 +29,18 @@ const onTargetInput = (event: Event) => {
 
 const targetNumber = computed(() => moneyInputToNumber(target.value));
 const monthly = computed(() => {
+    const dueIso = parseDueDate(due.value);
+    if (!dueIso) return 0;
     if (!targetNumber.value) return 0;
-    return 500;
+
+    const [y, m] = dueIso.split('-').map((p) => Number(p));
+    const dueDate = new Date(y, (m ?? 1) - 1, 1);
+    const now = new Date();
+    const months = (dueDate.getFullYear() - now.getFullYear()) * 12 + (dueDate.getMonth() - now.getMonth()) + 1;
+    const monthsLeft = Math.max(1, months);
+
+    const remaining = Math.max(0, targetNumber.value);
+    return Math.ceil(remaining / monthsLeft);
 });
 
 const mapIcon = (key: IconKey) => {

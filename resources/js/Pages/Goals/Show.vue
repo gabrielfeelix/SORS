@@ -8,6 +8,7 @@ import DesktopShell from '@/Layouts/DesktopShell.vue';
 import AddMoneyModal from '@/Components/AddMoneyModal.vue';
 import MobileToast from '@/Components/MobileToast.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
+import type { AccountOption } from '@/Components/AccountPickerSheet.vue';
 
 const isMobile = useIsMobile();
 const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
@@ -67,6 +68,53 @@ const onDepositConfirm = async (payload: { amount: string }) => {
     });
     goalData.value = response.goal;
     showToast('Valor adicionado');
+};
+
+const pickerAccounts = computed<AccountOption[]>(() => {
+    const options: AccountOption[] = [];
+    for (const a of bootstrap.value.accounts ?? []) {
+        if (a.type === 'credit_card') continue;
+        options.push({
+            key: a.name,
+            label: a.name,
+            subtitle: a.type === 'wallet' ? 'Carteira' : 'Conta',
+            type: a.type as any,
+            balance: Number(a.current_balance ?? 0),
+            customColor: (a as any).color ?? undefined,
+            icon: a.icon ?? undefined,
+        });
+    }
+    return options;
+});
+
+const onDepositConfirmWithFrom = async (payload: { amount: string; from: string; repeat: boolean }) => {
+    await onDepositConfirm({ amount: payload.amount });
+
+    const value = Number(payload.amount.replace(/\./g, '').replace(',', '.')) || 0;
+    if (!payload.from || !value) return;
+
+    try {
+        const txPayload = {
+            kind: 'expense',
+            amount: value,
+            description: `Depósito meta: ${goal.value.title}`,
+            category: 'Metas',
+            account: payload.from,
+            dateKind: 'today',
+            dateOther: '',
+            isPaid: true,
+            isInstallment: false,
+            installmentCount: 1,
+            tags: [],
+        };
+
+        await requestJson(route('transactions.store'), {
+            method: 'POST',
+            body: JSON.stringify(txPayload),
+        });
+    } catch {
+        // ignore transaction creation failures, goal deposit already done
+    }
 };
 </script>
 
@@ -185,8 +233,9 @@ const onDepositConfirm = async (payload: { amount: string }) => {
         <AddMoneyModal
             :open="depositOpen"
             :accent="goal.color === 'blue' ? 'blue' : 'teal'"
+            :accounts="pickerAccounts"
             @close="depositOpen = false"
-            @confirm="onDepositConfirm"
+            @confirm="onDepositConfirmWithFrom"
         />
         <MobileToast :show="toastOpen" :message="toastMessage" @dismiss="toastOpen = false" />
     </component>

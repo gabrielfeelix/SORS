@@ -171,6 +171,7 @@ const toggleEntryPaid = async (id: string) => {
     });
     replaceEntry(response.entry);
     if (response.entry.status === 'paid') showToast('Conta marcada como paga');
+    router.reload({ only: ['bootstrap'] });
 };
 
 const filteredEntries = computed(() => {

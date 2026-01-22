@@ -26,10 +26,10 @@ const props = defineProps<{
 
 const initial = computed(() => {
     const g = bootstrap.value.goals.find((goal) => goal.id === props.goalId) as Goal | undefined;
-    if (!g) return { name: 'Meta', icon: 'home' as const, target: '0,00', due: 'Dezembro 2026' };
+    if (!g) return { name: 'Meta', icon: 'home' as const, target: '0,00', due: 'Dezembro 2026', current: 0 };
     const icon: IconKey = g.icon === 'plane' ? 'plane' : g.icon === 'car' ? 'car' : 'home';
     const target = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(g.target);
-    return { name: g.title, icon, target, due: g.due };
+    return { name: g.title, icon, target, due: g.due, current: Number(g.current ?? 0) };
 });
 
 type IconKey = 'home' | 'car' | 'plane' | 'cap' | 'bag' | 'laptop';
@@ -38,6 +38,22 @@ const name = ref(initial.value.name);
 const icon = ref<IconKey>(initial.value.icon);
 const target = ref(initial.value.target);
 const due = ref(initial.value.due);
+const currentAmount = computed(() => Number(initial.value.current ?? 0));
+const targetNumber = computed(() => moneyInputToNumber(target.value));
+const monthly = computed(() => {
+    const dueIso = parseDueDate(due.value);
+    if (!dueIso) return 0;
+    if (!targetNumber.value) return 0;
+
+    const [y, m] = dueIso.split('-').map((p) => Number(p));
+    const dueDate = new Date(y, (m ?? 1) - 1, 1);
+    const now = new Date();
+    const months = (dueDate.getFullYear() - now.getFullYear()) * 12 + (dueDate.getMonth() - now.getMonth()) + 1;
+    const monthsLeft = Math.max(1, months);
+
+    const remaining = Math.max(0, targetNumber.value - currentAmount.value);
+    return Math.ceil(remaining / monthsLeft);
+});
 
 const onTargetInput = (event: Event) => {
     const targetEl = event.target as HTMLInputElement;
@@ -187,7 +203,7 @@ const submit = async () => {
                             <path d="M12 8h.01" />
                         </svg>
                     </span>
-                    <div>R$ 500/mês para atingir a meta no prazo.</div>
+                    <div>R$ {{ monthly }},00/mês para atingir a meta no prazo.</div>
                 </div>
             </div>
         </div>
