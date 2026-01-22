@@ -33,6 +33,20 @@ const bankLogoMap: Record<string, { svgFile: string | null; color: string }> = {
   'Banco do Nordeste do Brasil S.A': { svgFile: 'Banco do Nordeste do Brasil S.A/Logo_BNB.svg', color: '#E71930' },
 };
 
+export const bankInstitutions = [
+  { nome: 'Nubank', svgFile: bankLogoMap['Nubank']?.svgFile ?? null, color: bankLogoMap['Nubank']?.color ?? '#64748B' },
+  { nome: 'Banco Inter', svgFile: bankLogoMap['Banco Inter']?.svgFile ?? null, color: bankLogoMap['Banco Inter']?.color ?? '#64748B' },
+  { nome: 'Itaú', svgFile: bankLogoMap['Itaú']?.svgFile ?? null, color: bankLogoMap['Itaú']?.color ?? '#64748B' },
+  { nome: 'Bradesco', svgFile: bankLogoMap['Bradesco']?.svgFile ?? null, color: bankLogoMap['Bradesco']?.color ?? '#64748B' },
+  { nome: 'Banco do Brasil', svgFile: bankLogoMap['Banco do Brasil']?.svgFile ?? null, color: bankLogoMap['Banco do Brasil']?.color ?? '#64748B' },
+  { nome: 'Caixa', svgFile: bankLogoMap['Caixa']?.svgFile ?? null, color: bankLogoMap['Caixa']?.color ?? '#64748B' },
+  { nome: 'Santander', svgFile: bankLogoMap['Santander']?.svgFile ?? null, color: bankLogoMap['Santander']?.color ?? '#64748B' },
+  { nome: 'C6 Bank', svgFile: bankLogoMap['C6 Bank']?.svgFile ?? null, color: bankLogoMap['C6 Bank']?.color ?? '#64748B' },
+  { nome: 'PicPay', svgFile: bankLogoMap['PicPay']?.svgFile ?? null, color: bankLogoMap['PicPay']?.color ?? '#64748B' },
+  { nome: 'Neon', svgFile: bankLogoMap['Neon']?.svgFile ?? null, color: bankLogoMap['Neon']?.color ?? '#64748B' },
+  { nome: 'Outro', svgFile: null, color: '#64748B' },
+] as const;
+
 export const getBankLogo = (bankName: string | null | undefined): { svgFile: string | null; color: string } | null => {
   if (!bankName) return null;
   return bankLogoMap[bankName] || null;

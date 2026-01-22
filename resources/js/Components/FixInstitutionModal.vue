@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { requestJson } from '@/lib/kitamoApi';
-import { getBankLogo } from '@/lib/bankLogos';
+import { getBankSvgPath } from '@/lib/bankLogos';
+import InstitutionAvatar from '@/Components/InstitutionAvatar.vue';
+import InstitutionPickerModal from '@/Components/InstitutionPickerModal.vue';
 
 export type PendingItem = {
   id: string;
@@ -19,23 +21,10 @@ const emit = defineEmits<{
   (event: 'updated'): void;
 }>();
 
-const bancos = [
-  { nome: 'Nubank', svgFile: 'nubank-logo-svg.png' },
-  { nome: 'Banco Inter', svgFile: 'Banco Inter S.A/inter.svg' },
-  { nome: 'Itaú', svgFile: null },
-  { nome: 'Bradesco', svgFile: 'Bradesco S.A/bradesco com nome.svg' },
-  { nome: 'Banco do Brasil', svgFile: 'Banco do Brasil S.A/banco-do-brasil-com-fundo.svg' },
-  { nome: 'Caixa', svgFile: 'Caixa Econômica Federal/caixa-economica-federal-1.svg' },
-  { nome: 'Santander', svgFile: 'Banco Santander Brasil S.A/banco-santander-logo.svg' },
-  { nome: 'C6 Bank', svgFile: 'C6 Bank/c6-bank-logo-oficial-vector.png' },
-  { nome: 'PicPay', svgFile: 'PicPay/Logo-PicPay -nome .svg' },
-  { nome: 'Neon', svgFile: 'Neon/header-logo-neon.svg' },
-  { nome: 'Outro banco', svgFile: null },
-];
-
 const selectedInstitutions = ref<Record<string, string>>({});
 const savingIds = ref<Set<string>>(new Set());
 const fixedIds = ref<Set<string>>(new Set());
+const pickerForId = ref<string | null>(null);
 
 const pendingItems = computed(() => {
   return props.items.filter(item => !fixedIds.value.has(item.id));
@@ -77,6 +66,19 @@ const getItemIcon = (type: 'account' | 'card') => {
     <path d="M18 10v9" />
   </svg>`;
 };
+
+const openPicker = (itemId: string) => {
+  pickerForId.value = itemId;
+};
+
+const closePicker = () => {
+  pickerForId.value = null;
+};
+
+const pickerSelected = computed(() => {
+  if (!pickerForId.value) return null;
+  return selectedInstitutions.value[pickerForId.value] ?? null;
+});
 </script>
 
 <template>
@@ -155,15 +157,30 @@ const getItemIcon = (type: 'account' | 'card') => {
                     <label class="block text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Instituição
                     </label>
-                    <select
-                      v-model="selectedInstitutions[item.id]"
-                      class="mt-2 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    <button
+                      type="button"
+                      class="mt-2 flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-left"
+                      @click="openPicker(item.id)"
                     >
-                      <option value="">Selecione o banco</option>
-                      <option v-for="banco in bancos" :key="banco.nome" :value="banco.nome">
-                        {{ banco.nome }}
-                      </option>
-                    </select>
+                      <div class="flex min-w-0 items-center gap-3">
+                        <InstitutionAvatar
+                          :institution="selectedInstitutions[item.id] ?? null"
+                          :svg-path="getBankSvgPath(selectedInstitutions[item.id] ?? null)"
+                          fallback-icon="account"
+                          container-class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-white"
+                          img-class="h-7 w-7 object-contain"
+                          fallback-icon-class="h-5 w-5 text-slate-500"
+                        />
+                        <div class="min-w-0">
+                          <div class="truncate text-sm font-semibold text-slate-900">
+                            {{ selectedInstitutions[item.id] || 'Selecione o banco' }}
+                          </div>
+                        </div>
+                      </div>
+                      <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </button>
                   </div>
 
                   <button
@@ -185,4 +202,12 @@ const getItemIcon = (type: 'account' | 'card') => {
       </div>
     </div>
   </div>
+
+  <InstitutionPickerModal
+    :open="Boolean(pickerForId)"
+    title="Instituição financeira"
+    :selected="pickerSelected"
+    @close="closePicker"
+    @select="(banco) => { if (pickerForId) selectedInstitutions[pickerForId] = banco.nome; closePicker(); }"
+  />
 </template>

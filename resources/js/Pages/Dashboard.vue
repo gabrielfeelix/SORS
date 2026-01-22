@@ -20,6 +20,7 @@ import Modal from '@/Components/Modal.vue';
 import HomeWidgetsManager from '@/Components/HomeWidgetsManager.vue';
 import InstitutionMissingAlert from '@/Components/InstitutionMissingAlert.vue';
 import FixInstitutionModal, { type PendingItem } from '@/Components/FixInstitutionModal.vue';
+import InstitutionAvatar from '@/Components/InstitutionAvatar.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
 
 type ProjecaoResponse = {
@@ -280,6 +281,7 @@ const bankAccounts = computed(() =>
         .filter((account) => account.type !== 'credit_card')
         .map((account) => {
             const institution = account.institution ?? null;
+            const svgPath = (account as any).svgPath ?? null;
             return {
                 id: account.id,
                 label: account.name,
@@ -289,7 +291,9 @@ const bankAccounts = computed(() =>
                     account.color ??
                     (account.type === 'wallet' ? '#14B8A6' : '#3B82F6'),
                 institution,
-                svgPath: institution ? getBankSvgPath(institution) : null,
+                svgPath: svgPath ?? (institution ? getBankSvgPath(institution) : null),
+                type: account.type,
+                icon: account.icon ?? (account.type === 'wallet' ? 'wallet' : 'bank'),
             };
         }),
 );
@@ -297,16 +301,23 @@ const bankAccounts = computed(() =>
 const creditCards = computed(() =>
     (bootstrap.value.accounts ?? [])
         .filter((account) => account.type === 'credit_card')
-        .map((account) => ({
-            id: account.id,
-            label: account.name,
-            brand: (account.card_brand ?? 'visa') as string,
-            color: account.color ?? '#8B5CF6',
-            limit: Number(account.credit_limit ?? 0),
-            used: Math.max(0, Number(account.current_balance ?? 0)),
-            closingDay: Number(account.closing_day ?? 0) || null,
-            dueDay: Number(account.due_day ?? 0) || null,
-        })),
+        .map((account) => {
+            const institution = account.institution ?? null;
+            const svgPath = (account as any).svgPath ?? null;
+            return {
+                id: account.id,
+                label: account.name,
+                brand: (account.card_brand ?? 'visa') as string,
+                color: account.color ?? '#8B5CF6',
+                limit: Number(account.credit_limit ?? 0),
+                used: Math.max(0, Number(account.current_balance ?? 0)),
+                closingDay: Number(account.closing_day ?? 0) || null,
+                dueDay: Number(account.due_day ?? 0) || null,
+                institution,
+                svgPath: svgPath ?? (institution ? getBankSvgPath(institution) : null),
+                is_primary: Boolean((account as any).is_primary ?? false),
+            };
+        }),
 );
 
 const creditCardsApi = ref<CreditCard[]>([]);
@@ -357,7 +368,9 @@ const creditCardsDisplay = computed(() => {
                   used: c.used,
                   closingDay: c.closingDay,
                   dueDay: c.dueDay,
-                  is_primary: false, // TODO: get from API when credit_card model has is_primary
+                  institution: (c as any).institution ?? null,
+                  svgPath: (c as any).svgPath ?? null,
+                  is_primary: (c as any).is_primary ?? false,
               }))
             : creditCardsApi.value.map((c) => ({
                   id: c.id,
@@ -368,6 +381,8 @@ const creditCardsDisplay = computed(() => {
                   used: c.limite_usado ?? 0,
                   closingDay: c.dia_fechamento ?? null,
                   dueDay: c.dia_vencimento ?? null,
+                  institution: (c as any).banco ?? null,
+                  svgPath: (c as any).svgPath ?? null,
                   is_primary: c.is_primary ?? false,
               }));
 
@@ -1230,29 +1245,16 @@ onMounted(() => {
 	                    class="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm ring-1 ring-slate-200/60"
 	                >
 	                    <div class="flex items-center gap-3">
-	                        <div
-                                v-if="account.svgPath"
-                                class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white"
-                            >
-	                            <img
-	                                :src="`/Bancos-em-SVG-main/${account.svgPath}`"
-	                                :alt="account.institution ?? ''"
-	                                class="h-8 w-8 object-contain"
-	                                @error="($event.target as HTMLImageElement).style.display = 'none'"
-	                            />
-	                        </div>
-                            <div
-                                v-else
-                                class="flex h-11 w-11 items-center justify-center rounded-2xl text-white"
-                                :style="{ backgroundColor: account.color }"
-                            >
-	                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                <path d="M3 10h18" />
-	                                <path d="M5 10V8l7-5 7 5v2" />
-	                                <path d="M6 10v9" />
-	                                <path d="M18 10v9" />
-	                            </svg>
-	                        </div>
+	                        <InstitutionAvatar
+	                            :institution="account.institution"
+	                            :svg-path="account.svgPath"
+	                            :is-wallet="account.type === 'wallet' || account.icon === 'wallet'"
+	                            :fallback-icon="account.type === 'wallet' || account.icon === 'wallet' ? 'wallet' : 'account'"
+	                            container-class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white"
+	                            img-class="h-8 w-8 object-contain"
+	                            fallback-icon-class="h-5 w-5 text-white"
+	                            :style="account.svgPath ? undefined : { backgroundColor: account.color }"
+	                        />
 	                        <div>
 	                            <div class="text-sm font-semibold text-slate-900">{{ account.label }}</div>
 	                            <div class="text-xs text-slate-500">{{ account.subtitle }}</div>
@@ -1328,15 +1330,17 @@ onMounted(() => {
                                 <!-- Header -->
                                 <div class="flex items-start justify-between">
                                     <div class="flex items-center gap-2">
-                                        <div class="flex h-6 w-6 items-center justify-center rounded bg-white/20">
-                                            <svg class="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <rect x="3" y="5" width="18" height="14" rx="3" />
-                                                <path d="M3 10h18" />
-                                            </svg>
-                                        </div>
+                                        <InstitutionAvatar
+                                            :institution="card.institution"
+                                            :svg-path="card.svgPath"
+                                            fallback-icon="credit-card"
+                                            container-class="flex h-6 w-6 items-center justify-center overflow-hidden rounded bg-white"
+                                            img-class="h-4 w-4 object-contain"
+                                            fallback-icon-class="h-4 w-4 text-slate-600"
+                                        />
                                         <span class="text-sm font-semibold">{{ card.label }}</span>
                                     </div>
-                                    <span v-if="creditCardsDisplay.find(c => c.id === card.id)?.is_primary" class="rounded bg-white/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide">
+                                    <span v-if="card.is_primary" class="rounded bg-white/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide">
                                         PRINCIPAL
                                     </span>
                                 </div>

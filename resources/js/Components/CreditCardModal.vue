@@ -2,6 +2,9 @@
 import { computed, ref, watch } from 'vue';
 import { formatMoneyInputCentsShift, moneyInputToNumber, numberToMoneyInput } from '@/lib/moneyInput';
 import { preventNonDigitKeydown } from '@/lib/inputGuards';
+import { getBankSvgPath } from '@/lib/bankLogos';
+import InstitutionAvatar from '@/Components/InstitutionAvatar.vue';
+import InstitutionPickerModal from '@/Components/InstitutionPickerModal.vue';
 
 export type CreditCardModalPayload = {
   id?: string;
@@ -35,19 +38,8 @@ const dia_fechamento = ref<number | null>(null);
 const dia_vencimento = ref<number | null>(null);
 const cor = ref('#8B5CF6');
 const institution = ref<string | null>(null);
-
-// Institutions
-const institutions = [
-  { nome: 'Nubank', svgFile: 'nubank-logo-svg.png' },
-  { nome: 'Banco Inter', svgFile: 'Banco Inter S.A/inter.svg' },
-  { nome: 'Itaú', svgFile: null },
-  { nome: 'Bradesco', svgFile: 'Bradesco S.A/bradesco com nome.svg' },
-  { nome: 'Banco do Brasil', svgFile: 'Banco do Brasil S.A/banco-do-brasil-com-fundo.svg' },
-  { nome: 'Caixa', svgFile: 'Caixa Econômica Federal/caixa-economica-federal-1.svg' },
-  { nome: 'Santander', svgFile: 'Banco Santander Brasil S.A/banco-santander-logo.svg' },
-  { nome: 'C6 Bank', svgFile: 'C6 Bank/c6-bank-logo-oficial-vector.png' },
-  { nome: 'Outro', svgFile: null },
-];
+const institutionPickerOpen = ref(false);
+const institutionSvgPath = computed(() => (institution.value ? getBankSvgPath(institution.value) : null));
 
 // Bandeiras
 const bandeiras = [
@@ -150,22 +142,31 @@ watch(
           <!-- Instituição -->
           <div class="mt-6">
             <div class="mb-2 text-sm font-bold text-[#374151]">Instituição financeira</div>
-            <div class="relative">
-              <select
-                v-model="institution"
-                class="h-11 w-full appearance-none rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 pr-9 text-base text-[#374151] focus:border-[#14B8A6] focus:outline-none focus:ring-0"
-              >
-                <option :value="null">Selecione o banco</option>
-                <option v-for="inst in institutions" :key="inst.nome" :value="inst.nome">
-                  {{ inst.nome }}
-                </option>
-              </select>
-              <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </span>
-            </div>
+            <button
+              type="button"
+              class="flex h-14 w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 text-left"
+              @click="institutionPickerOpen = true"
+            >
+              <div class="flex min-w-0 items-center gap-3">
+                <InstitutionAvatar
+                  :institution="institution"
+                  :svg-path="institutionSvgPath"
+                  fallback-icon="account"
+                  container-class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-white"
+                  img-class="h-7 w-7 object-contain"
+                  fallback-icon-class="h-5 w-5 text-slate-500"
+                />
+                <div class="min-w-0">
+                  <div class="truncate text-sm font-semibold text-slate-900">
+                    {{ institution ?? 'Selecione o banco' }}
+                  </div>
+                  <div class="text-xs font-semibold text-slate-400">Toque para alterar</div>
+                </div>
+              </div>
+              <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
           </div>
 
           <!-- Nome do Cartão -->
@@ -307,4 +308,12 @@ watch(
       </div>
     </div>
   </div>
+
+  <InstitutionPickerModal
+    :open="institutionPickerOpen"
+    title="Instituição financeira"
+    :selected="institution"
+    @close="institutionPickerOpen = false"
+    @select="(banco) => { institution = banco.nome; institutionPickerOpen = false; }"
+  />
 </template>

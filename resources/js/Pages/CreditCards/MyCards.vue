@@ -8,6 +8,7 @@ import CreateCreditCardFlowModal from '@/Components/CreateCreditCardFlowModal.vu
 import MonthNavigator from '@/Components/MonthNavigator.vue';
 import { requestJson } from '@/lib/kitamoApi';
 import { getBankSvgPath } from '@/lib/bankLogos';
+import InstitutionAvatar from '@/Components/InstitutionAvatar.vue';
 
 const isMobile = useIsMobile();
 const Shell = computed(() => (isMobile.value ? MobileShell : DesktopShell));
@@ -117,7 +118,7 @@ const creditCards = computed(() => {
             vencimentoDia: Number(a.dia_vencimento ?? a.due_day ?? 0) || null,
             cor: ((a as any).color || a.cor) ?? '#8B5CF6',
             banco,
-            svgPath: banco ? getBankSvgPath(banco) : null,
+            svgPath: (a as any).svgPath ?? (banco ? getBankSvgPath(banco) : null),
             limite,
             usado,
             disponivel: Math.max(0, disponivel),
@@ -388,27 +389,15 @@ const handleCreateCreditCardFlowSave = () => {
                     <div class="p-4">
                         <div class="flex items-start gap-3">
                             <!-- Icon -->
-                            <div
-                                v-if="card.svgPath"
-                                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white"
-                            >
-                                <img
-                                    :src="`/Bancos-em-SVG-main/${card.svgPath}`"
-                                    :alt="card.banco ?? ''"
-                                    class="h-10 w-10 object-contain"
-                                    @error="($event.target as HTMLImageElement).style.display = 'none'"
-                                />
-                            </div>
-                            <div
-                                v-else
-                                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
-                                :style="{ backgroundColor: card.cor }"
-                            >
-                                <svg class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="2" y="5" width="20" height="14" rx="2" />
-                                    <line x1="2" y1="10" x2="22" y2="10" />
-                                </svg>
-                            </div>
+                            <InstitutionAvatar
+                                :institution="card.banco"
+                                :svg-path="card.svgPath"
+                                fallback-icon="credit-card"
+                                container-class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white"
+                                img-class="h-10 w-10 object-contain"
+                                fallback-icon-class="h-6 w-6 text-white"
+                                :style="card.svgPath ? undefined : { backgroundColor: card.cor }"
+                            />
 
                             <!-- Card Info -->
                             <div class="flex-1 min-w-0">

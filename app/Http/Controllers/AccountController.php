@@ -15,6 +15,49 @@ use Carbon\CarbonImmutable;
 
 class AccountController extends Controller
 {
+    private function getBankLogoPath(?string $institution): ?string
+    {
+        if (!$institution) {
+            return null;
+        }
+
+        $logoMap = [
+            'Nubank' => 'nubank-logo-svg.png',
+            'Nu Pagamentos S.A' => 'nubank-logo-svg.png',
+            'Banco Inter S.A' => 'Banco Inter S.A/inter.svg',
+            'Banco Inter' => 'Banco Inter S.A/inter.svg',
+            'Inter' => 'Banco Inter S.A/inter.svg',
+            'Itaú' => null,
+            'Itaú Unibanco' => null,
+            'Bradesco' => 'Bradesco S.A/bradesco com nome.svg',
+            'Bradesco S.A' => 'Bradesco S.A/bradesco com nome.svg',
+            'Banco do Brasil' => 'Banco do Brasil S.A/banco-do-brasil-com-fundo.svg',
+            'Banco do Brasil S.A' => 'Banco do Brasil S.A/banco-do-brasil-com-fundo.svg',
+            'Caixa' => 'Caixa Econômica Federal/caixa-economica-federal-1.svg',
+            'Caixa Econômica Federal' => 'Caixa Econômica Federal/caixa-economica-federal-1.svg',
+            'Santander' => 'Banco Santander Brasil S.A/banco-santander-logo.svg',
+            'Banco Santander Brasil S.A' => 'Banco Santander Brasil S.A/banco-santander-logo.svg',
+            'Banco Santander' => 'Banco Santander Brasil S.A/banco-santander-logo.svg',
+            'C6 Bank' => 'C6 Bank/c6-bank-logo-oficial-vector.png',
+            'Banco C6 S.A' => 'C6 Bank/c6-bank-logo-oficial-vector.png',
+            'PicPay' => 'PicPay/Logo-PicPay -nome .svg',
+            'Neon' => 'Neon/header-logo-neon.svg',
+            'Banco Safra S.A' => 'Banco Safra S.A/logo-safra-nome.svg',
+            'Banco Votorantim' => 'Banco Votorantim/banco-bv-logo.svg',
+            'Banco BTG Pacutal' => 'Banco BTG Pacutal/btg-pactual-nome .svg',
+            'Banco Original S.A' => 'Banco Original S.A/banco-original-logo-branco-nome.svg',
+            'Banco Sofisa' => 'Banco Sofisa/logo-banco-sofisa-verde.svg',
+            'Banco Mercantil do Brasil S.A' => 'Banco Mercantil do Brasil S.A/banco-mercantil-novo-azul.svg',
+            'Banco Daycoval' => 'Banco Daycoval/logo-Daycoval- maior.svg',
+            'Banco Paulista' => 'Banco Paulista/banco-paulista-nome.svg',
+            'BRB - Banco de Brasilia' => 'BRB - Banco de Brasilia/brb-logo-abreviado.svg',
+            'Banco da Amazônia S.A' => 'Banco da Amazônia S.A/banco-da-amazonia.svg',
+            'Banco do Nordeste do Brasil S.A' => 'Banco do Nordeste do Brasil S.A/Logo_BNB.svg',
+        ];
+
+        return $logoMap[$institution] ?? null;
+    }
+
     public function store(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -65,8 +108,8 @@ class AccountController extends Controller
         abort_unless((int) $account->user_id === (int) $user->id, 404);
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'in:wallet,bank,card,credit_card'],
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'type' => ['sometimes', 'required', 'in:wallet,bank,card,credit_card'],
             'icon' => ['nullable', 'string', 'max:64'],
             'institution' => ['nullable', 'string', 'max:255'],
             'bank_account_type' => ['nullable', 'in:corrente,poupanca,salario'],
@@ -80,12 +123,15 @@ class AccountController extends Controller
             'is_primary' => ['nullable', 'boolean'],
         ]);
 
-        $type = $data['type'] === 'card' ? 'credit_card' : $data['type'];
+        $type = $account->type;
+        if (array_key_exists('type', $data)) {
+            $type = $data['type'] === 'card' ? 'credit_card' : $data['type'];
+        }
 
         $account->fill([
-            'name' => $data['name'],
+            'name' => $data['name'] ?? $account->name,
             'type' => $type,
-            'icon' => $data['icon'] ?? null,
+            'icon' => array_key_exists('icon', $data) ? ($data['icon'] ?: null) : $account->icon,
             'institution' => array_key_exists('institution', $data) ? ($data['institution'] ?: null) : $account->institution,
             'bank_account_type' => array_key_exists('bank_account_type', $data) ? ($data['bank_account_type'] ?: null) : $account->bank_account_type,
             'color' => $data['color'] ?? $account->color,
@@ -440,21 +486,24 @@ class AccountController extends Controller
                 $accountId = (string) $account->id;
                 $projectionBase += $recurringDeltaByAccount[$accountId] ?? 0.0;
 
-                return [
-                    'id' => $account->id,
-                    'name' => $account->name,
-                    'type' => $account->type,
-                    'icon' => $account->icon,
-                    'color' => $account->color,
-                    'current_balance' => (float) $projectionBase,
-                    'initial_balance' => (float) $account->initial_balance,
-                    'credit_limit' => $account->credit_limit,
-                    'closing_day' => $account->closing_day,
-                    'due_day' => $account->due_day,
-                    'subtitle' => $account->type === 'wallet' ? 'Projeção' : 'Projeção',
-                    'has_data' => true,
-                    'balance_kind' => 'projection',
-                ];
+            return [
+                'id' => $account->id,
+                'name' => $account->name,
+                'type' => $account->type,
+                'icon' => $account->icon,
+                'color' => $account->color,
+                'current_balance' => (float) $projectionBase,
+                'initial_balance' => (float) $account->initial_balance,
+                'credit_limit' => $account->credit_limit,
+                'closing_day' => $account->closing_day,
+                'due_day' => $account->due_day,
+                'institution' => $account->institution,
+                'bank_account_type' => $account->bank_account_type,
+                'svgPath' => $this->getBankLogoPath($account->institution),
+                'subtitle' => $account->type === 'wallet' ? 'Projeção' : 'Projeção',
+                'has_data' => true,
+                'balance_kind' => 'projection',
+            ];
             }
 
             return [
@@ -468,6 +517,9 @@ class AccountController extends Controller
                 'credit_limit' => $account->credit_limit,
                 'closing_day' => $account->closing_day,
                 'due_day' => $account->due_day,
+                'institution' => $account->institution,
+                'bank_account_type' => $account->bank_account_type,
+                'svgPath' => $this->getBankLogoPath($account->institution),
                 'subtitle' => $account->type === 'wallet' ? 'Dinheiro físico' : 'Conta',
                 'has_data' => true,
                 'balance_kind' => 'real',
