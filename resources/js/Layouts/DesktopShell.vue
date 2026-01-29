@@ -384,7 +384,7 @@ onUnmounted(() => {
                 </header>
 
                 <main class="flex-1 px-6 py-8 md:px-10">
-                    <div class="mx-auto w-full max-w-[1100px]">
+                    <div class="w-full">
                         <slot />
                     </div>
                 </main>
