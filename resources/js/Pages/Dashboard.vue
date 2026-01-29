@@ -134,7 +134,7 @@ const despesas = ref(0);
 const hideValues = ref(false);
 const homeWidgetsModalOpen = ref(false);
 const accountMenuOpen = ref(false);
-const onboardingOpen = ref(false);
+const onboardingOpen = ref(!((page.props as any)?.auth?.user?.onboarding_completed_at ?? null));
 
 const fixInstitutionModalOpen = ref(false);
 const institutionAlertDismissed = ref(false);
@@ -1002,8 +1002,8 @@ onMounted(() => {
     loadCreditCardsApi();
     loadUnreadNotifications();
     try {
-        const completedAt = (page.props as any)?.auth?.user?.onboarding_completed_at ?? null;
-        if (!completedAt) onboardingOpen.value = true;
+        // Compat: remove flag antigo (não é mais usado)
+        localStorage.removeItem('kitamo:onboarding:v1');
     } catch {
         // ignore
     }

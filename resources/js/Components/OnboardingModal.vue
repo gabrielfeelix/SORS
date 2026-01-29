@@ -82,7 +82,10 @@ const markOnboardingDone = async () => {
     }
 };
 
-const close = () => emit('close');
+const close = () => {
+    void markOnboardingDone();
+    emit('close');
+};
 const skip = () => {
     void markOnboardingDone();
     emit('done');
