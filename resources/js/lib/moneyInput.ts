@@ -67,3 +67,19 @@ export const formatMoneyInputCentsShift = (raw: string) => {
     const whole = wholeRaw.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     return `${whole},${cents}`;
 };
+
+export const formatMoneyInputCentsShiftAllowNegative = (raw: string, defaultZero: boolean = true) => {
+    const value = String(raw ?? '').trim();
+    const negative = value.startsWith('-');
+    const digits = value.replace(/[^\d]/g, '');
+    if (!digits) {
+        if (!defaultZero) return '';
+        return negative ? '-0,00' : '0,00';
+    }
+
+    const padded = digits.padStart(3, '0');
+    const cents = padded.slice(-2);
+    const wholeRaw = padded.slice(0, -2).replace(/^0+/, '') || '0';
+    const whole = wholeRaw.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return `${negative ? '-' : ''}${whole},${cents}`;
+};

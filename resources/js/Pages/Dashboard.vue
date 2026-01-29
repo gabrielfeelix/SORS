@@ -134,7 +134,25 @@ const despesas = ref(0);
 const hideValues = ref(false);
 const homeWidgetsModalOpen = ref(false);
 const accountMenuOpen = ref(false);
-const onboardingOpen = ref(!((page.props as any)?.auth?.user?.onboarding_completed_at ?? null));
+const shouldShowOnboarding = computed(() => {
+    const user = (page.props as any)?.auth?.user ?? null;
+    if (!user) return false;
+
+    const completedAt = user.onboarding_completed_at;
+    if (completedAt) return false;
+
+    const createdAt = user.created_at;
+    const created = createdAt ? new Date(createdAt) : null;
+    const release = new Date('2026-01-29T00:00:00');
+
+    // Compat: se a coluna não existe ainda (undefined), trate usuários antigos como já onboarded.
+    if ((completedAt === undefined || completedAt === null) && created && Number.isFinite(created.getTime()) && created < release) {
+        return false;
+    }
+
+    return completedAt == null;
+});
+const onboardingOpen = ref(shouldShowOnboarding.value);
 
 const fixInstitutionModalOpen = ref(false);
 const institutionAlertDismissed = ref(false);

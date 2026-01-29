@@ -85,6 +85,23 @@ const formatCardClass = (value: Format) =>
 const selectFormat = (value: Format) => (format.value = value);
 
 const exportBusy = ref(false);
+const getCookie = (name: string) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length < 2) return '';
+    return parts.pop()!.split(';').shift() ?? '';
+};
+
+const xsrfToken = () => {
+    const raw = getCookie('XSRF-TOKEN');
+    if (!raw) return '';
+    try {
+        return decodeURIComponent(raw);
+    } catch {
+        return raw;
+    }
+};
+
 const exportReport = async (channel: 'download' | 'email') => {
     if (channel === 'email') {
         window.alert('Em breve: envio por email.');
@@ -94,13 +111,15 @@ const exportReport = async (channel: 'download' | 'email') => {
     exportBusy.value = true;
     try {
         const { startISO, endISO } = rangeForMonthKey(monthKey.value);
-        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+        const xsrf = xsrfToken();
         const response = await fetch(route('api.relatorios.exportar'), {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/octet-stream',
-                ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                'X-Requested-With': 'XMLHttpRequest',
+                ...(xsrf ? { 'X-CSRF-TOKEN': xsrf, 'X-XSRF-TOKEN': xsrf } : {}),
             },
             body: JSON.stringify({
                 formato: format.value,

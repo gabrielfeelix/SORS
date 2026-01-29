@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class UserApiController extends Controller
 {
@@ -24,9 +25,20 @@ class UserApiController extends Controller
     public function markOnboardingDone(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (! $user->onboarding_completed_at) {
-            $user->onboarding_completed_at = Carbon::now();
-            $user->save();
+        try {
+            if (! Schema::hasColumn('users', 'onboarding_completed_at')) {
+                return response()->json([
+                    'ok' => true,
+                    'onboarding_completed_at' => null,
+                ]);
+            }
+
+            if (! $user->onboarding_completed_at) {
+                $user->onboarding_completed_at = Carbon::now();
+                $user->save();
+            }
+        } catch (\Throwable) {
+            // Best-effort: não quebrar o app por causa desse flag
         }
 
         return response()->json([

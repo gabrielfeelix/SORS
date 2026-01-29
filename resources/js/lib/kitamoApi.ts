@@ -40,11 +40,12 @@ export const requestJson = async <T>(url: string, options: RequestInit = {}): Pr
     const makeRequest = async (token: { csrf: string; xsrf: string }) => {
         const requestedMethod = String(options.method ?? 'GET').toUpperCase();
         const shouldOverrideMethod = ['PATCH', 'PUT', 'DELETE'].includes(requestedMethod);
+        const preferredToken = token.xsrf || token.csrf;
 
         const headers = {
             'Content-Type': 'application/json',
             'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': token.csrf,
+            'X-CSRF-TOKEN': preferredToken,
             ...(token.xsrf ? { 'X-XSRF-TOKEN': token.xsrf } : {}),
             ...(shouldOverrideMethod ? { 'X-HTTP-Method-Override': requestedMethod } : {}),
             ...(options.headers ?? {}),
@@ -84,10 +85,11 @@ export const requestFormData = async <T>(url: string, options: RequestInit = {})
     const makeRequest = async (token: { csrf: string; xsrf: string }) => {
         const requestedMethod = String(options.method ?? 'GET').toUpperCase();
         const shouldOverrideMethod = ['PATCH', 'PUT', 'DELETE'].includes(requestedMethod);
+        const preferredToken = token.xsrf || token.csrf;
 
         const headers = new Headers(options.headers ?? {});
         headers.set('X-Requested-With', 'XMLHttpRequest');
-        headers.set('X-CSRF-TOKEN', token.csrf);
+        headers.set('X-CSRF-TOKEN', preferredToken);
         if (token.xsrf) {
             headers.set('X-XSRF-TOKEN', token.xsrf);
         }
