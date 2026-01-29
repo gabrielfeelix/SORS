@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('action_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('actor_user_id')->constrained('users')->cascadeOnDelete();
+            // Keep it compatible with shared-host MySQL setups (avoid FK constraints that can fail)
+            $table->unsignedBigInteger('actor_user_id');
             $table->string('method', 10);
             $table->string('route_name', 120)->nullable();
             $table->text('path');
@@ -30,4 +31,3 @@ return new class extends Migration
         Schema::dropIfExists('action_logs');
     }
 };
-

@@ -412,7 +412,7 @@ watch(
                                     type="text"
                                     inputmode="decimal"
                                     placeholder="0,00"
-                                    class="w-full bg-transparent text-right text-base font-semibold text-slate-900 outline-none"
+                                    class="w-full appearance-none border-0 bg-transparent p-0 text-right text-base font-semibold text-slate-900 outline-none"
                                     @keydown="preventNonMoneyKeydownAllowNegative"
                                     @input="(e) => setAccountBalance((e.target as HTMLInputElement).value)"
                                 />
@@ -534,7 +534,7 @@ watch(
                                         inputmode="numeric"
                                         pattern="[0-9]*"
                                         placeholder="0,00"
-                                        class="w-full bg-transparent text-right text-base font-semibold text-slate-900 outline-none"
+                                        class="w-full appearance-none border-0 bg-transparent p-0 text-right text-base font-semibold text-slate-900 outline-none"
                                         @keydown="preventNonDigitKeydown"
                                         @input="(e) => setCardLimit((e.target as HTMLInputElement).value)"
                                     />

@@ -80,7 +80,7 @@ const methodTone = (method: string) => {
                     <input
                         v-model="query"
                         type="text"
-                        class="w-full bg-transparent text-sm font-semibold text-slate-700 placeholder:text-slate-400 outline-none focus:outline-none focus-visible:outline-none"
+                        class="w-full appearance-none border-0 bg-transparent p-0 text-sm font-semibold text-slate-700 placeholder:text-slate-400 outline-none focus:outline-none focus-visible:outline-none"
                         placeholder="Ex: /api/contas, admin.users.update, email"
                         @input="runSearch"
                     />
@@ -137,4 +137,3 @@ const methodTone = (method: string) => {
         </div>
     </component>
 </template>
-

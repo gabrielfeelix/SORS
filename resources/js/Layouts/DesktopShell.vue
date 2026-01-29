@@ -290,7 +290,7 @@ onUnmounted(() => {
                                 <input
                                     type="text"
                                     :placeholder="props.searchPlaceholder"
-                                    class="w-[260px] bg-transparent text-sm font-semibold text-slate-700 placeholder:text-slate-400 outline-none focus:outline-none focus-visible:outline-none focus:ring-0"
+                                    class="w-[260px] appearance-none border-0 bg-transparent p-0 text-sm font-semibold text-slate-700 placeholder:text-slate-400 outline-none focus:outline-none focus-visible:outline-none focus:ring-0"
                                 />
                             </div>
 
