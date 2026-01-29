@@ -1004,8 +1004,7 @@ onMounted(() => {
     loadUnreadNotifications();
     try {
         const alreadyDone = window.localStorage.getItem(ONBOARDING_STORAGE_KEY) === '1';
-        const hasAccounts = (bootstrap.value.accounts ?? []).length > 0;
-        if (!alreadyDone && !hasAccounts) onboardingOpen.value = true;
+        if (!alreadyDone) onboardingOpen.value = true;
     } catch {
         // ignore
     }
