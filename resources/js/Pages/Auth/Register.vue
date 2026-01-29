@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import AuthShell from '@/Layouts/AuthShell.vue';
 import InputError from '@/Components/InputError.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
@@ -13,6 +13,10 @@ const form = useForm({
 
 const showPassword = ref(false);
 const showConfirm = ref(false);
+
+const hasMinLength = computed(() => form.password.length >= 8);
+const hasUppercase = computed(() => /[A-Z]/.test(form.password));
+const hasNumber = computed(() => /\d/.test(form.password));
 
 const submit = () => {
     form.post(route('register'), {
@@ -143,7 +147,7 @@ const submit = () => {
                                 v-model="form.password"
                                 :type="showPassword ? 'text' : 'password'"
                                 class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm font-semibold text-slate-700 placeholder:text-slate-400 focus:border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-                                placeholder="Minimo 6 caracteres"
+                                placeholder="Mínimo 8 caracteres"
                                 required
                                 autocomplete="new-password"
                             />
@@ -166,6 +170,35 @@ const submit = () => {
                             </button>
                         </div>
                         <InputError class="mt-1" :message="form.errors.password" />
+                        <ul class="mt-3 space-y-1 text-xs font-semibold text-slate-500">
+                            <li class="flex items-center gap-2" :class="hasMinLength ? 'text-emerald-600' : 'text-slate-500'">
+                                <span class="inline-flex h-4 w-4 items-center justify-center">
+                                    <svg v-if="hasMinLength" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M20 6 9 17l-5-5" />
+                                    </svg>
+                                    <span v-else class="h-2 w-2 rounded-full bg-slate-300"></span>
+                                </span>
+                                8+ caracteres
+                            </li>
+                            <li class="flex items-center gap-2" :class="hasUppercase ? 'text-emerald-600' : 'text-slate-500'">
+                                <span class="inline-flex h-4 w-4 items-center justify-center">
+                                    <svg v-if="hasUppercase" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M20 6 9 17l-5-5" />
+                                    </svg>
+                                    <span v-else class="h-2 w-2 rounded-full bg-slate-300"></span>
+                                </span>
+                                1 letra maiúscula
+                            </li>
+                            <li class="flex items-center gap-2" :class="hasNumber ? 'text-emerald-600' : 'text-slate-500'">
+                                <span class="inline-flex h-4 w-4 items-center justify-center">
+                                    <svg v-if="hasNumber" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M20 6 9 17l-5-5" />
+                                    </svg>
+                                    <span v-else class="h-2 w-2 rounded-full bg-slate-300"></span>
+                                </span>
+                                1 número
+                            </li>
+                        </ul>
                     </div>
 
                     <div>

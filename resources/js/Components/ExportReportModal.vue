@@ -274,7 +274,7 @@ const exportReport = async (channel: 'download' | 'email') => {
                         <path d="M4 6h16v12H4V6Z" />
                         <path d="m4 7 8 6 8-6" />
                     </svg>
-                    Email
+                    E-mail
                 </button>
                 <button
                     type="button"

@@ -101,6 +101,12 @@ const skip = () => {
     emit('done');
 };
 
+const goBack = () => {
+    error.value = '';
+    if (step.value === 3) step.value = 2;
+    else if (step.value === 2) step.value = 1;
+};
+
 const goStart = () => {
     error.value = '';
     step.value = 2;
@@ -168,13 +174,19 @@ onMounted(() => {
 <template>
     <div v-if="open" class="fixed inset-0 z-[95] bg-white">
         <header class="flex items-center justify-between px-5 pt-[calc(1rem+env(safe-area-inset-top))]">
-            <button type="button" class="text-sm font-semibold text-slate-400" @click="skip">Pular</button>
-            <button type="button" class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-600" @click="close" aria-label="Fechar">
-                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 6L6 18" />
-                    <path d="M6 6l12 12" />
-                </svg>
-            </button>
+            <button v-if="step > 1 && step < 4" type="button" class="text-sm font-semibold text-slate-600" @click="goBack">Voltar</button>
+            <button v-else-if="step < 4" type="button" class="text-sm font-semibold text-slate-400" @click="skip">Pular</button>
+            <div v-else class="h-10"></div>
+
+            <div class="flex items-center gap-3">
+                <button v-if="step > 1 && step < 4" type="button" class="text-sm font-semibold text-slate-400" @click="skip">Pular</button>
+                <button type="button" class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-600" @click="close" aria-label="Fechar">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18" />
+                        <path d="M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
         </header>
 
         <main class="mx-auto flex h-[calc(100vh-5rem)] w-full max-w-md flex-col px-6 pb-[calc(2rem+env(safe-area-inset-bottom))]">
@@ -288,4 +300,3 @@ onMounted(() => {
         </main>
     </div>
 </template>
-

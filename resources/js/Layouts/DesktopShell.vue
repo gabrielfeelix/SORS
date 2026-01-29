@@ -42,7 +42,7 @@ const initials = computed(() => {
 
 const navItems = computed(() => [
     {
-        label: 'Dashboard',
+        label: 'Painel',
         href: route('dashboard'),
         active: route().current('dashboard'),
         icon: 'dashboard' as const,

@@ -94,7 +94,7 @@ const initials = computed(() => {
                     </div>
                     <div class="min-w-0 flex-1">
                         <div class="text-sm font-bold text-slate-900">Meus Dados</div>
-                        <div class="text-xs font-medium text-slate-400">Email, telefone e endereço</div>
+                        <div class="text-xs font-medium text-slate-400">E-mail, telefone e endereço</div>
                     </div>
                     <svg class="h-4 w-4 flex-shrink-0 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 18l6-6-6-6" />

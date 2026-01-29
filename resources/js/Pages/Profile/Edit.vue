@@ -82,7 +82,7 @@ const onAvatarChange = (event: Event) => {
 </script>
 
 <template>
-    <Head title="Profile" />
+    <Head title="Perfil" />
 
     <MobileShell v-if="isMobile" :show-nav="false">
         <header class="relative flex items-center justify-center pt-2">
@@ -145,13 +145,13 @@ const onAvatarChange = (event: Event) => {
             </div>
 
             <div>
-                <div class="mb-2 text-sm font-semibold text-slate-700">Email</div>
+                <div class="mb-2 text-sm font-semibold text-slate-700">E-mail</div>
                 <input
                     v-model="form.email"
                     type="email"
                     disabled
                     class="h-12 w-full cursor-not-allowed rounded-2xl border border-slate-200 bg-slate-100 px-4 text-sm font-semibold text-slate-500"
-                    aria-label="Email"
+                    aria-label="E-mail"
                 />
                 <div class="mt-2 flex items-center gap-2 text-xs font-semibold text-slate-400">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -207,7 +207,7 @@ const onAvatarChange = (event: Event) => {
             <h2
                 class="text-xl font-semibold leading-tight text-gray-800"
             >
-                Profile
+                Perfil
             </h2>
         </template>
 
