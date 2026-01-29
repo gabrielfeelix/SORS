@@ -160,12 +160,12 @@ onUnmounted(() => {
                 :class="sidebarCollapsed ? 'w-[92px]' : 'w-[280px]'"
             >
                 <div class="px-5 pt-7">
-                    <div class="flex items-center gap-3">
+                    <Link :href="route('dashboard')" class="flex items-center gap-3" aria-label="Ir para a página inicial">
                         <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#14B8A6] text-xl font-bold text-white">
                             K
                         </div>
                         <div v-if="!sidebarCollapsed" class="text-xl font-semibold tracking-tight text-slate-900">Kitamo</div>
-                    </div>
+                    </Link>
                 </div>
 
                 <div class="mt-5 px-5">
