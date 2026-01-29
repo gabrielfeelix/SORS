@@ -89,7 +89,19 @@ const canContinueStep3 = computed(() => {
     );
 });
 
-const close = () => emit('close');
+const dismiss = async () => {
+    busy.value = true;
+    error.value = '';
+    try {
+        await requestJson('/api/user/onboarding', { method: 'POST' });
+        emit('done');
+        emit('close');
+    } catch {
+        error.value = 'Não foi possível pular agora. Tente novamente.';
+    } finally {
+        busy.value = false;
+    }
+};
 
 const handlePickAccountInstitution = (pick: InstitutionPick) => {
     accountInstitution.value = pick.nome;
@@ -106,19 +118,6 @@ const goBack = () => {
     error.value = '';
     if (step.value === 3) step.value = 2;
     else if (step.value === 2) step.value = 1;
-};
-
-const skip = async () => {
-    busy.value = true;
-    error.value = '';
-    try {
-        await requestJson('/api/user/onboarding', { method: 'POST' });
-        emit('done');
-    } catch {
-        error.value = 'Não foi possível pular agora. Tente novamente.';
-    } finally {
-        busy.value = false;
-    }
 };
 
 const goNext = () => {
@@ -271,8 +270,7 @@ watch(
     <div v-if="open" class="fixed inset-0 z-[95] bg-white">
         <header class="flex items-center justify-between px-5 pt-[calc(1rem+env(safe-area-inset-top))]">
             <button v-if="step > 1 && step < 4" type="button" class="text-sm font-semibold text-slate-600" @click="goBack">Voltar</button>
-            <button v-else-if="step < 4" type="button" class="text-sm font-semibold text-slate-400" :disabled="busy" @click="skip">Pular</button>
-            <div v-else class="h-10"></div>
+            <div v-else class="h-6"></div>
 
             <div class="flex items-center gap-3">
                 <div v-if="progressLabel" class="text-xs font-bold text-slate-400">{{ progressLabel }}</div>
@@ -280,7 +278,7 @@ watch(
                     type="button"
                     class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-600 disabled:opacity-60"
                     :disabled="busy"
-                    @click="close"
+                    @click="dismiss"
                     aria-label="Fechar"
                 >
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -328,6 +326,14 @@ watch(
                         @click="goNext"
                     >
                         Continuar
+                    </button>
+                    <button
+                        type="button"
+                        class="mt-4 w-full text-center text-sm font-semibold text-slate-400 transition hover:text-slate-600 disabled:opacity-50"
+                        :disabled="busy"
+                        @click="dismiss"
+                    >
+                        Pular
                     </button>
                 </div>
             </div>
@@ -428,6 +434,14 @@ watch(
                         @click="goNext"
                     >
                         Continuar
+                    </button>
+                    <button
+                        type="button"
+                        class="mt-3 w-full text-center text-sm font-semibold text-slate-400 transition hover:text-slate-600 disabled:opacity-50"
+                        :disabled="busy"
+                        @click="dismiss"
+                    >
+                        Pular
                     </button>
                 </div>
             </div>
@@ -535,7 +549,7 @@ watch(
                                         <div class="relative rounded-2xl border border-slate-200 bg-slate-50">
                                             <select
                                                 v-model="cardClosingDay"
-                                                class="h-12 w-full appearance-none rounded-2xl border-0 bg-transparent px-4 pr-10 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-0"
+                                                class="h-12 w-full appearance-none rounded-2xl border-0 bg-transparent bg-none px-4 pr-10 text-sm font-semibold text-slate-700 focus:outline-none focus-visible:outline-none focus:ring-0"
                                             >
                                                 <option v-for="d in days" :key="d" :value="d">{{ d }}</option>
                                             </select>
@@ -551,7 +565,7 @@ watch(
                                         <div class="relative rounded-2xl border border-slate-200 bg-slate-50">
                                             <select
                                                 v-model="cardDueDay"
-                                                class="h-12 w-full appearance-none rounded-2xl border-0 bg-transparent px-4 pr-10 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-0"
+                                                class="h-12 w-full appearance-none rounded-2xl border-0 bg-transparent bg-none px-4 pr-10 text-sm font-semibold text-slate-700 focus:outline-none focus-visible:outline-none focus:ring-0"
                                             >
                                                 <option v-for="d in days" :key="d" :value="d">{{ d }}</option>
                                             </select>
@@ -580,6 +594,14 @@ watch(
                         @click="saveSetupAndShowConfirmation"
                     >
                         {{ busy ? 'Salvando…' : 'Concluir' }}
+                    </button>
+                    <button
+                        type="button"
+                        class="mt-3 w-full text-center text-sm font-semibold text-slate-400 transition hover:text-slate-600 disabled:opacity-50"
+                        :disabled="busy"
+                        @click="dismiss"
+                    >
+                        Pular
                     </button>
                 </div>
             </div>

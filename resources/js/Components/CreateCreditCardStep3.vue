@@ -215,7 +215,7 @@ watch(
                 <div class="relative">
                   <select
                     :value="dia_fechamento ?? ''"
-                    class="h-11 w-full appearance-none rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 pr-9 text-center text-base text-[#374151] focus:border-[#14B8A6] focus:outline-none focus:ring-0"
+                    class="h-11 w-full appearance-none rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] bg-none px-3 pr-9 text-center text-base text-[#374151] focus:border-[#14B8A6] focus:outline-none focus-visible:outline-none focus:ring-0"
                     @change="(e) => { dia_fechamento = Number((e.target as HTMLSelectElement).value) || null }"
                   >
                     <option value="" disabled>Dia</option>
@@ -233,7 +233,7 @@ watch(
                 <div class="relative">
                   <select
                     :value="dia_vencimento ?? ''"
-                    class="h-11 w-full appearance-none rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 pr-9 text-center text-base text-[#374151] focus:border-[#14B8A6] focus:outline-none focus:ring-0"
+                    class="h-11 w-full appearance-none rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] bg-none px-3 pr-9 text-center text-base text-[#374151] focus:border-[#14B8A6] focus:outline-none focus-visible:outline-none focus:ring-0"
                     @change="(e) => { dia_vencimento = Number((e.target as HTMLSelectElement).value) || null }"
                   >
                     <option value="" disabled>Dia</option>

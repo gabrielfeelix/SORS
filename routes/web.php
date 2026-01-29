@@ -269,7 +269,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/admin', fn () => redirect()->route('admin.users.index'))->name('admin.index');
     Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
+    Route::patch('/admin/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
     Route::patch('/admin/users/{user}/password', [UserController::class, 'updatePassword'])->name('admin.users.password');
+    Route::delete('/admin/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
 
     Route::get('/admin/roles', fn () => Inertia::render('Admin/Roles'))->name('admin.roles.index');
     Route::get('/admin/logs', fn () => Inertia::render('Admin/Logs'))->name('admin.logs.index');

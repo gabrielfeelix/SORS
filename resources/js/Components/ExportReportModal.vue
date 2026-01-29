@@ -119,7 +119,7 @@ const exportReport = async (channel: 'download' | 'email') => {
                 'Content-Type': 'application/json',
                 Accept: 'application/octet-stream',
                 'X-Requested-With': 'XMLHttpRequest',
-                ...(xsrf ? { 'X-CSRF-TOKEN': xsrf, 'X-XSRF-TOKEN': xsrf } : {}),
+                ...(xsrf ? { 'X-XSRF-TOKEN': xsrf } : {}),
             },
             body: JSON.stringify({
                 formato: format.value,

@@ -58,6 +58,7 @@ class User extends Authenticatable
             'is_admin' => 'boolean',
             'last_backup_at' => 'datetime',
             'onboarding_completed_at' => 'datetime',
+            'disabled_at' => 'datetime',
         ];
     }
 

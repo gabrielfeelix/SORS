@@ -40,12 +40,14 @@ export const requestJson = async <T>(url: string, options: RequestInit = {}): Pr
     const makeRequest = async (token: { csrf: string; xsrf: string }) => {
         const requestedMethod = String(options.method ?? 'GET').toUpperCase();
         const shouldOverrideMethod = ['PATCH', 'PUT', 'DELETE'].includes(requestedMethod);
-        const preferredToken = token.xsrf || token.csrf;
+        // Important (Laravel): X-CSRF-TOKEN expects the raw session token, while X-XSRF-TOKEN
+        // expects the (possibly encrypted) XSRF-TOKEN cookie value.
+        const shouldSendCsrfHeader = !token.xsrf;
 
         const headers = {
             'Content-Type': 'application/json',
             'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': preferredToken,
+            ...(shouldSendCsrfHeader ? { 'X-CSRF-TOKEN': token.csrf } : {}),
             ...(token.xsrf ? { 'X-XSRF-TOKEN': token.xsrf } : {}),
             ...(shouldOverrideMethod ? { 'X-HTTP-Method-Override': requestedMethod } : {}),
             ...(options.headers ?? {}),
@@ -59,7 +61,18 @@ export const requestJson = async <T>(url: string, options: RequestInit = {}): Pr
         });
     };
 
-    let res = await makeRequest({ csrf: csrfToken(), xsrf: xsrfToken() });
+    const requestedMethod = String(options.method ?? 'GET').toUpperCase();
+    const unsafeMethod = requestedMethod !== 'GET' && requestedMethod !== 'HEAD';
+    let token = { csrf: csrfToken(), xsrf: xsrfToken() };
+    if (unsafeMethod && !token.xsrf) {
+        try {
+            token = await refreshCsrfToken();
+        } catch {
+            // fallback: tenta com o meta-token mesmo
+        }
+    }
+
+    let res = await makeRequest(token);
 
     // If we get a 419 (CSRF token mismatch), try to refresh the token and retry once
     if (res.status === 419) {
@@ -85,11 +98,13 @@ export const requestFormData = async <T>(url: string, options: RequestInit = {})
     const makeRequest = async (token: { csrf: string; xsrf: string }) => {
         const requestedMethod = String(options.method ?? 'GET').toUpperCase();
         const shouldOverrideMethod = ['PATCH', 'PUT', 'DELETE'].includes(requestedMethod);
-        const preferredToken = token.xsrf || token.csrf;
+        const shouldSendCsrfHeader = !token.xsrf;
 
         const headers = new Headers(options.headers ?? {});
         headers.set('X-Requested-With', 'XMLHttpRequest');
-        headers.set('X-CSRF-TOKEN', preferredToken);
+        if (shouldSendCsrfHeader && token.csrf) {
+            headers.set('X-CSRF-TOKEN', token.csrf);
+        }
         if (token.xsrf) {
             headers.set('X-XSRF-TOKEN', token.xsrf);
         }
@@ -116,7 +131,18 @@ export const requestFormData = async <T>(url: string, options: RequestInit = {})
         });
     };
 
-    let res = await makeRequest({ csrf: csrfToken(), xsrf: xsrfToken() });
+    const requestedMethod = String(options.method ?? 'GET').toUpperCase();
+    const unsafeMethod = requestedMethod !== 'GET' && requestedMethod !== 'HEAD';
+    let token = { csrf: csrfToken(), xsrf: xsrfToken() };
+    if (unsafeMethod && !token.xsrf) {
+        try {
+            token = await refreshCsrfToken();
+        } catch {
+            // fallback
+        }
+    }
+
+    let res = await makeRequest(token);
 
     if (res.status === 419) {
         try {

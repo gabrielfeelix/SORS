@@ -32,6 +32,8 @@ const page = usePage();
 const userName = computed(() => String((page.props as any)?.auth?.user?.name ?? ''));
 const firstName = computed(() => userName.value.trim().split(/\s+/)[0] ?? userName.value);
 const avatarUrl = computed(() => (page.props as any)?.auth?.user?.avatar_url ?? (page.props as any)?.auth?.user?.profile_photo_url ?? null);
+const userEmail = computed(() => String((page.props as any)?.auth?.user?.email ?? ''));
+const isAdminEmail = computed(() => userEmail.value.toLowerCase() === 'contato@kitamo.com.br');
 
 const initials = computed(() => {
     const parts = userName.value.trim().split(/\s+/).filter(Boolean);
@@ -256,6 +258,21 @@ onUnmounted(() => {
                                 </svg>
                                 <span v-if="unreadCount > 0" class="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-red-500"></span>
                             </button>
+
+                            <Link
+                                v-if="isAdminEmail"
+                                :href="route('admin.index')"
+                                class="hidden items-center gap-2 rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-slate-600 ring-1 ring-slate-200/60 transition hover:bg-slate-50 md:inline-flex"
+                                aria-label="Administração"
+                            >
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Z" />
+                                    <path
+                                        d="M19.4 15a7.9 7.9 0 0 0 .1-1 7.9 7.9 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1l-.4-2.6H9.1L8.7 8a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.9 7.9 0 0 0-.1 1 7.9 7.9 0 0 0 .1 1l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.6h5.8l.4-2.6a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6Z"
+                                    />
+                                </svg>
+                                Administração
+                            </Link>
 
                             <Link
                                 :href="route('settings')"
