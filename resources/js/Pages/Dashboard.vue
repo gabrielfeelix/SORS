@@ -21,6 +21,7 @@ import HomeWidgetsManager from '@/Components/HomeWidgetsManager.vue';
 import InstitutionMissingAlert from '@/Components/InstitutionMissingAlert.vue';
 import FixInstitutionModal, { type PendingItem } from '@/Components/FixInstitutionModal.vue';
 import InstitutionAvatar from '@/Components/InstitutionAvatar.vue';
+import NewsPanel, { type NewsItemRow } from '@/Components/NewsPanel.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
 
 type ProjecaoResponse = {
@@ -76,6 +77,21 @@ const loadUnreadNotifications = async () => {
         unreadNotifications.value = Number(response.count ?? 0);
     } catch {
         // ignore
+    }
+};
+
+const newsOpen = ref(false);
+const newsLoading = ref(false);
+const newsItems = ref<NewsItemRow[]>([]);
+const loadNews = async () => {
+    newsLoading.value = true;
+    try {
+        const res = await requestJson<{ items: NewsItemRow[] }>(route('api.news.index'));
+        newsItems.value = (res.items ?? []) as NewsItemRow[];
+    } catch {
+        // ignore
+    } finally {
+        newsLoading.value = false;
     }
 };
 
@@ -1086,19 +1102,17 @@ onMounted(() => {
                         <path d="M10 21a2 2 0 0 0 4 0" />
 	                    </svg>
 	                </Link>
-                    <Link
-                        v-if="isAdminEmail"
-                        :href="route('admin.index')"
+                    <button
+                        type="button"
                         class="flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-600 shadow-sm ring-1 ring-slate-200/60 hover:bg-slate-50"
-                        aria-label="Administração"
+                        aria-label="Novidades"
+                        @click="() => { newsOpen = true; if (newsItems.length === 0) loadNews(); }"
                     >
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Z" />
-                            <path
-                                d="M19.4 15a7.9 7.9 0 0 0 .1-1 7.9 7.9 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1l-.4-2.6H9.1L8.7 8a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.9 7.9 0 0 0-.1 1 7.9 7.9 0 0 0 .1 1l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.6h5.8l.4-2.6a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6Z"
-                            />
+                            <path d="M12 2l1.6 5.4L19 9l-5.4 1.6L12 16l-1.6-5.4L5 9l5.4-1.6L12 2Z" />
+                            <path d="M5 14l.9 3.1L9 18l-3.1.9L5 22l-.9-3.1L1 18l3.1-.9L5 14Z" />
                         </svg>
-                    </Link>
+                    </button>
 	            </div>
 	        </header>
 
@@ -1610,5 +1624,7 @@ onMounted(() => {
             @close="fixInstitutionModalOpen = false"
             @updated="handleInstitutionUpdated"
         />
+
+        <NewsPanel :open="newsOpen" :loading="newsLoading" :items="newsItems" @close="newsOpen = false" />
     </component>
 </template>

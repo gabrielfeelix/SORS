@@ -801,6 +801,7 @@ onMounted(() => {
     const url = new URL(window.location.href);
     const open = url.searchParams.get('open');
     const edit = url.searchParams.get('edit');
+    const create = url.searchParams.get('create');
 
     const kind = url.searchParams.get('kind');
     const account = url.searchParams.get('account');
@@ -823,6 +824,12 @@ onMounted(() => {
         const found = entries.value.find((e) => String(e.id) === String(edit));
         if (found) openEdit(String(found.id), { mode: 'edit' });
         url.searchParams.delete('edit');
+        window.history.replaceState({}, '', url.toString());
+    }
+
+    if (create) {
+        openCreate();
+        url.searchParams.delete('create');
         window.history.replaceState({}, '', url.toString());
     }
 });

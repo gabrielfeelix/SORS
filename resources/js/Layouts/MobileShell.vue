@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { computed, getCurrentInstance, onMounted, onUnmounted, ref } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import ConfigModal from '@/Components/ConfigModal.vue';
 
 const emit = defineEmits<{
@@ -96,6 +96,19 @@ const bgClass = computed(() =>
 const mainPaddingClass = computed(() =>
     props.showNav ? 'pb-[calc(5.5rem+env(safe-area-inset-bottom))]' : 'pb-[env(safe-area-inset-bottom)]',
 );
+
+const hasParentAddListener = () => {
+    const vnodeProps = (getCurrentInstance()?.vnode.props ?? {}) as Record<string, unknown>;
+    return Boolean((vnodeProps as any).onAdd || (vnodeProps as any).onAddOnce);
+};
+
+const handleAddClick = () => {
+    if (hasParentAddListener()) {
+        emit('add');
+        return;
+    }
+    router.visit(`${route('accounts.index')}?create=1`);
+};
 </script>
 
 <template>
@@ -150,7 +163,7 @@ const mainPaddingClass = computed(() =>
                     type="button"
                     class="mx-2 -mt-7 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 ring-8 ring-white"
                     aria-label="Nova movimentação"
-                    @click="emit('add')"
+                    @click="handleAddClick"
                 >
                     <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 5v14" />

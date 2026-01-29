@@ -166,7 +166,9 @@ const transactionKind = ref<'expense' | 'income' | 'transfer'>('expense');
 const transactionInitial = ref<TransactionModalPayload | null>(null);
 
 const openNewTransaction = () => {
-    router.visit(route('goals.create'));
+    transactionKind.value = 'expense';
+    transactionInitial.value = null;
+    transactionOpen.value = true;
 };
 
 const toastOpen = ref(false);

@@ -2,6 +2,10 @@
 
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\LogController;
+use App\Http\Controllers\Admin\RolesController;
+use App\Http\Controllers\Admin\LeadsController;
+use App\Http\Controllers\Admin\EmailCampaignController;
+use App\Http\Controllers\Admin\NewsItemsController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProfileController;
@@ -23,6 +27,8 @@ use App\Http\Controllers\MoedasController;
 use App\Http\Controllers\RelatoriosController;
 use App\Http\Controllers\CreditCardController;
 use App\Http\Controllers\CreditCardPageController;
+use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\NewsApiController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -48,6 +54,9 @@ Route::get('/', function () {
 Route::get('/csrf-cookie', fn () => response()->noContent())->name('csrf-cookie');
 
 Route::redirect('/landingpage', '/');
+
+// Landing page newsletter subscription (unauthenticated)
+Route::post('/api/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('api.newsletter.subscribe');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
@@ -256,7 +265,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/api/notifications/marcar-todas-lidas', [NotificationsController::class, 'marcarTodasLidas'])->name('api.notifications.read-all');
     Route::delete('/api/notifications/{notification}', [NotificationsController::class, 'destroy'])->name('api.notifications.delete');
     Route::delete('/api/notifications/limpar-lidas', [NotificationsController::class, 'limparLidas'])->name('api.notifications.clear-read');
-    Route::get('/api/notifications/count-unread', [NotificationsController::class, 'countUnread'])->name('api.notifications.count-unread');
+	    Route::get('/api/notifications/count-unread', [NotificationsController::class, 'countUnread'])->name('api.notifications.count-unread');
+	    Route::get('/api/news', [NewsApiController::class, 'index'])->name('api.news.index');
 
     Route::patch('/api/user/notification-preferences', [NotificationPreferencesController::class, 'update'])->name('api.user.notification-preferences');
     Route::get('/api/widget/data', [WidgetController::class, 'data'])->name('api.widget.data');
@@ -270,19 +280,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/goals/{goal}/deposits', [GoalDepositController::class, 'store'])->name('goals.deposits.store');
 });
 
-Route::middleware(['auth', 'verified', 'admin'])->group(function () {
-    Route::get('/admin', fn () => redirect()->route('admin.users.index'))->name('admin.index');
-    Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
-    Route::patch('/admin/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
-    Route::patch('/admin/users/{user}/password', [UserController::class, 'updatePassword'])->name('admin.users.password');
-    Route::delete('/admin/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
+	Route::middleware(['auth', 'verified', 'admin'])->group(function () {
+	    Route::get('/admin', fn () => redirect()->route('admin.users.index'))->name('admin.index');
+	    Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
+	    Route::patch('/admin/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
+	    Route::patch('/admin/users/{user}/password', [UserController::class, 'updatePassword'])->name('admin.users.password');
+	    Route::delete('/admin/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
+	
+	    Route::get('/admin/roles', [RolesController::class, 'index'])->name('admin.roles.index');
+	    Route::patch('/admin/roles/{role}', [RolesController::class, 'update'])->name('admin.roles.update');
+	    Route::get('/admin/logs', [LogController::class, 'index'])->name('admin.logs.index');
+	    Route::get('/admin/notifications', fn () => Inertia::render('Admin/Notifications'))->name('admin.notifications.index');
+	    Route::get('/admin/emails', [EmailCampaignController::class, 'index'])->name('admin.emails.index');
+	    Route::post('/admin/emails', [EmailCampaignController::class, 'store'])->name('admin.emails.store');
+	    Route::patch('/admin/emails/{campaign}', [EmailCampaignController::class, 'update'])->name('admin.emails.update');
+	    Route::delete('/admin/emails/{campaign}', [EmailCampaignController::class, 'destroy'])->name('admin.emails.destroy');
+	    Route::post('/admin/emails/{campaign}/send', [EmailCampaignController::class, 'sendNow'])->name('admin.emails.send');
 
-    Route::get('/admin/roles', fn () => Inertia::render('Admin/Roles'))->name('admin.roles.index');
-    Route::get('/admin/logs', [LogController::class, 'index'])->name('admin.logs.index');
-    Route::get('/admin/notifications', fn () => Inertia::render('Admin/Notifications'))->name('admin.notifications.index');
-    Route::get('/admin/emails', fn () => Inertia::render('Admin/Emails'))->name('admin.emails.index');
-    Route::get('/admin/news', fn () => Inertia::render('Admin/News'))->name('admin.news.index');
-});
+	    Route::get('/admin/leads', [LeadsController::class, 'index'])->name('admin.leads.index');
+	    Route::post('/admin/leads', [LeadsController::class, 'store'])->name('admin.leads.store');
+	    Route::patch('/admin/leads/{lead}', [LeadsController::class, 'update'])->name('admin.leads.update');
+	    Route::delete('/admin/leads/{lead}', [LeadsController::class, 'destroy'])->name('admin.leads.destroy');
+
+	    Route::get('/admin/news', [NewsItemsController::class, 'index'])->name('admin.news.index');
+	    Route::post('/admin/news', [NewsItemsController::class, 'store'])->name('admin.news.store');
+	    Route::patch('/admin/news/{newsItem}', [NewsItemsController::class, 'update'])->name('admin.news.update');
+	    Route::delete('/admin/news/{newsItem}', [NewsItemsController::class, 'destroy'])->name('admin.news.destroy');
+	});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

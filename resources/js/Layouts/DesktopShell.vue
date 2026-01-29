@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { computed, getCurrentInstance, onMounted, onUnmounted, ref } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import DesktopNotificationsPopover from '@/Components/DesktopNotificationsPopover.vue';
+import NewsPanel, { type NewsItemRow } from '@/Components/NewsPanel.vue';
 import ConfigModal from '@/Components/ConfigModal.vue';
 import { requestJson } from '@/lib/kitamoApi';
 
@@ -58,6 +59,19 @@ const initials = computed(() => {
     return `${first}${last}`.toUpperCase();
 });
 
+const hasParentAddListener = () => {
+    const vnodeProps = (getCurrentInstance()?.vnode.props ?? {}) as Record<string, unknown>;
+    return Boolean((vnodeProps as any).onAdd || (vnodeProps as any).onAddOnce);
+};
+
+const handleAddClick = () => {
+    if (hasParentAddListener()) {
+        emit('add');
+        return;
+    }
+    router.visit(`${route('accounts.index')}?create=1`);
+};
+
 const navItems = computed(() => [
     {
         label: 'Painel',
@@ -104,6 +118,21 @@ const setUnreadCount = (count: number) => {
 };
 const configModalOpen = ref(false);
 
+const newsOpen = ref(false);
+const newsLoading = ref(false);
+const newsItems = ref<NewsItemRow[]>([]);
+const loadNews = async () => {
+    newsLoading.value = true;
+    try {
+        const res = await requestJson<{ items: NewsItemRow[] }>(route('api.news.index'));
+        newsItems.value = (res.items ?? []) as NewsItemRow[];
+    } catch {
+        // ignore
+    } finally {
+        newsLoading.value = false;
+    }
+};
+
 const loadUnreadCount = async () => {
     try {
         const response = await requestJson<{ count: number }>(route('api.notifications.count-unread'));
@@ -132,19 +161,6 @@ onUnmounted(() => {
             >
                 <div class="px-5 pt-7">
                     <div class="flex items-center gap-3">
-                        <button
-                            type="button"
-                            class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 text-slate-600 ring-1 ring-slate-200/60 hover:bg-slate-100"
-                            aria-label="Recolher/Expandir menu"
-                            @click="toggleSidebar"
-                        >
-                            <svg v-if="sidebarCollapsed" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 18l6-6-6-6" />
-                            </svg>
-                            <svg v-else class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M15 18l-6-6 6-6" />
-                            </svg>
-                        </button>
                         <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#14B8A6] text-xl font-bold text-white">
                             K
                         </div>
@@ -158,7 +174,7 @@ onUnmounted(() => {
                         class="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#14B8A6] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:bg-emerald-600"
                         :class="sidebarCollapsed ? 'px-0' : ''"
                         aria-label="Nova movimentação"
-                        @click="emit('add')"
+                        @click="handleAddClick"
                     >
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 5v14" />
@@ -276,9 +292,24 @@ onUnmounted(() => {
             <div class="flex min-w-0 flex-1 flex-col">
                 <header class="sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 backdrop-blur">
                     <div class="flex items-center justify-between gap-4 px-6 py-4 md:px-10">
-                        <div>
-                            <div v-if="props.title" class="text-lg font-semibold text-slate-900">{{ props.title }}</div>
-                            <div v-if="props.subtitle" class="text-sm font-medium text-slate-400">{{ props.subtitle }}</div>
+                        <div class="flex items-center gap-3">
+                            <button
+                                type="button"
+                                class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-600 ring-1 ring-slate-200/60"
+                                :aria-label="sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'"
+                                @click="toggleSidebar"
+                            >
+                                <svg v-if="sidebarCollapsed" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 18l6-6-6-6" />
+                                </svg>
+                                <svg v-else class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M15 18l-6-6 6-6" />
+                                </svg>
+                            </button>
+                            <div>
+                                <div v-if="props.title" class="text-lg font-semibold text-slate-900">{{ props.title }}</div>
+                                <div v-if="props.subtitle" class="text-sm font-medium text-slate-400">{{ props.subtitle }}</div>
+                            </div>
                         </div>
 
                         <div class="flex items-center gap-3">
@@ -310,6 +341,19 @@ onUnmounted(() => {
                                 <span v-if="unreadCount > 0" class="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-red-500"></span>
                             </button>
 
+                            <button
+                                type="button"
+                                class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-600 ring-1 ring-slate-200/60"
+                                aria-label="Novidades"
+                                :aria-expanded="newsOpen ? 'true' : 'false'"
+                                @click="() => { newsOpen = !newsOpen; if (newsOpen && newsItems.length === 0) loadNews(); }"
+                            >
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2l1.6 5.4L19 9l-5.4 1.6L12 16l-1.6-5.4L5 9l5.4-1.6L12 2Z" />
+                                    <path d="M5 14l.9 3.1L9 18l-3.1.9L5 22l-.9-3.1L1 18l3.1-.9L5 14Z" />
+                                </svg>
+                            </button>
+
                             <Link
                                 v-if="isAdminEmail"
                                 :href="route('admin.index')"
@@ -339,7 +383,7 @@ onUnmounted(() => {
                                 type="button"
                                 class="h-11 w-11 items-center justify-center rounded-full bg-[#14B8A6] text-white shadow-xl shadow-emerald-500/30 ring-1 ring-emerald-400/20 md:inline-flex"
                                 aria-label="Nova transação"
-                                @click="emit('add')"
+                                @click="handleAddClick"
                             >
                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M12 5v14" />
@@ -366,4 +410,6 @@ onUnmounted(() => {
     />
 
     <ConfigModal :open="configModalOpen" @close="configModalOpen = false" />
+
+    <NewsPanel :open="newsOpen" :loading="newsLoading" :items="newsItems" @close="newsOpen = false" />
 </template>

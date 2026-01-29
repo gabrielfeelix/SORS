@@ -14,6 +14,7 @@ const items = computed<Item[]>(() => [
     { label: 'Logs de Ações', href: route('admin.logs.index'), active: route().current('admin.logs.*') },
     { label: 'Notificações', href: route('admin.notifications.index'), active: route().current('admin.notifications.*') },
     { label: 'E-mails e Comunicados', href: route('admin.emails.index'), active: route().current('admin.emails.*') },
+    { label: 'Leads', href: route('admin.leads.index'), active: route().current('admin.leads.*') },
     { label: 'Novidades', href: route('admin.news.index'), active: route().current('admin.news.*') },
 ]);
 </script>
@@ -31,4 +32,3 @@ const items = computed<Item[]>(() => [
         </Link>
     </div>
 </template>
-
