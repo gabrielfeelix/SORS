@@ -306,6 +306,8 @@ const onTransactionSave = async (payload: TransactionModalPayload) => {
     });
 
     showToast('Movimentação salva');
+    transactionOpen.value = false;
+    router.reload({ only: ['bootstrap'] });
 };
 </script>
 

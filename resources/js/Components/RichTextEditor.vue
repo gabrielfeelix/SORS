@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, getCurrentInstance, ref } from 'vue';
 import { QuillEditor } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
 
@@ -21,29 +21,46 @@ const emit = defineEmits<{
 }>();
 
 const editorRef = ref<any>(null);
+const quillRef = ref<any>(null);
 
-const modules = computed(() => ({
-    toolbar: {
-        container: '#kitamo-email-toolbar',
-        handlers: {
-            image: () => emit('request-image'),
-            undo: () => editorRef.value?.getQuill?.()?.history?.undo?.(),
-            redo: () => editorRef.value?.getQuill?.()?.history?.redo?.(),
-        },
-    },
-    history: {
+const instance = getCurrentInstance();
+const toolbarId = `kitamo-email-toolbar-${instance?.uid ?? Math.random().toString(36).slice(2)}`;
+
+const toolbar = computed(
+    () =>
+        ({
+            container: `#${toolbarId}`,
+            handlers: {
+                image: () => emit('request-image'),
+                undo: () => quillRef.value?.history?.undo?.(),
+                redo: () => quillRef.value?.history?.redo?.(),
+            },
+        }) as any,
+);
+
+const options = computed(
+    () =>
+        ({
+            modules: {
+                history: {
         delay: 600,
         maxStack: 100,
         userOnly: true,
     },
-}) as any);
+            },
+        }) as any,
+);
+
+const onReady = (quill: any) => {
+    quillRef.value = quill;
+};
 
 const onUpdate = (html: string) => {
     emit('update:modelValue', html ?? '');
 };
 
 const insertText = (text: string) => {
-    const quill = editorRef.value?.getQuill?.();
+    const quill = quillRef.value;
     if (!quill) return;
     const range = quill.getSelection(true);
     const index = range?.index ?? quill.getLength();
@@ -52,7 +69,7 @@ const insertText = (text: string) => {
 };
 
 const insertImage = (url: string) => {
-    const quill = editorRef.value?.getQuill?.();
+    const quill = quillRef.value;
     if (!quill || !url) return;
     const range = quill.getSelection(true);
     const index = range?.index ?? quill.getLength();
@@ -65,7 +82,7 @@ defineExpose({ insertText, insertImage });
 
 <template>
     <div class="rounded-2xl border border-slate-200 bg-white">
-        <div id="kitamo-email-toolbar" class="flex flex-wrap items-center gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2">
+        <div :id="toolbarId" class="flex flex-wrap items-center gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2">
             <button class="ql-bold rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200/60" aria-label="Negrito"></button>
             <button class="ql-italic rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200/60" aria-label="Itálico"></button>
             <button class="ql-underline rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200/60" aria-label="Sublinhado"></button>
@@ -89,9 +106,11 @@ defineExpose({ insertText, insertImage });
             contentType="html"
             :content="modelValue"
             :placeholder="placeholder"
-            :modules="modules"
+            :toolbar="toolbar"
+            :options="options"
             class="kitamo-quill"
             @update:content="onUpdate"
+            @ready="onReady"
         />
     </div>
 </template>

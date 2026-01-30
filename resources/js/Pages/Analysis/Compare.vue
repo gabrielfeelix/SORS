@@ -170,6 +170,8 @@ const onDesktopTransactionSave = async (payload: TransactionModalPayload) => {
     });
 
     showToast('Movimentação salva');
+    desktopTransactionOpen.value = false;
+    router.reload({ only: ['bootstrap'] });
 };
 </script>
 
