@@ -22,6 +22,7 @@ import InstitutionMissingAlert from '@/Components/InstitutionMissingAlert.vue';
 import FixInstitutionModal, { type PendingItem } from '@/Components/FixInstitutionModal.vue';
 import InstitutionAvatar from '@/Components/InstitutionAvatar.vue';
 import { useIsMobile } from '@/composables/useIsMobile';
+import CountUp from '@/Components/CountUp.vue';
 
 type ProjecaoResponse = {
     projecao_diaria: Array<{
@@ -1130,7 +1131,8 @@ onMounted(() => {
                     <div>
                         <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-300">Saldo Total</div>
                         <div class="mt-2 text-4xl font-semibold tracking-tight text-emerald-400">
-                            {{ formatBRLMasked(saldoAtual) }}
+                            <span v-if="hideValues">R$ ••••</span>
+                            <CountUp v-else :value="saldoAtual" :format="formatBRL" />
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -1166,7 +1168,8 @@ onMounted(() => {
                             </svg>
                         </div>
                         <div class="mt-1 text-base font-semibold text-white">
-                            {{ formatBRLMasked(receitas) }}
+                            <span v-if="hideValues">R$ ••••</span>
+                            <CountUp v-else :value="receitas" :format="formatBRL" />
                         </div>
                     </Link>
 
@@ -1182,7 +1185,8 @@ onMounted(() => {
                             </svg>
                         </div>
                         <div class="mt-1 text-base font-semibold text-white">
-                            {{ formatBRLMasked(despesas) }}
+                            <span v-if="hideValues">R$ ••••</span>
+                            <CountUp v-else :value="despesas" :format="formatBRL" />
                         </div>
                     </Link>
                 </div>
@@ -1222,7 +1226,7 @@ onMounted(() => {
 	                    v-else-if="projecao && projecao.saldo_dia_30 > 0"
 	                    class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600"
 	                >
-	                    ✅ {{ formatBRL(Math.abs(projecao.saldo_dia_30)) }}
+	                    ✅ <CountUp :value="Math.abs(projecao.saldo_dia_30)" :format="formatBRL" />
 	                </div>
 	            </div>
 
@@ -1252,7 +1256,7 @@ onMounted(() => {
 	                <div class="flex-1">
 	                    <h3 class="mb-1 font-semibold text-emerald-900">Tá tranquilo!</h3>
 	                    <p class="text-sm text-emerald-700">
-	                        Você pode gastar até {{ formatBRL(Math.abs(projecao.saldo_dia_30)) }} até o fim do mês
+	                        Você pode gastar até <CountUp :value="Math.abs(projecao.saldo_dia_30)" :format="formatBRL" /> até o fim do mês
 	                    </p>
 	                </div>
 	            </div>
