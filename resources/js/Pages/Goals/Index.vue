@@ -235,71 +235,77 @@ const onTransactionSave = async (payload: TransactionModalPayload) => {
             <div class="mt-2 text-sm text-slate-500">Crie um objetivo financeiro e acompanhe o progresso.</div>
         </div>
 
-        <div v-else :class="[isMobile ? 'mt-6 space-y-4 pb-4' : 'mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-8']">
+        <div v-else :class="[isMobile ? 'mt-6 space-y-4 pb-4' : 'mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 pb-8']">
             <Link
                 v-for="goal in goals"
                 :key="goal.id"
                 :href="route('goals.show', { goalId: goal.id })"
-                class="group block rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/60 transition-all hover:-translate-y-1 hover:shadow-md hover:ring-slate-300/80"
+                class="group relative overflow-hidden rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-200/60 transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-slate-300/80"
             >
-                <div class="flex h-full flex-col justify-between gap-4">
-                    <div class="flex items-start gap-4">
-                        <span
-                            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition group-hover:scale-110"
-                            :class="goal.icon === 'home' ? 'bg-emerald-50 text-emerald-600' : goal.icon === 'plane' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-500'"
-                        >
-                            <svg v-if="goal.icon === 'home'" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M3 10.5L12 3l9 7.5" />
-                                <path d="M5 10v10h14V10" />
-                            </svg>
-                            <svg v-else-if="goal.icon === 'plane'" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M2 16l20-8-20-8 6 8-6 8Z" />
-                                <path d="M6 16v6l4-4" />
-                            </svg>
-                            <svg v-else class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M5 16l1-5 1-3h10l1 3 1 5" />
-                                <path d="M7 16h10" />
-                                <circle cx="8" cy="17" r="1.5" />
-                                <circle cx="16" cy="17" r="1.5" />
-                            </svg>
-                        </span>
-
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="truncate">
-                                    <div class="truncate text-base font-bold text-slate-900 group-hover:text-emerald-700">{{ goal.title }}</div>
-                                    <div class="mt-0.5 text-xs font-semibold text-slate-400">Prazo: {{ goal.due }}</div>
-                                </div>
-                                
-                                <span v-if="!isMobile" class="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 ring-1 ring-slate-100">
-                                     {{ statusFor(goal.status).label }}
-                                </span>
+                <div class="absolute right-0 top-0 -mr-6 -mt-6 h-32 w-32 rounded-full bg-slate-50 transition-transform group-hover:scale-150"></div>
+                
+                <div class="relative flex h-full flex-col justify-between gap-6">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center gap-4">
+                            <span
+                                class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-sm transition-transform group-hover:scale-110"
+                                :class="goal.icon === 'home' ? 'bg-emerald-100/50 text-emerald-600' : goal.icon === 'plane' ? 'bg-blue-100/50 text-blue-600' : 'bg-orange-100/50 text-orange-500'"
+                            >
+                                <svg v-if="goal.icon === 'home'" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 10.5L12 3l9 7.5" />
+                                    <path d="M5 10v10h14V10" />
+                                </svg>
+                                <svg v-else-if="goal.icon === 'plane'" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M2 16l20-8-20-8 6 8-6 8Z" />
+                                    <path d="M6 16v6l4-4" />
+                                </svg>
+                                <svg v-else class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 16l1-5 1-3h10l1 3 1 5" />
+                                    <path d="M7 16h10" />
+                                    <circle cx="8" cy="17" r="1.5" />
+                                    <circle cx="16" cy="17" r="1.5" />
+                                </svg>
+                            </span>
+                            <div>
+                                <div class="text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-1">{{ goal.title }}</div>
+                                <div class="text-xs font-semibold text-slate-400">Prazo: {{ goal.due }}</div>
                             </div>
-                             
-                             <div v-if="isMobile" class="mt-2">
-                                 <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold" :class="statusFor(goal.status).cls">
-                                    <span class="h-2 w-2 rounded-full" :class="statusFor(goal.status).dot"></span>
-                                    {{ statusFor(goal.status).label }}
-                                </span>
-                             </div>
                         </div>
+
+                         <span v-if="!isMobile" class="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 shadow-sm ring-1 ring-slate-100">
+                             {{ statusFor(goal.status).label }}
+                        </span>
                     </div>
 
-                    <div>
-                        <div class="flex items-end justify-between text-sm font-bold">
-                            <div :class="goal.status === 'late' ? 'text-orange-500' : 'text-[#14B8A6]'">{{ formatMoney(goal.current).replace('R$', 'R$') }}</div>
-                            <div class="text-xs text-slate-400">de {{ formatMoney(goal.target).replace('R$', 'R$') }}</div>
+                    <div class="space-y-3">
+                         <div class="flex items-baseline justify-between">
+                            <div class="flex flex-col">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Guardado</span>
+                                <span class="text-2xl font-bold tracking-tight" :class="goal.status === 'late' ? 'text-orange-500' : 'text-slate-900'">
+                                    {{ formatMoney(goal.current).replace('R$', 'R$ ') }}
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Meta</span>
+                                <div class="text-sm font-semibold text-slate-600">{{ formatMoney(goal.target).replace('R$', 'R$ ') }}</div>
+                            </div>
                         </div>
-
-                        <div class="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                        
+                        <div class="relative h-3 w-full overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200/50">
                             <div
-                                class="h-full rounded-full transition-all duration-500"
-                                :class="goal.status === 'late' ? 'bg-orange-500' : 'bg-[#14B8A6]'"
+                                class="h-full rounded-full transition-all duration-1000 ease-out shadow-sm"
+                                :class="goal.status === 'late' ? 'bg-gradient-to-r from-orange-400 to-orange-500' : 'bg-gradient-to-r from-emerald-400 to-emerald-500'"
                                 :style="{ width: `${pct(goal)}%` }"
                             ></div>
                         </div>
-
-                        <div class="mt-3 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-slate-500">{{ pct(goal) }}% concluído</div>
+                        
+                        <div class="flex justify-between items-center pt-1">
+                             <span v-if="isMobile" class="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-500">
+                                {{ statusFor(goal.status).label }}
+                             </span>
+                             <span v-else></span>
+                             <span class="text-xs font-bold text-slate-400">{{ pct(goal) }}% concluído</span>
+                        </div>
                     </div>
                 </div>
             </Link>

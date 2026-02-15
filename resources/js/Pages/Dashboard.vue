@@ -294,6 +294,31 @@ const recentEntries = computed(() => {
         .slice(0, 5);
 });
 
+const topExpenseCategories = computed(() => {
+    const expenses = desktopEntries.value.filter((e) => e.kind === 'expense');
+    const grouped = new Map<string, number>();
+
+    for (const e of expenses) {
+        const cat = e.categoryLabel || 'Outros';
+        grouped.set(cat, (grouped.get(cat) || 0) + e.amount);
+    }
+
+    const totalTracked = Array.from(grouped.values()).reduce((a, b) => a + b, 0);
+
+    return Array.from(grouped.entries())
+        .map(([label, amount]) => {
+            const meta = pickerCategories.value.find((c) => c.label === label);
+            return {
+                label,
+                amount,
+                percent: totalTracked > 0 ? (amount / totalTracked) * 100 : 0,
+                icon: meta?.icon || 'other',
+            };
+        })
+        .sort((a, b) => b.amount - a.amount)
+        .slice(0, 4);
+});
+
 const formatEntryDate = (date?: string) => {
     if (!date) return '';
     const entryDate = parseISODateLocal(date) ?? new Date(date);
@@ -1328,6 +1353,41 @@ onMounted(() => {
                             {{ entry.kind === 'income' ? '+' : '-' }} {{ hideValues ? '••••' : formatBRL(entry.amount).replace('R$', '') }}
                         </div>
                     </button>
+                </div>
+            </section>
+
+            <section v-if="topExpenseCategories.length > 0" class="mt-6 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/60">
+                <div class="flex items-center gap-3 mb-4">
+                     <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2a10 10 0 1 0 10 10 10 10 0 0 0-10-10zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" />
+                            <path d="M12 6v6l4 2" />
+                        </svg>
+                    </span>
+                    <div class="text-base font-semibold text-slate-900">Onde você mais gastou</div>
+                </div>
+
+                <div class="space-y-4">
+                    <div v-for="cat in topExpenseCategories" :key="cat.label" class="group">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <div class="flex items-center gap-2">
+                                <div class="flex h-6 w-6 items-center justify-center rounded-lg bg-slate-100 text-slate-500 text-xs">
+                                    <!-- Simple icon fallback based on label or generic -->
+                                     <svg v-if="cat.icon === 'cart'" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6h15l-2 7H7L6 6ZM6 6l-2-2H2M9 18a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0M17 18a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"/></svg>
+                                    <svg v-else-if="cat.icon === 'food'" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 3v7M8 3v7M6 3v7M14 3v7c0 2 1 3 3 3v8M20 3v7"/></svg>
+                                    <svg v-else class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                                </div>
+                                <span class="text-sm font-semibold text-slate-700">{{ cat.label }}</span>
+                            </div>
+                            <div class="text-sm font-bold text-slate-900">{{ hideValues ? '••••' : formatBRL(cat.amount).replace('R$', '') }}</div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="h-2 w-full rounded-full bg-slate-50 overflow-hidden">
+                                <div class="h-full rounded-full bg-rose-500/80 transition-all duration-1000" :style="{ width: `${cat.percent}%` }"></div>
+                            </div>
+                            <div class="text-[10px] font-bold text-slate-400 w-8 text-right">{{ Math.round(cat.percent) }}%</div>
+                        </div>
+                    </div>
                 </div>
             </section>
                 </div>

@@ -451,48 +451,51 @@ watch(
                     <MonthNavigator v-model="selectedMonthKey" :months="monthItems" />
                 </div>
 
-                <div v-if="isLoading" class="mt-4" :class="[isMobile ? 'space-y-3' : 'grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3']">
-                    <div v-for="i in 3" :key="i" class="flex items-center justify-between rounded-3xl bg-white px-4 py-4 shadow-sm ring-1 ring-slate-200/60">
-                        <div class="flex items-center gap-3">
-                            <div class="h-12 w-12 animate-pulse rounded-2xl bg-slate-200"></div>
+                <div v-if="isLoading" class="mt-4" :class="[isMobile ? 'space-y-3' : 'grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2']">
+                    <div v-for="i in 3" :key="i" class="flex items-center justify-between rounded-[20px] bg-white px-5 py-5 shadow-sm ring-1 ring-slate-200/60">
+                        <div class="flex items-center gap-4">
+                            <div class="h-14 w-14 animate-pulse rounded-2xl bg-slate-200"></div>
                             <div>
                                 <div class="h-4 w-32 animate-pulse rounded bg-slate-200"></div>
-                                <div class="mt-1 h-3 w-24 animate-pulse rounded bg-slate-100"></div>
+                                <div class="mt-2 h-3 w-24 animate-pulse rounded bg-slate-100"></div>
                             </div>
                         </div>
-                        <div class="h-4 w-20 animate-pulse rounded bg-slate-200"></div>
+                        <div class="h-5 w-24 animate-pulse rounded bg-slate-200"></div>
                     </div>
                 </div>
 
-                <div v-else class="mt-4" :class="[isMobile ? 'space-y-3' : 'grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3']">
+                <div v-else class="mt-4" :class="[isMobile ? 'space-y-3' : 'grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2']">
                     <Link
                         v-for="account in bankAccounts"
                         :key="account.id"
                         :href="route('accounts.show', { accountKey: account.id })"
-                        class="flex items-center justify-between rounded-3xl bg-white px-4 py-4 shadow-sm ring-1 ring-slate-200/60 transition hover:shadow-md hover:ring-slate-300"
+                        class="group flex items-center justify-between rounded-[20px] bg-white px-5 py-5 shadow-sm ring-1 ring-slate-200/60 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:ring-slate-300"
                     >
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-4">
                                 <InstitutionAvatar
                                     :institution="account.institution ?? account.name"
                                     :svg-path="account.svgPath"
                                     :is-wallet="account.icon === 'wallet'"
                                     :fallback-icon="account.icon === 'wallet' ? 'wallet' : 'account'"
-                                    container-class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-white"
-                                    img-class="h-10 w-10 object-contain"
+                                    container-class="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-slate-50 group-hover:bg-white transition-colors shadow-sm ring-1 ring-slate-100"
+                                    img-class="h-9 w-9 object-contain"
                                 :fallback-bg-class="'rounded-2xl text-white'"
-                                :fallback-icon-class="'h-5 w-5'"
+                                :fallback-icon-class="'h-6 w-6'"
                                 :style="account.svgPath ? undefined : { backgroundColor: account.color }"
                             />
                             <div>
-                                <div class="text-sm font-bold text-slate-900">{{ account.name }}</div>
-                                <div class="flex flex-wrap items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                                <div class="text-base font-bold text-slate-900 group-hover:text-[#14B8A6] transition-colors">{{ account.name }}</div>
+                                <div class="flex flex-wrap items-center gap-1 text-xs font-medium text-slate-500">
                                     <span>{{ account.subtitle }}</span>
-                                    <span v-if="selectedMonthMode === 'past' && account.hasData === false">(SEM DADOS)</span>
-                                    <span v-if="selectedMonthMode === 'future'">(PROJEÇÃO)</span>
+                                    <span v-if="selectedMonthMode === 'past' && account.hasData === false" class="text-xs text-red-500 font-bold">• Sem dados</span>
+                                    <span v-if="selectedMonthMode === 'future'" class="text-xs text-blue-500 font-bold">• Projeção</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="text-sm font-bold text-slate-900">{{ formatBRL(account.balance) }}</div>
+                        <div class="text-right">
+                            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Saldo</div>
+                            <div class="text-lg font-bold text-slate-900">{{ formatBRL(account.balance).replace('R$', 'R$ ') }}</div>
+                        </div>
                     </Link>
                 </div>
             </div>
